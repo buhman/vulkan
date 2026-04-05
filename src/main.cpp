@@ -115,19 +115,22 @@ XMINT2 windowSize{};
 struct ShaderData {
   XMFLOAT4X4 projection;
   XMFLOAT4X4 view;
-  XMFLOAT4X4 model[3];
-  XMFLOAT4 lightPos{ 0.0f, -10.0f, 10.0f, 0.0f };
+  XMFLOAT4X4 model;
+  //XMFLOAT4X4 model[3];
+  XMFLOAT4 lightPosition{ 0.0f, -10.0f, 10.0f, 0.0f };
   uint32_t selected{ 1 };
 } shaderData{};
 
 struct ShaderDataBuffer {
   VkBuffer buffer{ VK_NULL_HANDLE };
   VkDeviceAddress deviceAddress{};
+  VkDeviceMemory memory;
+  void * mappedData;
 };
 
 ShaderDataBuffer shaderDataBuffers[maxFramesInFlight];
 
-static void print_memoryPropertyFlags(VkMemoryPropertyFlags propertyFlags)
+void print_memoryPropertyFlags(VkMemoryPropertyFlags propertyFlags)
 {
   int index = 0;
   while (propertyFlags) {
@@ -154,6 +157,33 @@ uint32_t findMemoryTypeIndex(VkPhysicalDeviceMemoryProperties const * memoryProp
   }
   ASSERT(false, "no memory type index matching memoryTypeBits and propertyFlags");
   UNREACHABLE();
+}
+
+XMMATRIX currentProjection()
+{
+  float fov_angle_y = XMConvertToRadians(45 * 1.0);
+  float aspect_ratio = windowSize.x / windowSize.y;
+  float near_z = 0.1;
+  float far_z = 100.0;
+  XMMATRIX projection = XMMatrixPerspectiveFovRH(fov_angle_y, aspect_ratio, near_z, far_z);
+  return projection;
+}
+
+XMMATRIX currentView()
+{
+  XMVECTOR eye = XMVectorSet(0, -3, 0, 0);
+  XMVECTOR at = XMVectorSet(0, 0, 0, 0);
+  XMVECTOR up = XMVectorSet(0, 0, 1, 0);
+  XMMATRIX view = XMMatrixLookAtRH(eye, at, up);
+  return view;
+}
+
+float theta = 0;
+
+XMMATRIX currentModel()
+{
+  theta += 0.01;
+  return XMMatrixTranslation(0, 0, -0.5) * XMMatrixRotationX(theta);
 }
 
 int main()
@@ -465,7 +495,7 @@ int main()
   for (uint32_t i = 0; i < maxFramesInFlight; i++) {
     VkBufferCreateInfo shaderBufferCreateInfo{
       .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-      .size = sizeof(ShaderData),
+      .size = (sizeof (ShaderData)),
       .usage = VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
       .sharingMode = VK_SHARING_MODE_EXCLUSIVE
     };
@@ -498,6 +528,10 @@ int main()
       .buffer = shaderDataBuffers[i].buffer
     };
     shaderDataBuffers[i].deviceAddress = vkGetBufferDeviceAddress(device, &shaderBufferDeviceAddressInfo);
+    void * mappedData;
+    VK_CHECK(vkMapMemory(device, shaderBufferMemory, 0, (sizeof (ShaderData)), 0, &mappedData));
+    shaderDataBuffers[i].memory = shaderBufferMemory;
+    shaderDataBuffers[i].mappedData = mappedData;
   }
 
   //////////////////////////////////////////////////////////////////////
@@ -564,7 +598,7 @@ int main()
 
   VkPushConstantRange pushConstantRange{
     .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
-    .size = sizeof(VkDeviceAddress)
+    .size = (sizeof (VkDeviceAddress))
   };
   VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{
     .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
@@ -702,6 +736,12 @@ int main()
     // acquire next image
     VK_CHECK_SWAPCHAIN(vkAcquireNextImageKHR(device, swapchain, UINT64_MAX, presentSemaphores[frameIndex], VK_NULL_HANDLE, &imageIndex));
 
+    // shader data
+    XMStoreFloat4x4(&shaderData.projection, currentProjection());
+    XMStoreFloat4x4(&shaderData.view, currentView());
+    XMStoreFloat4x4(&shaderData.model, currentModel());
+    memcpy(shaderDataBuffers[frameIndex].mappedData, &shaderData, (sizeof (ShaderData)));
+
     // command buffer
     VkCommandBuffer& commandBuffer = commandBuffers[frameIndex];
     VK_CHECK(vkResetCommandBuffer(commandBuffer, 0));
@@ -793,8 +833,8 @@ int main()
     vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexIndexBuffer, &vertexOffset);
     VkDeviceSize indexOffset{ vtxBufferSize };
     vkCmdBindIndexBuffer(commandBuffer, vertexIndexBuffer, indexOffset, VK_INDEX_TYPE_UINT32);
-    vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(VkDeviceAddress), &shaderDataBuffers[frameIndex].deviceAddress);
-    VkDeviceSize indexCount{ 3 };
+    vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, (sizeof (VkDeviceAddress)), &shaderDataBuffers[frameIndex].deviceAddress);
+    VkDeviceSize indexCount{ 9216 };
     vkCmdDrawIndexed(commandBuffer, indexCount, 3, 0, 0, 0);
     vkCmdEndRendering(commandBuffer);
 
