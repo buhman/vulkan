@@ -67,7 +67,7 @@ extern "C" {
 #define VK_CHECK_SWAPCHAIN(f) \
   { \
     VkResult result = (f); \
-    if (result == VK_ERROR_OUT_OF_DATE_KHR) { \
+    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) { \
       updateSwapchain = true; \
     } else if (result != VK_SUCCESS) { \
       fprintf(stderr, "VK: %s %s L%d error: `%s`\n", __FILE__, __func__, __LINE__, string_VkResult(result)); \
@@ -98,11 +98,13 @@ VkQueue queue{ VK_NULL_HANDLE };
 VkSurfaceKHR surface{ VK_NULL_HANDLE };
 VkSwapchainKHR swapchain{ VK_NULL_HANDLE };
 
+uint32_t swapchainImageCount{ 0 };
 VkImage * swapchainImages{ nullptr };
 VkImageView * swapchainImageViews{ nullptr };
 
 VkImage depthImage{ VK_NULL_HANDLE };
 VkImageView depthImageView{ VK_NULL_HANDLE };
+VkDeviceMemory depthImageMemory{ VK_NULL_HANDLE };
 
 VkBuffer vertexIndexBuffer{ VK_NULL_HANDLE };
 
@@ -176,7 +178,7 @@ uint32_t findMemoryTypeIndex(VkPhysicalDeviceMemoryProperties const * memoryProp
 XMMATRIX currentProjection()
 {
   float fov_angle_y = XMConvertToRadians(45 * 1.0);
-  float aspect_ratio = windowSize.x / windowSize.y;
+  float aspect_ratio = (float)windowSize.x / (float)windowSize.y;
   float near_z = 0.1;
   float far_z = 100.0;
   XMMATRIX projection = XMMatrixPerspectiveFovRH(fov_angle_y, aspect_ratio, near_z, far_z);
@@ -198,6 +200,131 @@ XMMATRIX currentModel()
 {
   theta += 0.01;
   return XMMatrixTranslation(0, 0, -0.5) * XMMatrixRotationX(theta);
+}
+
+void recreateSwapchain(VkSurfaceFormatKHR surfaceFormat, VkFormat depthFormat, VkPhysicalDeviceMemoryProperties2 const & memoryProperties, VkSurfaceCapabilitiesKHR const & surfaceCapabilities)
+{
+  //////////////////////////////////////////////////////////////////////
+  // swapchain and images
+  //////////////////////////////////////////////////////////////////////
+
+  VkExtent2D imageExtent {
+    .width = surfaceCapabilities.currentExtent.width,
+    .height = surfaceCapabilities.currentExtent.height,
+  };
+  VkFormat imageFormat{ surfaceFormat.format };
+  VkColorSpaceKHR imageColorSpace{ surfaceFormat.colorSpace };
+
+  VkSwapchainCreateInfoKHR swapchainCreateInfo{
+    .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
+    .surface = surface,
+    .minImageCount = surfaceCapabilities.minImageCount,
+    .imageFormat = imageFormat,
+    .imageColorSpace = imageColorSpace,
+    .imageExtent = imageExtent,
+    .imageArrayLayers = 1,
+    .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+    .preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR,
+    .compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
+    .presentMode = VK_PRESENT_MODE_FIFO_KHR
+  };
+  if (swapchain != VK_NULL_HANDLE) {
+    swapchainCreateInfo.oldSwapchain = swapchain;
+  }
+  VK_CHECK(vkCreateSwapchainKHR(device, &swapchainCreateInfo, nullptr, &swapchain));
+
+  if (swapchainImages != nullptr) {
+    free(swapchainImages);
+  }
+  if (swapchainImageViews != nullptr) {
+    for (uint32_t i = 0; i < swapchainImageCount; i++) {
+      vkDestroyImageView(device, swapchainImageViews[i], nullptr);
+    }
+    free(swapchainImageViews);
+  }
+
+  VK_CHECK(vkGetSwapchainImagesKHR(device, swapchain, &swapchainImageCount, nullptr));
+  swapchainImages = NewM<VkImage>(swapchainImageCount);
+  VK_CHECK(vkGetSwapchainImagesKHR(device, swapchain, &swapchainImageCount, swapchainImages));
+  swapchainImageViews = NewM<VkImageView>(swapchainImageCount);
+  for (uint32_t i = 0; i < swapchainImageCount; i++) {
+    VkImageViewCreateInfo imageViewCreateInfo{
+      .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+      .image = swapchainImages[i],
+      .viewType = VK_IMAGE_VIEW_TYPE_2D,
+      .format = imageFormat,
+      .subresourceRange{
+        .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+        .levelCount = 1,
+        .layerCount = 1
+      }
+    };
+    VK_CHECK(vkCreateImageView(device, &imageViewCreateInfo, nullptr, &swapchainImageViews[i]));
+  }
+
+  if (swapchainCreateInfo.oldSwapchain != nullptr) {
+    vkDestroySwapchainKHR(device, swapchainCreateInfo.oldSwapchain, nullptr);
+  }
+
+  //////////////////////////////////////////////////////////////////////
+  // depth
+  //////////////////////////////////////////////////////////////////////
+
+  if (depthImage != VK_NULL_HANDLE) {
+    vkDestroyImage(device, depthImage, nullptr);
+  }
+  if (depthImageMemory != VK_NULL_HANDLE) {
+    vkFreeMemory(device, depthImageMemory, nullptr);
+  }
+  if (depthImageView != VK_NULL_HANDLE) {
+    vkDestroyImageView(device, depthImageView, nullptr);
+  }
+
+  VkImageCreateInfo depthImageCreateInfo{
+    .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+    .imageType = VK_IMAGE_TYPE_2D,
+    .format = depthFormat,
+    .extent{
+      .width = imageExtent.width,
+      .height = imageExtent.height,
+      .depth = 1,
+    },
+    .mipLevels = 1,
+    .arrayLayers = 1,
+    .samples = VK_SAMPLE_COUNT_1_BIT,
+    .tiling = VK_IMAGE_TILING_OPTIMAL,
+    .usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+    .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+  };
+  VK_CHECK(vkCreateImage(device, &depthImageCreateInfo, nullptr, &depthImage));
+
+  VkMemoryRequirements depthImageMemoryRequirements;
+  vkGetImageMemoryRequirements(device, depthImage, &depthImageMemoryRequirements);
+  VkMemoryPropertyFlags depthImageMemoryPropertyFlags{
+    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+  };
+  uint32_t depthImageMemoryTypeIndex = findMemoryTypeIndex(&memoryProperties.memoryProperties, depthImageMemoryRequirements.memoryTypeBits, depthImageMemoryPropertyFlags);
+  VkMemoryAllocateInfo depthImageAllocateInfo{
+    .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+    .allocationSize = depthImageMemoryRequirements.size,
+    .memoryTypeIndex = depthImageMemoryTypeIndex,
+  };
+
+  VK_CHECK(vkAllocateMemory(device, &depthImageAllocateInfo, nullptr, &depthImageMemory));
+  VK_CHECK(vkBindImageMemory(device, depthImage, depthImageMemory, 0));
+
+  VkImageViewCreateInfo depthViewCreateInfo{
+    .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+    .image = depthImage,
+    .viewType = VK_IMAGE_VIEW_TYPE_2D,
+    .format = depthFormat,
+    .subresourceRange{
+      .aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT,
+      .levelCount = 1,
+      .layerCount = 1
+    }
+  };
+  VK_CHECK(vkCreateImageView(device, &depthViewCreateInfo, nullptr, &depthImageView));
 }
 
 int main()
@@ -346,6 +473,9 @@ int main()
   VkSurfaceCapabilitiesKHR surfaceCapabilities{};
   VK_CHECK(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &surfaceCapabilities));
   printf("surfaceCapabilities currentExtent %d %d\n", surfaceCapabilities.currentExtent.width, surfaceCapabilities.currentExtent.height);
+
+  // surface format
+
   uint32_t surfaceFormatCount{ 0 };
   VK_CHECK(vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &surfaceFormatCount, nullptr));
   VkSurfaceFormatKHR * surfaceFormats = NewM<VkSurfaceFormatKHR>(surfaceFormatCount);
@@ -355,56 +485,10 @@ int main()
   for (uint32_t i = 0; i < surfaceFormatCount; i++) {
     printf("surfaceFormat[%d] %s %s%s\n", i, string_VkFormat(surfaceFormats[i].format), string_VkColorSpaceKHR(surfaceFormats[i].colorSpace), (i == surfaceFormatIndex) ? " [selected]" : "");
   }
-
-  //////////////////////////////////////////////////////////////////////
-  // swapchain and images
-  //////////////////////////////////////////////////////////////////////
-
-  VkExtent2D imageExtent {
-    .width = surfaceCapabilities.currentExtent.width,
-    .height = surfaceCapabilities.currentExtent.height,
-  };
-  VkFormat imageFormat{ surfaceFormats[surfaceFormatIndex].format };
-  VkColorSpaceKHR imageColorSpace{ surfaceFormats[surfaceFormatIndex].colorSpace };
+  VkSurfaceFormatKHR surfaceFormat = surfaceFormats[surfaceFormatIndex];
   free(surfaceFormats);
-  VkSwapchainCreateInfoKHR swapchainCreateInfo{
-    .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
-    .surface = surface,
-    .minImageCount = surfaceCapabilities.minImageCount,
-    .imageFormat = imageFormat,
-    .imageColorSpace = imageColorSpace,
-    .imageExtent = imageExtent,
-    .imageArrayLayers = 1,
-    .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
-    .preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR,
-    .compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
-    .presentMode = VK_PRESENT_MODE_FIFO_KHR
-  };
-  VK_CHECK(vkCreateSwapchainKHR(device, &swapchainCreateInfo, nullptr, &swapchain));
 
-  uint32_t swapchainImageCount{ 0 };
-  VK_CHECK(vkGetSwapchainImagesKHR(device, swapchain, &swapchainImageCount, nullptr));
-  swapchainImages = NewM<VkImage>(swapchainImageCount);
-  VK_CHECK(vkGetSwapchainImagesKHR(device, swapchain, &swapchainImageCount, swapchainImages));
-  swapchainImageViews = NewM<VkImageView>(swapchainImageCount);
-  for (uint32_t i = 0; i < swapchainImageCount; i++) {
-    VkImageViewCreateInfo imageViewCreateInfo{
-      .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-      .image = swapchainImages[i],
-      .viewType = VK_IMAGE_VIEW_TYPE_2D,
-      .format = imageFormat,
-      .subresourceRange{
-        .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-        .levelCount = 1,
-        .layerCount = 1
-      }
-    };
-    VK_CHECK(vkCreateImageView(device, &imageViewCreateInfo, nullptr, &swapchainImageViews[i]));
-  }
-
-  //////////////////////////////////////////////////////////////////////
-  // depth
-  //////////////////////////////////////////////////////////////////////
+  // depth format
 
   VkFormat depthFormat{ VK_FORMAT_UNDEFINED };
   constexpr uint32_t depthFormatCount = 2;
@@ -420,51 +504,7 @@ int main()
   ASSERT(depthFormat != VK_FORMAT_UNDEFINED, "no depth format with VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT");
   printf("depthFormat: %s\n", string_VkFormat(depthFormat));
 
-  VkImageCreateInfo depthImageCreateInfo{
-    .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
-    .imageType = VK_IMAGE_TYPE_2D,
-    .format = depthFormat,
-    .extent{
-      .width = imageExtent.width,
-      .height = imageExtent.height,
-      .depth = 1,
-    },
-    .mipLevels = 1,
-    .arrayLayers = 1,
-    .samples = VK_SAMPLE_COUNT_1_BIT,
-    .tiling = VK_IMAGE_TILING_OPTIMAL,
-    .usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-    .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-  };
-  VK_CHECK(vkCreateImage(device, &depthImageCreateInfo, nullptr, &depthImage));
-
-  VkMemoryRequirements depthImageMemoryRequirements;
-  vkGetImageMemoryRequirements(device, depthImage, &depthImageMemoryRequirements);
-  VkMemoryPropertyFlags depthImageMemoryPropertyFlags{
-    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
-  };
-  uint32_t depthImageMemoryTypeIndex = findMemoryTypeIndex(&memoryProperties.memoryProperties, depthImageMemoryRequirements.memoryTypeBits, depthImageMemoryPropertyFlags);
-  VkMemoryAllocateInfo depthImageAllocateInfo{
-    .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
-    .allocationSize = depthImageMemoryRequirements.size,
-    .memoryTypeIndex = depthImageMemoryTypeIndex,
-  };
-  VkDeviceMemory depthImageMemory;
-  VK_CHECK(vkAllocateMemory(device, &depthImageAllocateInfo, nullptr, &depthImageMemory));
-  VK_CHECK(vkBindImageMemory(device, depthImage, depthImageMemory, 0));
-
-  VkImageViewCreateInfo depthViewCreateInfo{
-    .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-    .image = depthImage,
-    .viewType = VK_IMAGE_VIEW_TYPE_2D,
-    .format = depthFormat,
-    .subresourceRange{
-      .aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT,
-      .levelCount = 1,
-      .layerCount = 1
-    }
-  };
-  VK_CHECK(vkCreateImageView(device, &depthViewCreateInfo, nullptr, &depthImageView));
+  recreateSwapchain(surfaceFormat, depthFormat, memoryProperties, surfaceCapabilities);
 
   //////////////////////////////////////////////////////////////////////
   // mesh
@@ -521,7 +561,7 @@ int main()
     VkMemoryPropertyFlags shaderBufferMemoryPropertyFlags{
       VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
     };
-    uint32_t shaderBufferMemoryTypeIndex = findMemoryTypeIndex(&memoryProperties.memoryProperties, depthImageMemoryRequirements.memoryTypeBits, shaderBufferMemoryPropertyFlags);
+    uint32_t shaderBufferMemoryTypeIndex = findMemoryTypeIndex(&memoryProperties.memoryProperties, shaderBufferMemoryRequirements.memoryTypeBits, shaderBufferMemoryPropertyFlags);
     VkMemoryAllocateFlagsInfo shaderBufferAllocateFlagsInfo{
       .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO,
       .flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT,
@@ -930,7 +970,7 @@ int main()
   VkPipelineRenderingCreateInfo renderingCreateInfo{
     .sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
     .colorAttachmentCount = 1,
-    .pColorAttachmentFormats = &imageFormat,
+    .pColorAttachmentFormats = &surfaceFormat.format,
     .depthAttachmentFormat = depthFormat
   };
 
@@ -981,6 +1021,9 @@ int main()
     while (SDL_PollEvent(&event)) {
       if (event.type == SDL_EVENT_QUIT) {
         quit = true;
+      }
+      if (event.type == SDL_EVENT_WINDOW_RESIZED) {
+        SDL_CHECK(SDL_GetWindowSize(window, &windowSize.x, &windowSize.y));
       }
     }
 
@@ -1064,7 +1107,7 @@ int main()
 
     VkRenderingInfo renderingInfo{
       .sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
-      .renderArea{ .extent{ .width = (uint32_t)windowSize.x, .height = (uint32_t)windowSize.y } },
+      .renderArea{ .extent{ .width = surfaceCapabilities.currentExtent.width, .height = surfaceCapabilities.currentExtent.height } },
       .layerCount = 1,
       .colorAttachmentCount = 1,
       .pColorAttachments = &colorRenderingAttachmentInfo,
@@ -1140,6 +1183,14 @@ int main()
     };
     VK_CHECK_SWAPCHAIN(vkQueuePresentKHR(queue, &presentInfo));
 
-    assert(updateSwapchain == 0);
+    if (updateSwapchain) {
+      //////////////////////////////////////////////////////////////////////
+      // recreate swapchain
+      //////////////////////////////////////////////////////////////////////
+      updateSwapchain = false;
+      VK_CHECK(vkDeviceWaitIdle(device));
+      VK_CHECK(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &surfaceCapabilities));
+      recreateSwapchain(surfaceFormat, depthFormat, memoryProperties, surfaceCapabilities);
+    }
   }
 }
