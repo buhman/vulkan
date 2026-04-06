@@ -19,6 +19,9 @@ extern "C" {
   extern void * const _binary_shader_triangle_vs_spv_size;
   extern uint8_t const _binary_shader_triangle_ps_spv_start[];
   extern void * const _binary_shader_triangle_ps_spv_size;
+
+  extern uint8_t const _binary_sprite_data_start[];
+  extern void * const _binary_sprite_data_size;
 }
 
 #define vtx_start _binary_position_normal_texture_vtx_start
@@ -30,6 +33,9 @@ extern "C" {
 #define vs_size (size_t)(&_binary_shader_triangle_vs_spv_size)
 #define ps_start _binary_shader_triangle_ps_spv_start
 #define ps_size (size_t)(&_binary_shader_triangle_ps_spv_size)
+
+#define sprite_start _binary_sprite_data_start
+#define sprite_size (size_t)(&_binary_sprite_data_size)
 
 #define SDL_CHECK(f) \
   { \
@@ -109,6 +115,14 @@ VkCommandBuffer commandBuffers[maxFramesInFlight];
 
 VkPipeline pipeline{ VK_NULL_HANDLE };
 VkPipelineLayout pipelineLayout{ VK_NULL_HANDLE };
+
+VkImage textureImage{ VK_NULL_HANDLE };
+VkImageView textureImageView{ VK_NULL_HANDLE };
+VkSampler textureSampler{ VK_NULL_HANDLE };
+
+VkDescriptorPool descriptorPool{ VK_NULL_HANDLE };
+VkDescriptorSetLayout textureDescriptorSetLayout{ VK_NULL_HANDLE };
+VkDescriptorSet textureDescriptorSet{ VK_NULL_HANDLE };
 
 XMINT2 windowSize{};
 
@@ -422,7 +436,6 @@ int main()
     .usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
     .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
   };
-
   VK_CHECK(vkCreateImage(device, &depthImageCreateInfo, nullptr, &depthImage));
 
   VkMemoryRequirements depthImageMemoryRequirements;
@@ -482,10 +495,10 @@ int main()
   VK_CHECK(vkAllocateMemory(device, &vertexIndexBufferAllocateInfo, nullptr, &vertexIndexBufferMemory));
   VK_CHECK(vkBindBufferMemory(device, vertexIndexBuffer, vertexIndexBufferMemory, 0));
 
-  void * mappedData;
-  VK_CHECK(vkMapMemory(device, vertexIndexBufferMemory, 0, vertexIndexBufferCreateInfo.size, 0, &mappedData));
-  memcpy((void *)(((ptrdiff_t)mappedData) + 0), vtx_start, vtx_size);
-  memcpy((void *)(((ptrdiff_t)mappedData) + vtx_size), idx_start, idx_size);
+  void * vertexIndexMappedData;
+  VK_CHECK(vkMapMemory(device, vertexIndexBufferMemory, 0, vertexIndexBufferCreateInfo.size, 0, &vertexIndexMappedData));
+  memcpy((void *)(((ptrdiff_t)vertexIndexMappedData) + 0), vtx_start, vtx_size);
+  memcpy((void *)(((ptrdiff_t)vertexIndexMappedData) + vtx_size), idx_start, idx_size);
   vkUnmapMemory(device, vertexIndexBufferMemory);
 
   //////////////////////////////////////////////////////////////////////
@@ -573,6 +586,250 @@ int main()
   VK_CHECK(vkAllocateCommandBuffers(device, &commandBufferAllocateCreateInfo, commandBuffers));
 
   //////////////////////////////////////////////////////////////////////
+  // texture
+  //////////////////////////////////////////////////////////////////////
+
+  VkFormat textureFormat{ VK_FORMAT_B8G8R8A8_SRGB };
+
+  VkImageCreateInfo textureImageCreateInfo{
+    .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+    .imageType = VK_IMAGE_TYPE_2D,
+    .format = textureFormat,
+    .extent = {.width = 858, .height = 858, .depth = 1 },
+    .mipLevels = 1,
+    .arrayLayers = 1,
+    .samples = VK_SAMPLE_COUNT_1_BIT,
+    .tiling = VK_IMAGE_TILING_OPTIMAL,
+    .usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+    .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED
+  };
+  VK_CHECK(vkCreateImage(device, &textureImageCreateInfo, nullptr, &textureImage));
+
+  VkMemoryRequirements textureImageMemoryRequirements;
+  vkGetImageMemoryRequirements(device, textureImage, &textureImageMemoryRequirements);
+  VkMemoryPropertyFlags textureImageMemoryPropertyFlags{
+    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+  };
+  uint32_t textureImageMemoryTypeIndex = findMemoryTypeIndex(&memoryProperties.memoryProperties, textureImageMemoryRequirements.memoryTypeBits, textureImageMemoryPropertyFlags);
+
+  VkMemoryAllocateInfo textureImageAllocateInfo{
+    .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+    .allocationSize = textureImageMemoryRequirements.size,
+    .memoryTypeIndex = textureImageMemoryTypeIndex,
+  };
+
+  VkDeviceMemory textureImageMemory;
+  VK_CHECK(vkAllocateMemory(device, &textureImageAllocateInfo, nullptr, &textureImageMemory));
+  VK_CHECK(vkBindImageMemory(device, textureImage, textureImageMemory, 0));
+
+  VkImageViewCreateInfo textureViewCreateInfo{
+    .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+    .image = textureImage,
+    .viewType = VK_IMAGE_VIEW_TYPE_2D,
+    .format = textureFormat,
+    .subresourceRange{
+      .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+      .levelCount = 1,
+      .layerCount = 1
+    }
+  };
+  VK_CHECK(vkCreateImageView(device, &textureViewCreateInfo, nullptr, &textureImageView));
+
+  // texture transfer: source buffer
+
+  VkBuffer textureSourceBuffer{};
+  VkBufferCreateInfo textureSourceBufferCreateInfo{
+    .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+    .size = sprite_size,
+    .usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT
+  };
+  VK_CHECK(vkCreateBuffer(device, &textureSourceBufferCreateInfo, nullptr, &textureSourceBuffer));
+  VkMemoryRequirements textureSourceBufferMemoryRequirements;
+  vkGetBufferMemoryRequirements(device, textureSourceBuffer, &textureSourceBufferMemoryRequirements);
+  VkMemoryPropertyFlags textureSourceBufferMemoryPropertyFlags{
+    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+  };
+  uint32_t textureSourceBufferMemoryTypeIndex = findMemoryTypeIndex(&memoryProperties.memoryProperties, textureSourceBufferMemoryRequirements.memoryTypeBits, textureSourceBufferMemoryPropertyFlags);
+  VkMemoryAllocateInfo textureSourceBufferAllocateInfo{
+    .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+    .allocationSize = textureSourceBufferMemoryRequirements.size,
+    .memoryTypeIndex = textureSourceBufferMemoryTypeIndex,
+  };
+  VkDeviceMemory textureSourceBufferMemory;
+  VK_CHECK(vkAllocateMemory(device, &textureSourceBufferAllocateInfo, nullptr, &textureSourceBufferMemory));
+  VK_CHECK(vkBindBufferMemory(device, textureSourceBuffer, textureSourceBufferMemory, 0));
+
+  void * textureSourceMappedData;
+  VK_CHECK(vkMapMemory(device, textureSourceBufferMemory, 0, textureSourceBufferCreateInfo.size, 0, &textureSourceMappedData));
+  memcpy((void *)(((ptrdiff_t)textureSourceMappedData) + 0), sprite_start, sprite_size);
+  vkUnmapMemory(device, textureSourceBufferMemory);
+
+  VkFenceCreateInfo textureFenceCreateInfo{
+    .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO
+  };
+  VkFence textureFence{};
+  VK_CHECK(vkCreateFence(device, &textureFenceCreateInfo, nullptr, &textureFence));
+
+  // texture transfer: command buffer
+
+  VkCommandBuffer textureCommandBuffer{};
+  VkCommandBufferAllocateInfo textureCommandBufferAllocateInfo{
+    .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+    .commandPool = commandPool,
+    .commandBufferCount = 1
+  };
+  VK_CHECK(vkAllocateCommandBuffers(device, &textureCommandBufferAllocateInfo, &textureCommandBuffer));
+
+  VkCommandBufferBeginInfo textureCommandBufferBeginInfo{
+    .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+    .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT
+  };
+  VK_CHECK(vkBeginCommandBuffer(textureCommandBuffer, &textureCommandBufferBeginInfo));
+  VkImageMemoryBarrier2 barrierTextureImage{
+    .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
+    .srcStageMask = VK_PIPELINE_STAGE_2_NONE,
+    .srcAccessMask = VK_ACCESS_2_NONE,
+    .dstStageMask = VK_PIPELINE_STAGE_2_TRANSFER_BIT,
+    .dstAccessMask = VK_ACCESS_2_TRANSFER_WRITE_BIT,
+    .oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+    .newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+    .image = textureImage,
+    .subresourceRange = {
+      .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+      .levelCount = 1,
+      .layerCount = 1
+    }
+  };
+  VkDependencyInfo barrierTextureImageDependencyInfo{
+    .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
+    .imageMemoryBarrierCount = 1,
+    .pImageMemoryBarriers = &barrierTextureImage
+  };
+  vkCmdPipelineBarrier2(textureCommandBuffer, &barrierTextureImageDependencyInfo);
+  VkBufferImageCopy copyRegion{
+    .bufferOffset = 0,
+    .imageSubresource{
+      .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+      .mipLevel = 0,
+      .layerCount = 1
+    },
+    .imageExtent{ .width = 858, .height = 858, .depth = 1 },
+  };
+  vkCmdCopyBufferToImage(textureCommandBuffer, textureSourceBuffer, textureImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copyRegion);
+
+  VkImageMemoryBarrier2 barrierTextureRead{
+    .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
+    .srcStageMask = VK_PIPELINE_STAGE_TRANSFER_BIT,
+    .srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
+    .dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+    .dstAccessMask = VK_ACCESS_SHADER_READ_BIT,
+    .oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+    .newLayout = VK_IMAGE_LAYOUT_READ_ONLY_OPTIMAL,
+    .image = textureImage,
+    .subresourceRange = { .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, .levelCount = 1, .layerCount = 1 }
+  };
+  VkDependencyInfo barrierTextureReadDependencyInfo{
+    .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
+    .imageMemoryBarrierCount = 1,
+    .pImageMemoryBarriers = &barrierTextureRead
+  };
+  vkCmdPipelineBarrier2(textureCommandBuffer, &barrierTextureReadDependencyInfo);
+
+  VK_CHECK(vkEndCommandBuffer(textureCommandBuffer));
+
+  VkSubmitInfo textureSubmitInfo{
+    .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+    .commandBufferCount = 1,
+    .pCommandBuffers = &textureCommandBuffer
+  };
+  VK_CHECK(vkQueueSubmit(queue, 1, &textureSubmitInfo, textureFence));
+  VK_CHECK(vkWaitForFences(device, 1, &textureFence, VK_TRUE, UINT64_MAX));
+
+  // texture sampler
+
+  VkSamplerCreateInfo samplerCreateInfo{
+    .sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
+    .magFilter = VK_FILTER_LINEAR,
+    .minFilter = VK_FILTER_LINEAR,
+    .mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR,
+    .anisotropyEnable = VK_FALSE,
+    .maxLod = 1,
+  };
+  VK_CHECK(vkCreateSampler(device, &samplerCreateInfo, nullptr, &textureSampler));
+
+  VkDescriptorImageInfo textureDescriptorImageInfo = {
+    .sampler = textureSampler,
+    .imageView = textureImageView,
+    .imageLayout = VK_IMAGE_LAYOUT_READ_ONLY_OPTIMAL
+  };
+
+  //////////////////////////////////////////////////////////////////////
+  // descriptors
+  //////////////////////////////////////////////////////////////////////
+
+  VkDescriptorBindingFlags descriptorBindingFlags{ VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT };
+  VkDescriptorSetLayoutBindingFlagsCreateInfo descriptorSetLayoutBindingFlagsCreateInfo{
+    .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO,
+    .bindingCount = 1,
+    .pBindingFlags = &descriptorBindingFlags
+  };
+  VkDescriptorSetLayoutBinding textureDescriptorSetLayoutBinding{
+    .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+    .descriptorCount = 1,
+    .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT
+  };
+  VkDescriptorSetLayoutCreateInfo textureDescriptorSetLayoutCreateInfo{
+    .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+    .pNext = &descriptorSetLayoutBindingFlagsCreateInfo,
+    .bindingCount = 1,
+    .pBindings = &textureDescriptorSetLayoutBinding
+  };
+  VK_CHECK(vkCreateDescriptorSetLayout(device, &textureDescriptorSetLayoutCreateInfo, nullptr, &textureDescriptorSetLayout));
+
+  // pool
+
+  VkDescriptorPoolSize poolSize{
+    .type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+    .descriptorCount = 1,
+  };
+  VkDescriptorPoolCreateInfo descriptorPoolCreateInfo{
+    .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+    .maxSets = 1,
+    .poolSizeCount = 1,
+    .pPoolSizes = &poolSize
+  };
+  VK_CHECK(vkCreateDescriptorPool(device, &descriptorPoolCreateInfo, nullptr, &descriptorPool));
+
+  //
+
+  uint32_t variableDescriptorCount{ 1 };
+  VkDescriptorSetVariableDescriptorCountAllocateInfo descriptorSetVariableDescriptorCountAllocateInfo{
+    .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_ALLOCATE_INFO_EXT,
+    .descriptorSetCount = 1,
+    .pDescriptorCounts = &variableDescriptorCount
+  };
+  VkDescriptorSetAllocateInfo descriptorSetAllocateInfo{
+    .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+    .pNext = &descriptorSetVariableDescriptorCountAllocateInfo,
+    .descriptorPool = descriptorPool,
+    .descriptorSetCount = 1,
+    .pSetLayouts = &textureDescriptorSetLayout
+  };
+  VK_CHECK(vkAllocateDescriptorSets(device, &descriptorSetAllocateInfo, &textureDescriptorSet));
+
+  //
+
+  VkWriteDescriptorSet writeDescriptorSet{
+    .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+    .dstSet = textureDescriptorSet,
+    .dstBinding = 0,
+    .descriptorCount = 1,
+    .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+    .pImageInfo = &textureDescriptorImageInfo
+  };
+  vkUpdateDescriptorSets(device, 1, &writeDescriptorSet, 0, nullptr);
+
+  //////////////////////////////////////////////////////////////////////
   // shaders
   //////////////////////////////////////////////////////////////////////
 
@@ -602,10 +859,8 @@ int main()
   };
   VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{
     .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-    .setLayoutCount = 0,
-    .pSetLayouts = nullptr,
-    //.setLayoutCount = 1,
-    //.pSetLayouts = &descriptorSetLayoutTex,
+    .setLayoutCount = 1,
+    .pSetLayouts = &textureDescriptorSetLayout,
     .pushConstantRangeCount = 1,
     .pPushConstantRanges = &pushConstantRange
   };
@@ -829,7 +1084,7 @@ int main()
 
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
     VkDeviceSize vertexOffset{ 0 };
-    //vkCmdBindDescriptorSets(cb, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSetTex, 0, nullptr);
+    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &textureDescriptorSet, 0, nullptr);
     vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexIndexBuffer, &vertexOffset);
     VkDeviceSize indexOffset{ vtxBufferSize };
     vkCmdBindIndexBuffer(commandBuffer, vertexIndexBuffer, indexOffset, VK_INDEX_TYPE_UINT32);

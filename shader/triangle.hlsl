@@ -9,6 +9,7 @@ struct VSOutput
 {
   float4 Position : SV_POSITION;
   float3 Normal : NORMAL0;
+  float2 Texture : TEXCOORD0;
 };
 
 struct ShaderData
@@ -27,6 +28,9 @@ struct PushConstant {
 [[vk::push_constant]]
 struct PushConstant constants;
 
+[[vk::binding(0)]] SamplerState samplers[];
+[[vk::binding(0)]] Texture2D textures[];
+
 [shader("vertex")]
 VSOutput VSMain(VSInput input)
 {
@@ -34,11 +38,14 @@ VSOutput VSMain(VSInput input)
   output.Position = mul(constants.data.Get().Projection, mul(constants.data.Get().View, mul(constants.data.Get().Model, float4(input.Position.xyz, 1.0))));
   //output.Normal = mul((float3x3)constants.data.Get().Model, input.Normal);
   output.Normal = input.Normal * 0.5 + 0.5;
+  output.Texture = input.Texture.xy;
   return output;
 }
 
 [shader("pixel")]
 float4 PSMain(VSOutput input) : SV_TARGET
 {
-  return float4(input.Normal, 1.0);
+  float3 color = textures[0].Sample(samplers[0], input.Texture).bgr;
+
+  return float4(color, 1.0);
 }

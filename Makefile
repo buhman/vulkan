@@ -22,7 +22,7 @@ CFLAGS += -I../SDL3-dist/include
 CFLAGS += -I../volk
 CFLAGS += -fpic
 
-FLAGS += -fstack-protector -fstack-protector-all -fno-omit-frame-pointer -fsanitize=address
+#FLAGS += -fstack-protector -fstack-protector-all -fno-omit-frame-pointer -fsanitize=address
 
 LDFLAGS += -lm
 ifeq ($(shell uname),Linux)
@@ -34,7 +34,8 @@ OBJS = \
 
 BINS = \
 	index.idx.o \
-	position_normal_texture.vtx.o
+	position_normal_texture.vtx.o \
+	sprite.data.o
 
 SHADERS = \
 	shader/triangle.vs.spv.o \
@@ -57,6 +58,9 @@ endef
 	$(BUILD_BINARY_O)
 
 %.spv.o: %.spv
+	$(BUILD_BINARY_O)
+
+%.data.o: %.data
 	$(BUILD_BINARY_O)
 
 %.o: %.c
