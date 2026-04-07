@@ -129,12 +129,10 @@ VkDescriptorSet textureDescriptorSet{ VK_NULL_HANDLE };
 XMINT2 windowSize{};
 
 struct ShaderData {
-  XMFLOAT4X4 projection;
-  XMFLOAT4X4 view;
-  XMFLOAT4X4 model;
-  //XMFLOAT4X4 model[3];
-  XMFLOAT4 lightPosition{ 0.0f, -10.0f, 10.0f, 0.0f };
-  uint32_t selected{ 1 };
+  XMFLOAT4X4 transform;
+  XMFLOAT4X4 modelView;
+  XMFLOAT4 lightPosition;
+  uint32_t selected;
 };
 
 ShaderData shaderData{};
@@ -1191,9 +1189,15 @@ int main()
     VK_CHECK_SWAPCHAIN(vkAcquireNextImageKHR(device, swapchain, UINT64_MAX, presentSemaphores[frameIndex], VK_NULL_HANDLE, &imageIndex));
 
     // shader data
-    XMStoreFloat4x4(&shaderData.projection, currentProjection());
-    XMStoreFloat4x4(&shaderData.view, currentView());
-    XMStoreFloat4x4(&shaderData.model, currentModel());
+    XMMATRIX model = currentModel();
+    XMMATRIX view = currentView();
+    XMMATRIX modelView = model * view;
+    XMMATRIX transform = modelView * currentProjection();
+    XMStoreFloat4x4(&shaderData.transform, transform);
+    XMStoreFloat4x4(&shaderData.modelView, modelView);
+    XMVECTOR lightPosition = XMVector3Transform(XMVectorSet(-3, -3, 0, 0), view);
+    XMStoreFloat4(&shaderData.lightPosition, lightPosition);
+
     size_t frameOffset = shaderDataDevice.stride * frameIndex;
     void * frameData = (void *)(((VkDeviceSize)shaderDataDevice.mappedData) + frameOffset);
     VkDeviceSize frameSize{ (sizeof (ShaderData)) };
