@@ -1,5 +1,4 @@
-shader/triangle.vs.spv
-shader/triangle.ps.spv
+shader/triangle.spv
 index.idx
 position_normal_texture.vtx
 sprite.data

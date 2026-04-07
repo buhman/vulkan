@@ -49,3 +49,25 @@ float4 PSMain(VSOutput input) : SV_TARGET
 
   return float4(color, 1.0);
 }
+
+struct VSOutlineOutput
+{
+  float4 Position : SV_POSITION;
+  float3 Normal : NORMAL0;
+};
+
+[shader("vertex")]
+VSOutlineOutput VSOutlineMain(VSInput input)
+{
+  VSOutlineOutput output = (VSOutlineOutput)0;
+  float3 position = input.Position.xyz + input.Normal.xyz * 0.01;
+  output.Position = mul(constants.data.Get().Projection, mul(constants.data.Get().View, mul(constants.data.Get().Model, float4(position, 1.0))));
+  output.Normal = input.Normal;
+  return output;
+}
+
+[shader("pixel")]
+float4 PSOutlineMain(VSOutlineOutput input) : SV_TARGET
+{
+  return float4(1.0, 1.0, 1.0, 1.0);
+}

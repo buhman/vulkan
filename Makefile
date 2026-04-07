@@ -24,7 +24,7 @@ CFLAGS += -I./include
 CFLAGS += -I../SDL3-dist/include
 CFLAGS += -fpic
 
-#FLAGS += -fstack-protector -fstack-protector-all -fno-omit-frame-pointer -fsanitize=address
+FLAGS += -fstack-protector -fstack-protector-all -fno-omit-frame-pointer -fsanitize=address
 
 LDFLAGS += -lm
 ifeq ($(UNAME),Linux)
@@ -63,14 +63,13 @@ all: main
 main: $(OBJS) $(LIBS) $(BINS) $(SHADERS)
 	$(CC) $(ARCH) $(LDFLAGS) $(FLAGS) $(OPT) $(DEBUG) $^ -o $@
 
-%.vs.spv: %.hlsl
-	../dxc/bin/dxc -spirv -T vs_6_1 -E VSMain -fspv-target-env=vulkan1.3 $< -Fo $@
-
-%.ps.spv: %.hlsl
-	../dxc/bin/dxc -spirv -T ps_6_1 -E PSMain -fspv-target-env=vulkan1.3 $< -Fo $@
+%.spv: %.hlsl
+	../dxc/bin/dxc -spirv -T lib_6_3 -fspv-target-env=vulkan1.3 $< -Fo $@
 
 tool/pack_file: tool/pack_file.cpp
 	make -C tool pack_file
+
+src/pack.o: files.pack
 
 PACK_FILENAMES = $(shell cat filenames.txt)
 files.pack: tool/pack_file $(PACK_FILENAMES) filenames.txt

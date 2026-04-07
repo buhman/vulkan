@@ -109,7 +109,12 @@ VkSemaphore * renderSemaphores{ nullptr };
 VkCommandPool commandPool{ VK_NULL_HANDLE };
 VkCommandBuffer commandBuffers[maxFramesInFlight];
 
-VkPipeline pipeline{ VK_NULL_HANDLE };
+enum {
+  MAIN_PIPELINE = 0,
+  OUTLINE_PIPELINE = 1,
+};
+
+VkPipeline pipelines[2]{ VK_NULL_HANDLE, VK_NULL_HANDLE };
 VkPipelineLayout pipelineLayout{ VK_NULL_HANDLE };
 
 VkImage textureImage{ VK_NULL_HANDLE };
@@ -959,26 +964,16 @@ int main()
   // shaders
   //////////////////////////////////////////////////////////////////////
 
-  uint32_t triangleVSSize;
-  void const * triangleVSStart = file::open("shader/triangle.vs.spv", &triangleVSSize);
-  uint32_t trianglePSSize;
-  void const * trianglePSStart = file::open("shader/triangle.ps.spv", &trianglePSSize);
+  uint32_t triangleSize;
+  void const * triangleStart = file::open("shader/triangle.spv", &triangleSize);
 
-  VkShaderModuleCreateInfo vertexShaderModuleCreateInfo{
+  VkShaderModuleCreateInfo shaderModuleCreateInfo{
     .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
-    .codeSize = triangleVSSize,
-    .pCode = (uint32_t *)triangleVSStart
+    .codeSize = triangleSize,
+    .pCode = (uint32_t *)triangleStart
   };
-  VkShaderModule vertexShaderModule{};
-  VK_CHECK(vkCreateShaderModule(device, &vertexShaderModuleCreateInfo, nullptr, &vertexShaderModule));
-
-  VkShaderModuleCreateInfo pixelShaderModuleCreateInfo{
-    .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
-    .codeSize = trianglePSSize,
-    .pCode = (uint32_t *)trianglePSStart
-  };
-  VkShaderModule pixelShaderModule{};
-  VK_CHECK(vkCreateShaderModule(device, &pixelShaderModuleCreateInfo, nullptr, &pixelShaderModule));
+  VkShaderModule shaderModule{};
+  VK_CHECK(vkCreateShaderModule(device, &shaderModuleCreateInfo, nullptr, &shaderModule));
 
   //////////////////////////////////////////////////////////////////////
   // pipeline
@@ -1026,14 +1021,29 @@ int main()
     {
       .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
       .stage = VK_SHADER_STAGE_VERTEX_BIT,
-      .module = vertexShaderModule,
+      .module = shaderModule,
       .pName = "VSMain"
     },
     {
       .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
       .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
-      .module = pixelShaderModule,
+      .module = shaderModule,
       .pName = "PSMain"
+    }
+  };
+
+  VkPipelineShaderStageCreateInfo outlineShaderStages[2]{
+    {
+      .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+      .stage = VK_SHADER_STAGE_VERTEX_BIT,
+      .module = shaderModule,
+      .pName = "VSOutlineMain"
+    },
+    {
+      .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+      .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
+      .module = shaderModule,
+      .pName = "PSOutlineMain"
     }
   };
 
@@ -1071,6 +1081,23 @@ int main()
     },
   };
 
+  VkPipelineDepthStencilStateCreateInfo outlineDepthStencilState{
+    .sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
+    .depthTestEnable = VK_TRUE,
+    .depthWriteEnable = VK_TRUE,
+    .depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL,
+    .stencilTestEnable = VK_TRUE,
+    .front = {
+      .failOp = VK_STENCIL_OP_KEEP,
+      .passOp = VK_STENCIL_OP_REPLACE,
+      .depthFailOp = VK_STENCIL_OP_KEEP,
+      .compareOp = VK_COMPARE_OP_NOT_EQUAL,
+      .compareMask = 0x01,
+      .writeMask = 0x00,
+      .reference = 1,
+    },
+  };
+
   VkPipelineRenderingCreateInfo renderingCreateInfo{
     .sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
     .colorAttachmentCount = 1,
@@ -1098,22 +1125,39 @@ int main()
     .rasterizationSamples = VK_SAMPLE_COUNT_1_BIT
   };
 
-  VkGraphicsPipelineCreateInfo pipelineCreateInfo{
-    .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
-    .pNext = &renderingCreateInfo,
-    .stageCount = 2,
-    .pStages = shaderStages,
-    .pVertexInputState = &vertexInputState,
-    .pInputAssemblyState = &inputAssemblyState,
-    .pViewportState = &viewportState,
-    .pRasterizationState = &rasterizationState,
-    .pMultisampleState = &multisampleState,
-    .pDepthStencilState = &depthStencilState,
-    .pColorBlendState = &colorBlendState,
-    .pDynamicState = &dynamicState,
-    .layout = pipelineLayout
+  VkGraphicsPipelineCreateInfo pipelineCreateInfos[2]{
+    {
+      .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
+      .pNext = &renderingCreateInfo,
+      .stageCount = 2,
+      .pStages = shaderStages,
+      .pVertexInputState = &vertexInputState,
+      .pInputAssemblyState = &inputAssemblyState,
+      .pViewportState = &viewportState,
+      .pRasterizationState = &rasterizationState,
+      .pMultisampleState = &multisampleState,
+      .pDepthStencilState = &depthStencilState,
+      .pColorBlendState = &colorBlendState,
+      .pDynamicState = &dynamicState,
+      .layout = pipelineLayout
+    },
+    {
+      .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
+      .pNext = &renderingCreateInfo,
+      .stageCount = 2,
+      .pStages = outlineShaderStages,
+      .pVertexInputState = &vertexInputState,
+      .pInputAssemblyState = &inputAssemblyState,
+      .pViewportState = &viewportState,
+      .pRasterizationState = &rasterizationState,
+      .pMultisampleState = &multisampleState,
+      .pDepthStencilState = &outlineDepthStencilState,
+      .pColorBlendState = &colorBlendState,
+      .pDynamicState = &dynamicState,
+      .layout = pipelineLayout
+    }
   };
-  VK_CHECK(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr, &pipeline));
+  VK_CHECK(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 2, pipelineCreateInfos, nullptr, pipelines));
 
   //////////////////////////////////////////////////////////////////////
   // loop
@@ -1249,7 +1293,6 @@ int main()
     VkRect2D scissor{ .extent{ .width = (uint32_t)windowSize.x, .height = (uint32_t)windowSize.y } };
     vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
     VkDeviceSize vertexOffset{ 0 };
     vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &textureDescriptorSet, 0, nullptr);
     vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexIndexBuffer, &vertexOffset);
@@ -1258,7 +1301,12 @@ int main()
     vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, (sizeof (VkDeviceAddress)), &shaderDataDevice.frame[frameIndex].deviceAddress);
     VkDeviceSize indexCount{ 9216 };
 
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelines[MAIN_PIPELINE]);
     vkCmdDrawIndexed(commandBuffer, indexCount, 3, 0, 0, 0);
+
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelines[OUTLINE_PIPELINE]);
+    vkCmdDrawIndexed(commandBuffer, indexCount, 3, 0, 0, 0);
+
     vkCmdEndRendering(commandBuffer);
 
     VkImageMemoryBarrier2 barrierPresent{
@@ -1349,12 +1397,12 @@ int main()
   vkDestroyDescriptorSetLayout(device, textureDescriptorSetLayout, nullptr);
   vkDestroyDescriptorPool(device, descriptorPool, nullptr);
   vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
-  vkDestroyPipeline(device, pipeline, nullptr);
+  vkDestroyPipeline(device, pipelines[0], nullptr);
+  vkDestroyPipeline(device, pipelines[1], nullptr);
   vkDestroySwapchainKHR(device, swapchain, nullptr);
   vkDestroySurfaceKHR(instance, surface, nullptr);
   vkDestroyCommandPool(device, commandPool, nullptr);
-  vkDestroyShaderModule(device, vertexShaderModule, nullptr);
-  vkDestroyShaderModule(device, pixelShaderModule, nullptr);
+  vkDestroyShaderModule(device, shaderModule, nullptr);
 
   SDL_DestroyWindow(window);
   SDL_QuitSubSystem(SDL_INIT_VIDEO);
