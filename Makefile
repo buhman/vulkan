@@ -5,7 +5,9 @@ AS=$(PREFIX)as
 
 OBJARCH = elf64-x86-64
 
-OPT = -O0 -march=x86-64-v3
+UNAME := $(shell uname -s)
+
+OPT += -O0 	-march=x86-64-v3
 
 DEBUG = -g
 
@@ -25,8 +27,12 @@ CFLAGS += -fpic
 FLAGS += -fstack-protector -fstack-protector-all -fno-omit-frame-pointer -fsanitize=address
 
 LDFLAGS += -lm
-ifeq ($(shell uname),Linux)
+ifeq ($(UNAME),Linux)
 LDFLAGS += -Wl,-z noexecstack
+endif
+ifeq ($(UNAME),Darwin)
+LDFLAGS += -framework Foundation -framework Cocoa -framework IOKit -framework AVFoundation -framework CoreVideo -framework CoreAudio -framework CoreMedia -framework CoreHaptics -framework AudioToolbox -framework GameController -framework ForceFeedback -framework Carbon -framework Metal -framework QuartzCore -framework UniformTypeIdentifiers
+LDFLAGS += -lstdc++
 endif
 
 OBJS = \
@@ -35,8 +41,13 @@ OBJS = \
 	src/file.o \
 	src/pack.o
 
+ifeq ($(UNAME),Darwin)
+LIBS = \
+	 ../SDL3-dist/lib/libSDL3.a
+else
 LIBS = \
 	 ../SDL3-dist/lib64/libSDL3.a
+endif
 
 all: main
 

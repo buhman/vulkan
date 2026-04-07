@@ -8,8 +8,17 @@
 #include "file.h"
 
 extern "C" {
+#ifdef __APPLE__
+  extern uint8_t const files_pack_start[];
+  extern uint8_t const files_pack_end[];
+  #define files_pack_start files_pack_start
+  #define files_pack_end files_pack_end
+#else
   extern uint8_t const _files_pack_start[];
   extern uint8_t const _files_pack_end[];
+  #define files_pack_start _files_pack_start
+  #define files_pack_end _files_pack_end
+#endif
 };
 
 namespace file {
@@ -18,12 +27,12 @@ namespace file {
   {
     fprintf(stderr, "(pack) filename: %s\n", r_filename);
 
-    pack::header const * header = (pack::header const *)&_files_pack_start[0];
+    pack::header const * header = (pack::header const *)&files_pack_start[0];
     if (header->magic != pack::magic_value) {
       fprintf(stderr, "invalid header magic: %08x expected magic value: %08x\n", header->magic, pack::magic_value);
       exit(EXIT_FAILURE);
     }
-    ptrdiff_t data = (ptrdiff_t)&_files_pack_start[header->header_size];
+    ptrdiff_t data = (ptrdiff_t)&files_pack_start[header->header_size];
 
     for (unsigned int i = 0; i < header->entry_count; i++) {
       if (strcmp(header->entry[i].filename, r_filename) == 0) {
@@ -35,5 +44,4 @@ namespace file {
     fprintf(stderr, "filename not found in pack file %s\n", r_filename);
     exit(EXIT_FAILURE);
   }
-
 }

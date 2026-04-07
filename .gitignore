@@ -3,3 +3,6 @@
 *.o
 main
 *.pack
+tool/pack_file
+*.zip
+*.tar
