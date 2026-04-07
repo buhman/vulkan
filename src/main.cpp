@@ -107,6 +107,7 @@ VkImageView depthImageView{ VK_NULL_HANDLE };
 VkDeviceMemory depthImageMemory{ VK_NULL_HANDLE };
 
 VkBuffer vertexIndexBuffer{ VK_NULL_HANDLE };
+VkDeviceMemory vertexIndexBufferMemory{ VK_NULL_HANDLE };
 
 VkFence fences[maxFramesInFlight];
 VkSemaphore presentSemaphores[maxFramesInFlight];
@@ -120,6 +121,7 @@ VkPipelineLayout pipelineLayout{ VK_NULL_HANDLE };
 
 VkImage textureImage{ VK_NULL_HANDLE };
 VkImageView textureImageView{ VK_NULL_HANDLE };
+VkDeviceMemory textureImageMemory{ VK_NULL_HANDLE };
 VkSampler textureSampler{ VK_NULL_HANDLE };
 
 VkDescriptorPool descriptorPool{ VK_NULL_HANDLE };
@@ -531,7 +533,6 @@ int main()
     .allocationSize = vertexIndexBufferMemoryRequirements.size,
     .memoryTypeIndex = vertexIndexBufferMemoryTypeIndex,
   };
-  VkDeviceMemory vertexIndexBufferMemory;
   VK_CHECK(vkAllocateMemory(device, &vertexIndexBufferAllocateInfo, nullptr, &vertexIndexBufferMemory));
   VK_CHECK(vkBindBufferMemory(device, vertexIndexBuffer, vertexIndexBufferMemory, 0));
 
@@ -572,19 +573,15 @@ int main()
       .allocationSize = shaderBufferMemoryRequirements.size,
       .memoryTypeIndex = shaderBufferMemoryTypeIndex,
     };
-    VkDeviceMemory shaderBufferMemory;
-    VK_CHECK(vkAllocateMemory(device, &shaderBufferAllocateInfo, nullptr, &shaderBufferMemory));
-    VK_CHECK(vkBindBufferMemory(device, shaderDataBuffers[i].buffer, shaderBufferMemory, 0));
+    VK_CHECK(vkAllocateMemory(device, &shaderBufferAllocateInfo, nullptr, &shaderDataBuffers[i].memory));
+    VK_CHECK(vkBindBufferMemory(device, shaderDataBuffers[i].buffer, shaderDataBuffers[i].memory, 0));
 
     VkBufferDeviceAddressInfo shaderBufferDeviceAddressInfo{
       .sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO,
       .buffer = shaderDataBuffers[i].buffer
     };
     shaderDataBuffers[i].deviceAddress = vkGetBufferDeviceAddress(device, &shaderBufferDeviceAddressInfo);
-    void * mappedData;
-    VK_CHECK(vkMapMemory(device, shaderBufferMemory, 0, (sizeof (ShaderData)), 0, &mappedData));
-    shaderDataBuffers[i].memory = shaderBufferMemory;
-    shaderDataBuffers[i].mappedData = mappedData;
+    VK_CHECK(vkMapMemory(device, shaderDataBuffers[i].memory, 0, (sizeof (ShaderData)), 0, &shaderDataBuffers[i].mappedData));
   }
 
   //////////////////////////////////////////////////////////////////////
@@ -658,7 +655,6 @@ int main()
     .memoryTypeIndex = textureImageMemoryTypeIndex,
   };
 
-  VkDeviceMemory textureImageMemory;
   VK_CHECK(vkAllocateMemory(device, &textureImageAllocateInfo, nullptr, &textureImageMemory));
   VK_CHECK(vkBindImageMemory(device, textureImage, textureImageMemory, 0));
 
@@ -784,6 +780,9 @@ int main()
   };
   VK_CHECK(vkQueueSubmit(queue, 1, &textureSubmitInfo, textureFence));
   VK_CHECK(vkWaitForFences(device, 1, &textureFence, VK_TRUE, UINT64_MAX));
+  vkDestroyFence(device, textureFence, nullptr);
+  vkDestroyBuffer(device, textureSourceBuffer, nullptr);
+  vkFreeMemory(device, textureSourceBufferMemory, nullptr);
 
   // texture sampler
 
@@ -1193,4 +1192,48 @@ int main()
       recreateSwapchain(surfaceFormat, depthFormat, memoryProperties, surfaceCapabilities);
     }
   }
+
+  VK_CHECK(vkDeviceWaitIdle(device));
+  for (uint32_t i = 0; i < maxFramesInFlight; i++) {
+    vkDestroyFence(device, fences[i], nullptr);
+    vkDestroySemaphore(device, presentSemaphores[i], nullptr);
+
+    vkUnmapMemory(device, shaderDataBuffers[i].memory);
+    vkDestroyBuffer(device, shaderDataBuffers[i].buffer, nullptr);
+    vkFreeMemory(device, shaderDataBuffers[i].memory, nullptr);
+  }
+
+  for (uint32_t i = 0; i < swapchainImageCount; i++) {
+    vkDestroySemaphore(device, renderSemaphores[i], nullptr);
+    vkDestroyImageView(device, swapchainImageViews[i], nullptr);
+  }
+
+  vkDestroyImage(device, depthImage, nullptr);
+  vkFreeMemory(device, depthImageMemory, nullptr);
+  vkDestroyImageView(device, depthImageView, nullptr);
+
+  vkDestroyBuffer(device, vertexIndexBuffer, nullptr);
+  vkFreeMemory(device, vertexIndexBufferMemory, nullptr);
+
+  vkDestroyImageView(device, textureImageView, nullptr);
+  vkDestroySampler(device, textureSampler, nullptr);
+  vkDestroyImage(device, textureImage, nullptr);
+  vkFreeMemory(device, textureImageMemory, nullptr);
+
+  vkDestroyDescriptorSetLayout(device, textureDescriptorSetLayout, nullptr);
+  vkDestroyDescriptorPool(device, descriptorPool, nullptr);
+  vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
+  vkDestroyPipeline(device, pipeline, nullptr);
+  vkDestroySwapchainKHR(device, swapchain, nullptr);
+  vkDestroySurfaceKHR(instance, surface, nullptr);
+  vkDestroyCommandPool(device, commandPool, nullptr);
+  vkDestroyShaderModule(device, vertexShaderModule, nullptr);
+  vkDestroyShaderModule(device, pixelShaderModule, nullptr);
+
+  SDL_DestroyWindow(window);
+  SDL_QuitSubSystem(SDL_INIT_VIDEO);
+  SDL_Quit();
+
+  vkDestroyDevice(device, nullptr);
+  vkDestroyInstance(instance, nullptr);
 }

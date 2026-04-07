@@ -22,7 +22,7 @@ CFLAGS += -I../SDL3-dist/include
 CFLAGS += -I../volk
 CFLAGS += -fpic
 
-#FLAGS += -fstack-protector -fstack-protector-all -fno-omit-frame-pointer -fsanitize=address
+FLAGS += -fstack-protector -fstack-protector-all -fno-omit-frame-pointer -fsanitize=address
 
 LDFLAGS += -lm
 ifeq ($(shell uname),Linux)
