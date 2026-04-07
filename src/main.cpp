@@ -81,6 +81,8 @@ VkDeviceMemory depthImageMemory{ VK_NULL_HANDLE };
 
 VkBuffer vertexIndexBuffer{ VK_NULL_HANDLE };
 VkDeviceMemory vertexIndexBufferMemory{ VK_NULL_HANDLE };
+VkDeviceSize vertexBufferSize{ 0 };
+VkDeviceSize indexBufferSize{ 0 };
 
 VkFence fences[maxFramesInFlight];
 VkSemaphore presentSemaphores[maxFramesInFlight];
@@ -337,7 +339,7 @@ VkDeviceSize allocateFromMemoryRequirements(VkPhysicalDeviceMemoryProperties2 co
                                                  memoryRequirements.memoryTypeBits,
                                                  memoryPropertyFlags);
 
-  VkDeviceSize stride = roundAlignment(memoryRequirements.size, memoryRequirements.alignment);
+  VkDeviceSize stride = (count == 1) ? memoryRequirements.size : roundAlignment(memoryRequirements.size, memoryRequirements.alignment);
 
   VkMemoryAllocateFlagsInfo memoryAllocateFlagsInfo{
     .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO,
@@ -541,40 +543,52 @@ int main()
   // mesh
   //////////////////////////////////////////////////////////////////////
 
-  uint32_t vertexSize;
-  void const * vertexStart = file::open("position_normal_texture.vtx", &vertexSize);
-  uint32_t indexSize;
-  void const * indexStart = file::open("index.idx", &indexSize);
+  {
+    uint32_t vertexSize;
+    void const * vertexStart = file::open("position_normal_texture.vtx", &vertexSize);
+    uint32_t indexSize;
+    void const * indexStart = file::open("index.idx", &indexSize);
+    vertexBufferSize = vertexSize;
+    indexBufferSize = indexSize;
 
-  VkDeviceSize vtxBufferSize{ vertexSize };
-  VkDeviceSize idxBufferSize{ indexSize };
-  VkBufferCreateInfo vertexIndexBufferCreateInfo{
-    .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-    .size = vtxBufferSize + idxBufferSize,
-    .usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-    .sharingMode = VK_SHARING_MODE_EXCLUSIVE
-  };
-  VK_CHECK(vkCreateBuffer(device, &vertexIndexBufferCreateInfo, nullptr, &vertexIndexBuffer));
+    VkDeviceSize bufferSize{ vertexSize + indexSize };
+    VkBufferCreateInfo vertexIndexBufferCreateInfo{
+      .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+      .size = bufferSize,
+      .usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+      .sharingMode = VK_SHARING_MODE_EXCLUSIVE
+    };
+    VK_CHECK(vkCreateBuffer(device, &vertexIndexBufferCreateInfo, nullptr, &vertexIndexBuffer));
 
-  VkMemoryRequirements vertexIndexBufferMemoryRequirements;
-  vkGetBufferMemoryRequirements(device, vertexIndexBuffer, &vertexIndexBufferMemoryRequirements);
-  VkMemoryPropertyFlags vertexIndexBufferMemoryPropertyFlags{
-    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
-  };
-  uint32_t vertexIndexBufferMemoryTypeIndex = findMemoryTypeIndex(physicalDeviceMemoryProperties.memoryProperties, vertexIndexBufferMemoryRequirements.memoryTypeBits, vertexIndexBufferMemoryPropertyFlags);
-  VkMemoryAllocateInfo vertexIndexBufferAllocateInfo{
-    .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
-    .allocationSize = vertexIndexBufferMemoryRequirements.size,
-    .memoryTypeIndex = vertexIndexBufferMemoryTypeIndex,
-  };
-  VK_CHECK(vkAllocateMemory(device, &vertexIndexBufferAllocateInfo, nullptr, &vertexIndexBufferMemory));
-  VK_CHECK(vkBindBufferMemory(device, vertexIndexBuffer, vertexIndexBufferMemory, 0));
+    VkMemoryRequirements memoryRequirements;
+    vkGetBufferMemoryRequirements(device, vertexIndexBuffer, &memoryRequirements);
+    VkMemoryPropertyFlags memoryPropertyFlags{ VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT };
+    VkMemoryAllocateFlags memoryAllocateFlags{};
 
-  void * vertexIndexMappedData;
-  VK_CHECK(vkMapMemory(device, vertexIndexBufferMemory, 0, vertexIndexBufferCreateInfo.size, 0, &vertexIndexMappedData));
-  memcpy((void *)(((ptrdiff_t)vertexIndexMappedData) + 0), vertexStart, vertexSize);
-  memcpy((void *)(((ptrdiff_t)vertexIndexMappedData) + vertexSize), indexStart, indexSize);
-  vkUnmapMemory(device, vertexIndexBufferMemory);
+    allocateFromMemoryRequirements(physicalDeviceMemoryProperties,
+                                   memoryRequirements,
+                                   memoryPropertyFlags,
+                                   memoryAllocateFlags,
+                                   1,
+                                   &vertexIndexBufferMemory);
+
+    VK_CHECK(vkBindBufferMemory(device, vertexIndexBuffer, vertexIndexBufferMemory, 0));
+
+    void * vertexIndexMappedData;
+    VK_CHECK(vkMapMemory(device, vertexIndexBufferMemory, 0, vertexIndexBufferCreateInfo.size, 0, &vertexIndexMappedData));
+    memcpy((void *)(((ptrdiff_t)vertexIndexMappedData) + 0), vertexStart, vertexSize);
+    memcpy((void *)(((ptrdiff_t)vertexIndexMappedData) + vertexSize), indexStart, indexSize);
+
+    VkMappedMemoryRange mappedMemoryRange{
+      .sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE,
+      .memory = vertexIndexBufferMemory,
+      .offset = 0,
+      .size = VK_WHOLE_SIZE,
+    };
+    vkFlushMappedMemoryRanges(device, 1, &mappedMemoryRange);
+
+    vkUnmapMemory(device, vertexIndexBufferMemory);
+  }
 
   //////////////////////////////////////////////////////////////////////
   // shader buffers
@@ -1185,7 +1199,7 @@ int main()
     VkDeviceSize vertexOffset{ 0 };
     vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &textureDescriptorSet, 0, nullptr);
     vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexIndexBuffer, &vertexOffset);
-    VkDeviceSize indexOffset{ vtxBufferSize };
+    VkDeviceSize indexOffset{ vertexBufferSize };
     vkCmdBindIndexBuffer(commandBuffer, vertexIndexBuffer, indexOffset, VK_INDEX_TYPE_UINT32);
     vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, (sizeof (VkDeviceAddress)), &shaderDataDevice.frame[frameIndex].deviceAddress);
     VkDeviceSize indexCount{ 9216 };
