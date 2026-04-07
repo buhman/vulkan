@@ -10,6 +10,24 @@
 #include "new.h"
 #include "file.h"
 
+template <typename T>
+inline static constexpr T min(T a, T b)
+{
+  return (a < b) ? a : b;
+}
+
+template <typename T>
+inline static constexpr T max(T a, T b)
+{
+  return (a > b) ? a : b;
+}
+
+template <typename T>
+inline static constexpr T clamp(T n, T minVal, T maxVal)
+{
+  return min(max(n, minVal), maxVal);
+}
+
 #define SDL_CHECK(f) \
   { \
     bool result = (f); \
@@ -236,6 +254,12 @@ void recreateSwapchain(VkSurfaceFormatKHR surfaceFormat, VkFormat depthFormat, V
     }
     free(swapchainImageViews);
   }
+  if (renderSemaphores != nullptr) {
+    for (uint32_t i = 0; i < swapchainImageCount; i++) {
+      vkDestroySemaphore(device, renderSemaphores[i], nullptr);
+    }
+    free(renderSemaphores);
+  }
 
   VK_CHECK(vkGetSwapchainImagesKHR(device, swapchain, &swapchainImageCount, nullptr));
   swapchainImages = NewM<VkImage>(swapchainImageCount);
@@ -258,6 +282,18 @@ void recreateSwapchain(VkSurfaceFormatKHR surfaceFormat, VkFormat depthFormat, V
 
   if (swapchainCreateInfo.oldSwapchain != nullptr) {
     vkDestroySwapchainKHR(device, swapchainCreateInfo.oldSwapchain, nullptr);
+  }
+
+  //////////////////////////////////////////////////////////////////////
+  // render semaphores
+  //////////////////////////////////////////////////////////////////////
+
+  VkSemaphoreCreateInfo semaphoreCreateInfo{
+    .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO
+  };
+  renderSemaphores = NewM<VkSemaphore>(swapchainImageCount);
+  for (uint32_t i = 0; i < swapchainImageCount; i++) {
+    VK_CHECK(vkCreateSemaphore(device, &semaphoreCreateInfo, nullptr, &renderSemaphores[i]));
   }
 
   //////////////////////////////////////////////////////////////////////
@@ -650,10 +686,6 @@ int main()
   for (uint32_t i = 0; i < maxFramesInFlight; i++) {
     VK_CHECK(vkCreateFence(device, &fenceCreateInfo, nullptr, &fences[i]));
     VK_CHECK(vkCreateSemaphore(device, &semaphoreCreateInfo, nullptr, &presentSemaphores[i]));
-  }
-  renderSemaphores = NewM<VkSemaphore>(swapchainImageCount);
-  for (uint32_t i = 0; i < swapchainImageCount; i++) {
-    VK_CHECK(vkCreateSemaphore(device, &semaphoreCreateInfo, nullptr, &renderSemaphores[i]));
   }
 
   //////////////////////////////////////////////////////////////////////
