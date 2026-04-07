@@ -2,3 +2,4 @@
 *.spv
 *.o
 main
+*.pack

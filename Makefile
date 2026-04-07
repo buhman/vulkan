@@ -1,6 +1,7 @@
 CC=$(PREFIX)gcc
 CXX=$(PREFIX)g++
 OBJCOPY=$(PREFIX)objcopy
+AS=$(PREFIX)as
 
 OBJARCH = elf64-x86-64
 
@@ -30,43 +31,23 @@ endif
 
 OBJS = \
 	src/main.o \
-	src/volk/volk.o
-
-BINS = \
-	index.idx.o \
-	position_normal_texture.vtx.o \
-	sprite.data.o
-
-SHADERS = \
-	shader/triangle.vs.spv.o \
-	shader/triangle.ps.spv.o
+	src/volk/volk.o \
+	src/file.o \
+	src/pack.o
 
 LIBS = \
 	 ../SDL3-dist/lib64/libSDL3.a
 
 all: main
 
-define BUILD_BINARY_O
-	$(OBJCOPY) -I binary -O $(OBJARCH) $< $@
-endef
-
-%.vtx.o: %.vtx
-	$(BUILD_BINARY_O)
-
-%.idx.o: %.idx
-	$(BUILD_BINARY_O)
-
-%.spv.o: %.spv
-	$(BUILD_BINARY_O)
-
-%.data.o: %.data
-	$(BUILD_BINARY_O)
-
 %.o: %.c
 	$(CC) $(ARCH) $(CSTD) $(CFLAGS) $(FLAGS) $(OPT) $(DEBUG) -c $< -o $@
 
 %.o: %.cpp
 	$(CXX) $(ARCH) $(CXXSTD) $(CFLAGS) $(FLAGS) $(OPT) $(DEBUG) -c $< -o $@
+
+%.o: %.s
+	$(AS) $< -o $@
 
 main: $(OBJS) $(LIBS) $(BINS) $(SHADERS)
 	$(CC) $(ARCH) $(LDFLAGS) $(FLAGS) $(OPT) $(DEBUG) $^ -o $@
@@ -76,6 +57,13 @@ main: $(OBJS) $(LIBS) $(BINS) $(SHADERS)
 
 %.ps.spv: %.hlsl
 	../dxc/bin/dxc -spirv -T ps_6_1 -E PSMain -fspv-target-env=vulkan1.3 $< -Fo $@
+
+tool/pack_file: tool/pack_file.cpp
+	make -C tool pack_file
+
+PACK_FILENAMES = $(shell cat filenames.txt)
+files.pack: tool/pack_file $(PACK_FILENAMES) filenames.txt
+	./tool/pack_file $@ $(PACK_FILENAMES)
 
 .SUFFIXES:
 .INTERMEDIATE:

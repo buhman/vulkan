@@ -8,34 +8,7 @@
 #include "directxmath/directxmath.h"
 
 #include "new.h"
-
-extern "C" {
-  extern uint8_t const _binary_position_normal_texture_vtx_start[];
-  extern void * const _binary_position_normal_texture_vtx_size;
-  extern uint8_t const _binary_index_idx_start[];
-  extern void * const _binary_index_idx_size;
-
-  extern uint8_t const _binary_shader_triangle_vs_spv_start[];
-  extern void * const _binary_shader_triangle_vs_spv_size;
-  extern uint8_t const _binary_shader_triangle_ps_spv_start[];
-  extern void * const _binary_shader_triangle_ps_spv_size;
-
-  extern uint8_t const _binary_sprite_data_start[];
-  extern void * const _binary_sprite_data_size;
-}
-
-#define vtx_start _binary_position_normal_texture_vtx_start
-#define vtx_size (size_t)(&_binary_position_normal_texture_vtx_size)
-#define idx_start _binary_index_idx_start
-#define idx_size (size_t)(&_binary_index_idx_size)
-
-#define vs_start _binary_shader_triangle_vs_spv_start
-#define vs_size (size_t)(&_binary_shader_triangle_vs_spv_size)
-#define ps_start _binary_shader_triangle_ps_spv_start
-#define ps_size (size_t)(&_binary_shader_triangle_ps_spv_size)
-
-#define sprite_start _binary_sprite_data_start
-#define sprite_size (size_t)(&_binary_sprite_data_size)
+#include "file.h"
 
 #define SDL_CHECK(f) \
   { \
@@ -512,8 +485,13 @@ int main()
   // mesh
   //////////////////////////////////////////////////////////////////////
 
-  VkDeviceSize vtxBufferSize{ vtx_size };
-  VkDeviceSize idxBufferSize{ idx_size };
+  uint32_t vertexSize;
+  void const * vertexStart = file::open("position_normal_texture.vtx", &vertexSize);
+  uint32_t indexSize;
+  void const * indexStart = file::open("index.idx", &indexSize);
+
+  VkDeviceSize vtxBufferSize{ vertexSize };
+  VkDeviceSize idxBufferSize{ indexSize };
   VkBufferCreateInfo vertexIndexBufferCreateInfo{
     .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
     .size = vtxBufferSize + idxBufferSize,
@@ -538,8 +516,8 @@ int main()
 
   void * vertexIndexMappedData;
   VK_CHECK(vkMapMemory(device, vertexIndexBufferMemory, 0, vertexIndexBufferCreateInfo.size, 0, &vertexIndexMappedData));
-  memcpy((void *)(((ptrdiff_t)vertexIndexMappedData) + 0), vtx_start, vtx_size);
-  memcpy((void *)(((ptrdiff_t)vertexIndexMappedData) + vtx_size), idx_start, idx_size);
+  memcpy((void *)(((ptrdiff_t)vertexIndexMappedData) + 0), vertexStart, vertexSize);
+  memcpy((void *)(((ptrdiff_t)vertexIndexMappedData) + vertexSize), indexStart, indexSize);
   vkUnmapMemory(device, vertexIndexBufferMemory);
 
   //////////////////////////////////////////////////////////////////////
@@ -673,10 +651,13 @@ int main()
 
   // texture transfer: source buffer
 
+  uint32_t spriteSize;
+  void const * spriteStart = file::open("sprite.data", &spriteSize);
+
   VkBuffer textureSourceBuffer{};
   VkBufferCreateInfo textureSourceBufferCreateInfo{
     .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-    .size = sprite_size,
+    .size = spriteSize,
     .usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT
   };
   VK_CHECK(vkCreateBuffer(device, &textureSourceBufferCreateInfo, nullptr, &textureSourceBuffer));
@@ -697,7 +678,7 @@ int main()
 
   void * textureSourceMappedData;
   VK_CHECK(vkMapMemory(device, textureSourceBufferMemory, 0, textureSourceBufferCreateInfo.size, 0, &textureSourceMappedData));
-  memcpy((void *)(((ptrdiff_t)textureSourceMappedData) + 0), sprite_start, sprite_size);
+  memcpy((void *)(((ptrdiff_t)textureSourceMappedData) + 0), spriteStart, spriteSize);
   vkUnmapMemory(device, textureSourceBufferMemory);
 
   VkFenceCreateInfo textureFenceCreateInfo{
@@ -872,18 +853,23 @@ int main()
   // shaders
   //////////////////////////////////////////////////////////////////////
 
+  uint32_t triangleVSSize;
+  void const * triangleVSStart = file::open("shader/triangle.vs.spv", &triangleVSSize);
+  uint32_t trianglePSSize;
+  void const * trianglePSStart = file::open("shader/triangle.ps.spv", &trianglePSSize);
+
   VkShaderModuleCreateInfo vertexShaderModuleCreateInfo{
     .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
-    .codeSize = vs_size,
-    .pCode = (uint32_t *)vs_start
+    .codeSize = triangleVSSize,
+    .pCode = (uint32_t *)triangleVSStart
   };
   VkShaderModule vertexShaderModule{};
   VK_CHECK(vkCreateShaderModule(device, &vertexShaderModuleCreateInfo, nullptr, &vertexShaderModule));
 
   VkShaderModuleCreateInfo pixelShaderModuleCreateInfo{
     .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
-    .codeSize = ps_size,
-    .pCode = (uint32_t *)ps_start
+    .codeSize = trianglePSSize,
+    .pCode = (uint32_t *)trianglePSStart
   };
   VkShaderModule pixelShaderModule{};
   VK_CHECK(vkCreateShaderModule(device, &pixelShaderModuleCreateInfo, nullptr, &pixelShaderModule));
