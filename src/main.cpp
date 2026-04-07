@@ -110,16 +110,21 @@ struct ShaderData {
   //XMFLOAT4X4 model[3];
   XMFLOAT4 lightPosition{ 0.0f, -10.0f, 10.0f, 0.0f };
   uint32_t selected{ 1 };
-} shaderData{};
-
-struct ShaderDataBuffer {
-  VkBuffer buffer{ VK_NULL_HANDLE };
-  VkDeviceAddress deviceAddress{};
-  VkDeviceMemory memory;
-  void * mappedData;
 };
 
-ShaderDataBuffer shaderDataBuffers[maxFramesInFlight];
+ShaderData shaderData{};
+
+struct ShaderDataDevice {
+  VkDeviceMemory memory;
+  VkDeviceAddress stride;
+  void * mappedData;
+  struct {
+    VkBuffer buffer{ VK_NULL_HANDLE };
+    VkDeviceAddress deviceAddress{};
+  } frame[maxFramesInFlight];
+};
+
+ShaderDataDevice shaderDataDevice{};
 
 void print_memoryPropertyFlags(VkMemoryPropertyFlags propertyFlags)
 {
@@ -136,16 +141,28 @@ void print_memoryPropertyFlags(VkMemoryPropertyFlags propertyFlags)
   printf("\n");
 }
 
-uint32_t findMemoryTypeIndex(VkPhysicalDeviceMemoryProperties const * memoryProperties, uint32_t memoryTypeBits, VkMemoryPropertyFlags propertyFlags)
+uint32_t findMemoryTypeIndex(VkPhysicalDeviceMemoryProperties const & memoryProperties, uint32_t memoryTypeBits, VkMemoryPropertyFlags propertyFlags)
 {
-  for (uint32_t i = 0; i < memoryProperties->memoryTypeCount; i++) {
+  // find an exact match
+  for (uint32_t i = 0; i < memoryProperties.memoryTypeCount; i++) {
     if (!(memoryTypeBits & (1u << i)))
       continue;
 
-    if (memoryProperties->memoryTypes[i].propertyFlags == propertyFlags) {
+    if (memoryProperties.memoryTypes[i].propertyFlags == propertyFlags) {
       return i;
     }
   }
+
+  // find a partial match
+  for (uint32_t i = 0; i < memoryProperties.memoryTypeCount; i++) {
+    if (!(memoryTypeBits & (1u << i)))
+      continue;
+
+    if ((memoryProperties.memoryTypes[i].propertyFlags & propertyFlags) == propertyFlags) {
+      return i;
+    }
+  }
+
   ASSERT(false, "no memory type index matching memoryTypeBits and propertyFlags");
   UNREACHABLE();
 }
@@ -177,7 +194,7 @@ XMMATRIX currentModel()
   return XMMatrixTranslation(0, 0, -0.5) * XMMatrixRotationX(theta);
 }
 
-void recreateSwapchain(VkSurfaceFormatKHR surfaceFormat, VkFormat depthFormat, VkPhysicalDeviceMemoryProperties2 const & memoryProperties, VkSurfaceCapabilitiesKHR const & surfaceCapabilities)
+void recreateSwapchain(VkSurfaceFormatKHR surfaceFormat, VkFormat depthFormat, VkPhysicalDeviceMemoryProperties const & memoryProperties, VkSurfaceCapabilitiesKHR const & surfaceCapabilities)
 {
   //////////////////////////////////////////////////////////////////////
   // swapchain and images
@@ -278,7 +295,7 @@ void recreateSwapchain(VkSurfaceFormatKHR surfaceFormat, VkFormat depthFormat, V
   VkMemoryPropertyFlags depthImageMemoryPropertyFlags{
     VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
   };
-  uint32_t depthImageMemoryTypeIndex = findMemoryTypeIndex(&memoryProperties.memoryProperties, depthImageMemoryRequirements.memoryTypeBits, depthImageMemoryPropertyFlags);
+  uint32_t depthImageMemoryTypeIndex = findMemoryTypeIndex(memoryProperties, depthImageMemoryRequirements.memoryTypeBits, depthImageMemoryPropertyFlags);
   VkMemoryAllocateInfo depthImageAllocateInfo{
     .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
     .allocationSize = depthImageMemoryRequirements.size,
@@ -300,6 +317,41 @@ void recreateSwapchain(VkSurfaceFormatKHR surfaceFormat, VkFormat depthFormat, V
     }
   };
   VK_CHECK(vkCreateImageView(device, &depthViewCreateInfo, nullptr, &depthImageView));
+}
+
+inline static constexpr VkDeviceSize roundAlignment(VkDeviceSize offset, VkDeviceSize alignment)
+{
+  // must be a power of two
+  assert(alignment && ((alignment & (alignment - 1)) == 0));
+  return (offset + (alignment - 1)) & (-alignment);
+}
+
+VkDeviceSize allocateFromMemoryRequirements(VkPhysicalDeviceMemoryProperties2 const & physicalDeviceMemoryProperties,
+                                            VkMemoryRequirements const & memoryRequirements,
+                                            VkMemoryPropertyFlags memoryPropertyFlags,
+                                            VkMemoryAllocateFlags memoryAllocateFlags,
+                                            uint32_t count,
+                                            VkDeviceMemory * memory)
+{
+  uint32_t memoryTypeIndex = findMemoryTypeIndex(physicalDeviceMemoryProperties.memoryProperties,
+                                                 memoryRequirements.memoryTypeBits,
+                                                 memoryPropertyFlags);
+
+  VkDeviceSize stride = roundAlignment(memoryRequirements.size, memoryRequirements.alignment);
+
+  VkMemoryAllocateFlagsInfo memoryAllocateFlagsInfo{
+    .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO,
+    .flags = memoryAllocateFlags,
+  };
+  VkMemoryAllocateInfo memoryAllocateInfo{
+    .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+    .pNext = &memoryAllocateFlagsInfo,
+    .allocationSize = stride * count,
+    .memoryTypeIndex = memoryTypeIndex,
+  };
+  VK_CHECK(vkAllocateMemory(device, &memoryAllocateInfo, nullptr, memory));
+
+  return stride;
 }
 
 int main()
@@ -338,6 +390,7 @@ int main()
 
   uint32_t physicalDeviceIndex{ 0 };
   printf("physicalDeviceCount %d\n", physicalDeviceCount);
+  VkPhysicalDeviceProperties physicalDeviceProperties;
   for (uint32_t i = 0; i < physicalDeviceCount; i++) {
     VkPhysicalDeviceProperties2 properties{ .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2 };
     vkGetPhysicalDeviceProperties2(physicalDevices[i], &properties);
@@ -348,6 +401,8 @@ int main()
       printf("  maxImageDimension2D %u\n", properties.properties.limits.maxImageDimension2D);
       printf("  maxMemoryAllocationCount %u\n", properties.properties.limits.maxMemoryAllocationCount);
       printf("  maxSamplerAllocationCount %u\n", properties.properties.limits.maxSamplerAllocationCount);
+      printf("  nonCoherentAtomSize %lu\n", properties.properties.limits.nonCoherentAtomSize);
+      physicalDeviceProperties = properties.properties;
     }
   }
   VkPhysicalDevice physicalDevice = physicalDevices[physicalDeviceIndex];
@@ -378,22 +433,23 @@ int main()
   // memory
   //////////////////////////////////////////////////////////////////////
 
-  VkPhysicalDeviceMemoryProperties2 memoryProperties{
+  VkPhysicalDeviceMemoryProperties2 physicalDeviceMemoryProperties{
     .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_PROPERTIES_2,
     .pNext = nullptr
   };
-  vkGetPhysicalDeviceMemoryProperties2(physicalDevice, &memoryProperties);
-  /*
-  for (uint32_t i = 0; i < memoryProperties.memoryProperties.memoryTypeCount; i++) {
-    printf("memoryTypes[%u].propertyFlags: ", i);
-    print_memoryPropertyFlags(memoryProperties.memoryProperties.memoryTypes[i].propertyFlags);
-    printf("memoryTypes[%u].heapIndex: %u\n", i, memoryProperties.memoryProperties.memoryTypes[i].heapIndex);
+  vkGetPhysicalDeviceMemoryProperties2(physicalDevice, &physicalDeviceMemoryProperties);
+  if constexpr (true) {
+    VkPhysicalDeviceMemoryProperties const & memoryProperties = physicalDeviceMemoryProperties.memoryProperties;
+    for (uint32_t i = 0; i < memoryProperties.memoryTypeCount; i++) {
+      printf("memoryTypes[%u].propertyFlags: ", i);
+      print_memoryPropertyFlags(memoryProperties.memoryTypes[i].propertyFlags);
+      printf("memoryTypes[%u].heapIndex: %u\n", i, memoryProperties.memoryTypes[i].heapIndex);
+    }
+    for (uint32_t i = 0; i < memoryProperties.memoryHeapCount; i++) {
+      printf("memoryHeaps[%u].size %lu\n", i, memoryProperties.memoryHeaps[i].size);
+      printf("memoryHeaps[%u].flags %08x\n", i, memoryProperties.memoryHeaps[i].flags);
+    }
   }
-  for (uint32_t i = 0; i < memoryProperties.memoryProperties.memoryHeapCount; i++) {
-    printf("memoryHeaps[%u].size %lu\n", i, memoryProperties.memoryProperties.memoryHeaps[i].size);
-    printf("memoryHeaps[%u].flags %08x\n", i, memoryProperties.memoryProperties.memoryHeaps[i].flags);
-  }
-  */
 
   //////////////////////////////////////////////////////////////////////
   // device and queue
@@ -479,7 +535,7 @@ int main()
   ASSERT(depthFormat != VK_FORMAT_UNDEFINED, "no depth format with VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT");
   printf("depthFormat: %s\n", string_VkFormat(depthFormat));
 
-  recreateSwapchain(surfaceFormat, depthFormat, memoryProperties, surfaceCapabilities);
+  recreateSwapchain(surfaceFormat, depthFormat, physicalDeviceMemoryProperties.memoryProperties, surfaceCapabilities);
 
   //////////////////////////////////////////////////////////////////////
   // mesh
@@ -505,7 +561,7 @@ int main()
   VkMemoryPropertyFlags vertexIndexBufferMemoryPropertyFlags{
     VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
   };
-  uint32_t vertexIndexBufferMemoryTypeIndex = findMemoryTypeIndex(&memoryProperties.memoryProperties, vertexIndexBufferMemoryRequirements.memoryTypeBits, vertexIndexBufferMemoryPropertyFlags);
+  uint32_t vertexIndexBufferMemoryTypeIndex = findMemoryTypeIndex(physicalDeviceMemoryProperties.memoryProperties, vertexIndexBufferMemoryRequirements.memoryTypeBits, vertexIndexBufferMemoryPropertyFlags);
   VkMemoryAllocateInfo vertexIndexBufferAllocateInfo{
     .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
     .allocationSize = vertexIndexBufferMemoryRequirements.size,
@@ -524,42 +580,46 @@ int main()
   // shader buffers
   //////////////////////////////////////////////////////////////////////
 
-  for (uint32_t i = 0; i < maxFramesInFlight; i++) {
-    VkBufferCreateInfo shaderBufferCreateInfo{
-      .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-      .size = (sizeof (ShaderData)),
-      .usage = VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
-      .sharingMode = VK_SHARING_MODE_EXCLUSIVE
-    };
+  {
+    for (uint32_t i = 0; i < maxFramesInFlight; i++) {
+      VkBufferCreateInfo bufferCreateInfo{
+        .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+        .size = (sizeof (ShaderData)),
+        .usage = VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
+        .sharingMode = VK_SHARING_MODE_EXCLUSIVE
+      };
 
-    VK_CHECK(vkCreateBuffer(device, &shaderBufferCreateInfo, nullptr, &shaderDataBuffers[i].buffer));
+      VK_CHECK(vkCreateBuffer(device, &bufferCreateInfo, nullptr, &shaderDataDevice.frame[i].buffer));
+    }
 
-    VkMemoryRequirements shaderBufferMemoryRequirements;
-    vkGetBufferMemoryRequirements(device, shaderDataBuffers[i].buffer, &shaderBufferMemoryRequirements);
+    VkMemoryRequirements memoryRequirements;
+    vkGetBufferMemoryRequirements(device, shaderDataDevice.frame[0].buffer, &memoryRequirements);
 
-    VkMemoryPropertyFlags shaderBufferMemoryPropertyFlags{
-      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
-    };
-    uint32_t shaderBufferMemoryTypeIndex = findMemoryTypeIndex(&memoryProperties.memoryProperties, shaderBufferMemoryRequirements.memoryTypeBits, shaderBufferMemoryPropertyFlags);
-    VkMemoryAllocateFlagsInfo shaderBufferAllocateFlagsInfo{
-      .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO,
-      .flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT,
-    };
-    VkMemoryAllocateInfo shaderBufferAllocateInfo{
-      .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
-      .pNext = &shaderBufferAllocateFlagsInfo,
-      .allocationSize = shaderBufferMemoryRequirements.size,
-      .memoryTypeIndex = shaderBufferMemoryTypeIndex,
-    };
-    VK_CHECK(vkAllocateMemory(device, &shaderBufferAllocateInfo, nullptr, &shaderDataBuffers[i].memory));
-    VK_CHECK(vkBindBufferMemory(device, shaderDataBuffers[i].buffer, shaderDataBuffers[i].memory, 0));
+    VkMemoryPropertyFlags memoryPropertyFlags{ VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT };
+    VkMemoryAllocateFlags memoryAllocateFlags{ VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT };
+    shaderDataDevice.stride = allocateFromMemoryRequirements(physicalDeviceMemoryProperties,
+                                                             memoryRequirements,
+                                                             memoryPropertyFlags,
+                                                             memoryAllocateFlags,
+                                                             maxFramesInFlight,
+                                                             &shaderDataDevice.memory);
 
-    VkBufferDeviceAddressInfo shaderBufferDeviceAddressInfo{
-      .sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO,
-      .buffer = shaderDataBuffers[i].buffer
-    };
-    shaderDataBuffers[i].deviceAddress = vkGetBufferDeviceAddress(device, &shaderBufferDeviceAddressInfo);
-    VK_CHECK(vkMapMemory(device, shaderDataBuffers[i].memory, 0, (sizeof (ShaderData)), 0, &shaderDataBuffers[i].mappedData));
+    VkDeviceSize offset{ 0 };
+    VkDeviceSize size{ VK_WHOLE_SIZE };
+    VkMemoryMapFlags flags{ 0 };
+    VK_CHECK(vkMapMemory(device, shaderDataDevice.memory, offset, size, flags, &shaderDataDevice.mappedData));
+
+    for (uint32_t i = 0; i < maxFramesInFlight; i++) {
+      VkDeviceSize offset{ shaderDataDevice.stride * i };
+
+      VK_CHECK(vkBindBufferMemory(device, shaderDataDevice.frame[i].buffer, shaderDataDevice.memory, offset));
+
+      VkBufferDeviceAddressInfo bufferDeviceAddressInfo{
+        .sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO,
+        .buffer = shaderDataDevice.frame[i].buffer
+      };
+      shaderDataDevice.frame[i].deviceAddress = vkGetBufferDeviceAddress(device, &bufferDeviceAddressInfo);
+    }
   }
 
   //////////////////////////////////////////////////////////////////////
@@ -625,7 +685,7 @@ int main()
   VkMemoryPropertyFlags textureImageMemoryPropertyFlags{
     VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
   };
-  uint32_t textureImageMemoryTypeIndex = findMemoryTypeIndex(&memoryProperties.memoryProperties, textureImageMemoryRequirements.memoryTypeBits, textureImageMemoryPropertyFlags);
+  uint32_t textureImageMemoryTypeIndex = findMemoryTypeIndex(physicalDeviceMemoryProperties.memoryProperties, textureImageMemoryRequirements.memoryTypeBits, textureImageMemoryPropertyFlags);
 
   VkMemoryAllocateInfo textureImageAllocateInfo{
     .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
@@ -666,7 +726,7 @@ int main()
   VkMemoryPropertyFlags textureSourceBufferMemoryPropertyFlags{
     VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
   };
-  uint32_t textureSourceBufferMemoryTypeIndex = findMemoryTypeIndex(&memoryProperties.memoryProperties, textureSourceBufferMemoryRequirements.memoryTypeBits, textureSourceBufferMemoryPropertyFlags);
+  uint32_t textureSourceBufferMemoryTypeIndex = findMemoryTypeIndex(physicalDeviceMemoryProperties.memoryProperties, textureSourceBufferMemoryRequirements.memoryTypeBits, textureSourceBufferMemoryPropertyFlags);
   VkMemoryAllocateInfo textureSourceBufferAllocateInfo{
     .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
     .allocationSize = textureSourceBufferMemoryRequirements.size,
@@ -1023,7 +1083,18 @@ int main()
     XMStoreFloat4x4(&shaderData.projection, currentProjection());
     XMStoreFloat4x4(&shaderData.view, currentView());
     XMStoreFloat4x4(&shaderData.model, currentModel());
-    memcpy(shaderDataBuffers[frameIndex].mappedData, &shaderData, (sizeof (ShaderData)));
+    size_t frameOffset = shaderDataDevice.stride * frameIndex;
+    void * frameData = (void *)(((VkDeviceSize)shaderDataDevice.mappedData) + frameOffset);
+    VkDeviceSize frameSize{ (sizeof (ShaderData)) };
+    memcpy(frameData, &shaderData, frameSize);
+    VkDeviceSize flushSize{ roundAlignment(frameSize, physicalDeviceProperties.limits.nonCoherentAtomSize) };
+    VkMappedMemoryRange shaderDataMemoryRange{
+      .sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE,
+      .memory = shaderDataDevice.memory,
+      .offset = frameOffset,
+      .size = flushSize,
+    };
+    vkFlushMappedMemoryRanges(device, 1, &shaderDataMemoryRange);
 
     // command buffer
     VkCommandBuffer& commandBuffer = commandBuffers[frameIndex];
@@ -1116,7 +1187,7 @@ int main()
     vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexIndexBuffer, &vertexOffset);
     VkDeviceSize indexOffset{ vtxBufferSize };
     vkCmdBindIndexBuffer(commandBuffer, vertexIndexBuffer, indexOffset, VK_INDEX_TYPE_UINT32);
-    vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, (sizeof (VkDeviceAddress)), &shaderDataBuffers[frameIndex].deviceAddress);
+    vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, (sizeof (VkDeviceAddress)), &shaderDataDevice.frame[frameIndex].deviceAddress);
     VkDeviceSize indexCount{ 9216 };
     vkCmdDrawIndexed(commandBuffer, indexCount, 3, 0, 0, 0);
     vkCmdEndRendering(commandBuffer);
@@ -1175,7 +1246,7 @@ int main()
       updateSwapchain = false;
       VK_CHECK(vkDeviceWaitIdle(device));
       VK_CHECK(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &surfaceCapabilities));
-      recreateSwapchain(surfaceFormat, depthFormat, memoryProperties, surfaceCapabilities);
+      recreateSwapchain(surfaceFormat, depthFormat, physicalDeviceMemoryProperties.memoryProperties, surfaceCapabilities);
     }
   }
 
@@ -1184,10 +1255,10 @@ int main()
     vkDestroyFence(device, fences[i], nullptr);
     vkDestroySemaphore(device, presentSemaphores[i], nullptr);
 
-    vkUnmapMemory(device, shaderDataBuffers[i].memory);
-    vkDestroyBuffer(device, shaderDataBuffers[i].buffer, nullptr);
-    vkFreeMemory(device, shaderDataBuffers[i].memory, nullptr);
+    vkDestroyBuffer(device, shaderDataDevice.frame[i].buffer, nullptr);
   }
+  vkUnmapMemory(device, shaderDataDevice.memory);
+  vkFreeMemory(device, shaderDataDevice.memory, nullptr);
 
   for (uint32_t i = 0; i < swapchainImageCount; i++) {
     vkDestroySemaphore(device, renderSemaphores[i], nullptr);
