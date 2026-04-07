@@ -349,7 +349,7 @@ void recreateSwapchain(VkSurfaceFormatKHR surfaceFormat, VkFormat depthFormat, V
     .viewType = VK_IMAGE_VIEW_TYPE_2D,
     .format = depthFormat,
     .subresourceRange{
-      .aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT,
+      .aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT,
       .levelCount = 1,
       .layerCount = 1
     }
@@ -1026,12 +1026,14 @@ int main()
     {
       .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
       .stage = VK_SHADER_STAGE_VERTEX_BIT,
-      .module = vertexShaderModule, .pName = "VSMain"
+      .module = vertexShaderModule,
+      .pName = "VSMain"
     },
     {
       .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
       .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
-      .module = pixelShaderModule, .pName = "PSMain"
+      .module = pixelShaderModule,
+      .pName = "PSMain"
     }
   };
 
@@ -1041,13 +1043,14 @@ int main()
     .scissorCount = 1
   };
 
-  VkDynamicState dynamicStates[2]{
+  constexpr uint32_t dynamicStateCount = 2;
+  VkDynamicState dynamicStates[dynamicStateCount]{
     VK_DYNAMIC_STATE_VIEWPORT,
-    VK_DYNAMIC_STATE_SCISSOR
+    VK_DYNAMIC_STATE_SCISSOR,
   };
   VkPipelineDynamicStateCreateInfo dynamicState{
     .sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
-    .dynamicStateCount = 2,
+    .dynamicStateCount = dynamicStateCount,
     .pDynamicStates = dynamicStates
   };
 
@@ -1055,14 +1058,25 @@ int main()
     .sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
     .depthTestEnable = VK_TRUE,
     .depthWriteEnable = VK_TRUE,
-    .depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL
+    .depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL,
+    .stencilTestEnable = VK_TRUE,
+    .front = {
+      .failOp = VK_STENCIL_OP_REPLACE,
+      .passOp = VK_STENCIL_OP_REPLACE,
+      .depthFailOp = VK_STENCIL_OP_REPLACE,
+      .compareOp = VK_COMPARE_OP_ALWAYS,
+      .compareMask = 0x01,
+      .writeMask = 0x01,
+      .reference = 1,
+    },
   };
 
   VkPipelineRenderingCreateInfo renderingCreateInfo{
     .sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
     .colorAttachmentCount = 1,
     .pColorAttachmentFormats = &surfaceFormat.format,
-    .depthAttachmentFormat = depthFormat
+    .depthAttachmentFormat = depthFormat,
+    .stencilAttachmentFormat = depthFormat
   };
 
   VkPipelineColorBlendAttachmentState blendAttachment{
@@ -1075,6 +1089,8 @@ int main()
   };
   VkPipelineRasterizationStateCreateInfo rasterizationState{
     .sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
+    .cullMode = VK_CULL_MODE_BACK_BIT,
+    .frontFace = VK_FRONT_FACE_CLOCKWISE,
     .lineWidth = 1.0f
   };
   VkPipelineMultisampleStateCreateInfo multisampleState{
@@ -1112,6 +1128,11 @@ int main()
     while (SDL_PollEvent(&event)) {
       if (event.type == SDL_EVENT_QUIT) {
         quit = true;
+      }
+      if (event.type == SDL_EVENT_KEY_DOWN) {
+        if (event.key.key == SDLK_ESCAPE) {
+          quit = true;
+        }
       }
       if (event.type == SDL_EVENT_WINDOW_RESIZED) {
         SDL_CHECK(SDL_GetWindowSize(window, &windowSize.x, &windowSize.y));
@@ -1169,9 +1190,9 @@ int main()
       },
       VkImageMemoryBarrier2{
         .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
-        .srcStageMask = VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT,
+        .srcStageMask = VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT,
         .srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-        .dstStageMask = VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT,
+        .dstStageMask = VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT,
         .dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
         .oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
         .newLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL,
@@ -1213,7 +1234,8 @@ int main()
       .layerCount = 1,
       .colorAttachmentCount = 1,
       .pColorAttachments = &colorRenderingAttachmentInfo,
-      .pDepthAttachment = &depthRenderingAttachmentInfo
+      .pDepthAttachment = &depthRenderingAttachmentInfo,
+      .pStencilAttachment = &depthRenderingAttachmentInfo,
     };
     vkCmdBeginRendering(commandBuffer, &renderingInfo);
 
@@ -1235,6 +1257,7 @@ int main()
     vkCmdBindIndexBuffer(commandBuffer, vertexIndexBuffer, indexOffset, VK_INDEX_TYPE_UINT32);
     vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, (sizeof (VkDeviceAddress)), &shaderDataDevice.frame[frameIndex].deviceAddress);
     VkDeviceSize indexCount{ 9216 };
+
     vkCmdDrawIndexed(commandBuffer, indexCount, 3, 0, 0, 0);
     vkCmdEndRendering(commandBuffer);
 
