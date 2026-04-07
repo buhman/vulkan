@@ -19,7 +19,6 @@ CFLAGS += -Wno-unknown-pragmas
 CFLAGS += -fno-strict-aliasing
 CFLAGS += -I./include
 CFLAGS += -I../SDL3-dist/include
-CFLAGS += -I../volk
 CFLAGS += -fpic
 
 FLAGS += -fstack-protector -fstack-protector-all -fno-omit-frame-pointer -fsanitize=address
@@ -30,7 +29,8 @@ LDFLAGS += -Wl,-z noexecstack
 endif
 
 OBJS = \
-	src/main.o
+	src/main.o \
+	src/volk/volk.o
 
 BINS = \
 	index.idx.o \
@@ -42,8 +42,7 @@ SHADERS = \
 	shader/triangle.ps.spv.o
 
 LIBS = \
-	 ../SDL3-dist/lib64/libSDL3.a \
-	../volk/volk.o
+	 ../SDL3-dist/lib64/libSDL3.a
 
 all: main
 
