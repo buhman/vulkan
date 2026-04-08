@@ -123,6 +123,8 @@ VkDeviceMemory textureImageMemory{ VK_NULL_HANDLE };
 VkSampler textureSampler{ VK_NULL_HANDLE };
 
 VkDescriptorPool descriptorPool{ VK_NULL_HANDLE };
+VkDescriptorSetLayout uniformBufferDescriptorSetLayout{ VK_NULL_HANDLE };
+VkDescriptorSet uniformBufferDescriptorSets[maxFramesInFlight];
 VkDescriptorSetLayout textureDescriptorSetLayout{ VK_NULL_HANDLE };
 VkDescriptorSet textureDescriptorSet{ VK_NULL_HANDLE };
 
@@ -443,6 +445,7 @@ int main()
       printf("  maxMemoryAllocationCount %u\n", properties.properties.limits.maxMemoryAllocationCount);
       printf("  maxSamplerAllocationCount %u\n", properties.properties.limits.maxSamplerAllocationCount);
       printf("  nonCoherentAtomSize %lu\n", properties.properties.limits.nonCoherentAtomSize);
+      printf("  minUniformBufferOffsetAlignment %lu\n", properties.properties.limits.minUniformBufferOffsetAlignment);
       physicalDeviceProperties = properties.properties;
     }
   }
@@ -509,7 +512,6 @@ int main()
     .shaderSampledImageArrayNonUniformIndexing = true,
     .descriptorBindingVariableDescriptorCount = true,
     .runtimeDescriptorArray = true,
-    .bufferDeviceAddress = true
   };
   VkPhysicalDeviceVulkan13Features enabledVulkan13Features{
     .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES,
@@ -638,7 +640,7 @@ int main()
       VkBufferCreateInfo bufferCreateInfo{
         .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
         .size = (sizeof (ShaderData)),
-        .usage = VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
+        .usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
         .sharingMode = VK_SHARING_MODE_EXCLUSIVE
       };
 
@@ -649,7 +651,7 @@ int main()
     vkGetBufferMemoryRequirements(device, shaderDataDevice.frame[0].buffer, &memoryRequirements);
 
     VkMemoryPropertyFlags memoryPropertyFlags{ VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT };
-    VkMemoryAllocateFlags memoryAllocateFlags{ VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT };
+    VkMemoryAllocateFlags memoryAllocateFlags{ };
     shaderDataDevice.stride = allocateFromMemoryRequirements(physicalDeviceMemoryProperties,
                                                              memoryRequirements,
                                                              memoryPropertyFlags,
@@ -666,12 +668,6 @@ int main()
       VkDeviceSize offset{ shaderDataDevice.stride * i };
 
       VK_CHECK(vkBindBufferMemory(device, shaderDataDevice.frame[i].buffer, shaderDataDevice.memory, offset));
-
-      VkBufferDeviceAddressInfo bufferDeviceAddressInfo{
-        .sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO,
-        .buffer = shaderDataDevice.frame[i].buffer
-      };
-      shaderDataDevice.frame[i].deviceAddress = vkGetBufferDeviceAddress(device, &bufferDeviceAddressInfo);
     }
   }
 
@@ -773,7 +769,7 @@ int main()
   VkMemoryRequirements textureSourceBufferMemoryRequirements;
   vkGetBufferMemoryRequirements(device, textureSourceBuffer, &textureSourceBufferMemoryRequirements);
   VkMemoryPropertyFlags textureSourceBufferMemoryPropertyFlags{
-    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
   };
   uint32_t textureSourceBufferMemoryTypeIndex = findMemoryTypeIndex(physicalDeviceMemoryProperties.memoryProperties, textureSourceBufferMemoryRequirements.memoryTypeBits, textureSourceBufferMemoryPropertyFlags);
   VkMemoryAllocateInfo textureSourceBufferAllocateInfo{
@@ -886,69 +882,103 @@ int main()
   };
   VK_CHECK(vkCreateSampler(device, &samplerCreateInfo, nullptr, &textureSampler));
 
+  //////////////////////////////////////////////////////////////////////
+  // descriptors
+  //////////////////////////////////////////////////////////////////////
+
+  //
+  // pool
+  //
+
+  VkDescriptorPoolSize descriptorPoolSizes[2]{
+    {
+      .type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+      .descriptorCount = 1,
+    },
+    {
+      .type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+      .descriptorCount = maxFramesInFlight,
+    }
+  };
+  VkDescriptorPoolCreateInfo descriptorPoolCreateInfo{
+    .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+    .maxSets = 3,
+    .poolSizeCount = 2,
+    .pPoolSizes = descriptorPoolSizes
+  };
+  VK_CHECK(vkCreateDescriptorPool(device, &descriptorPoolCreateInfo, nullptr, &descriptorPool));
+
+  //
+  // uniform buffer descriptor set layout/allocation
+  //
+
+  VkDescriptorSetLayoutBinding uniformBufferDescriptorSetLayoutBinding{
+    .binding = 0,
+    .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+    .descriptorCount = 1,
+    .stageFlags = VK_SHADER_STAGE_VERTEX_BIT
+  };
+
+  VkDescriptorSetLayoutCreateInfo uniformBufferDescriptorSetLayoutCreateInfo{
+    .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+    .bindingCount = 1,
+    .pBindings = &uniformBufferDescriptorSetLayoutBinding
+  };
+  VK_CHECK(vkCreateDescriptorSetLayout(device, &uniformBufferDescriptorSetLayoutCreateInfo, nullptr, &uniformBufferDescriptorSetLayout));
+
+  VkDescriptorSetLayout uniformBufferDescriptorSetLayouts[maxFramesInFlight];
+  for (uint32_t i = 0; i < maxFramesInFlight; i++) {
+    uniformBufferDescriptorSetLayouts[i] = uniformBufferDescriptorSetLayout;
+  };
+
+  VkDescriptorSetAllocateInfo uniformBufferDescriptorSetAllocateInfo{
+    .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+    .descriptorPool = descriptorPool,
+    .descriptorSetCount = maxFramesInFlight,
+    .pSetLayouts = uniformBufferDescriptorSetLayouts
+  };
+  VK_CHECK(vkAllocateDescriptorSets(device, &uniformBufferDescriptorSetAllocateInfo, uniformBufferDescriptorSets));
+
+  //
+  // texture descriptor set layout/allocation
+  //
+
+  VkDescriptorSetLayoutBinding textureDescriptorSetLayoutBinding{
+    .binding = 0,
+    .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+    .descriptorCount = 1,
+    .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT
+  };
+
+  VkDescriptorSetLayoutCreateInfo textureDescriptorSetLayoutCreateInfo{
+    .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+    .bindingCount = 1,
+    .pBindings = &textureDescriptorSetLayoutBinding
+  };
+  VK_CHECK(vkCreateDescriptorSetLayout(device, &textureDescriptorSetLayoutCreateInfo, nullptr, &textureDescriptorSetLayout));
+
+  VkDescriptorSetAllocateInfo textureDescriptorSetAllocateInfo{
+    .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+    .descriptorPool = descriptorPool,
+    .descriptorSetCount = 1,
+    .pSetLayouts = &textureDescriptorSetLayout
+  };
+  VK_CHECK(vkAllocateDescriptorSets(device, &textureDescriptorSetAllocateInfo, &textureDescriptorSet));
+
+  //////////////////////////////////////////////////////////////////////
+  // descriptor set writes
+  //////////////////////////////////////////////////////////////////////
+
+  constexpr int writeDescriptorSetsCount = 1 + maxFramesInFlight;
+  VkWriteDescriptorSet writeDescriptorSets[writeDescriptorSetsCount];
+
   VkDescriptorImageInfo textureDescriptorImageInfo = {
     .sampler = textureSampler,
     .imageView = textureImageView,
     .imageLayout = VK_IMAGE_LAYOUT_READ_ONLY_OPTIMAL
   };
 
-  //////////////////////////////////////////////////////////////////////
-  // descriptors
-  //////////////////////////////////////////////////////////////////////
-
-  VkDescriptorBindingFlags descriptorBindingFlags{ VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT };
-  VkDescriptorSetLayoutBindingFlagsCreateInfo descriptorSetLayoutBindingFlagsCreateInfo{
-    .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO,
-    .bindingCount = 1,
-    .pBindingFlags = &descriptorBindingFlags
-  };
-  VkDescriptorSetLayoutBinding textureDescriptorSetLayoutBinding{
-    .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-    .descriptorCount = 1,
-    .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT
-  };
-  VkDescriptorSetLayoutCreateInfo textureDescriptorSetLayoutCreateInfo{
-    .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-    .pNext = &descriptorSetLayoutBindingFlagsCreateInfo,
-    .bindingCount = 1,
-    .pBindings = &textureDescriptorSetLayoutBinding
-  };
-  VK_CHECK(vkCreateDescriptorSetLayout(device, &textureDescriptorSetLayoutCreateInfo, nullptr, &textureDescriptorSetLayout));
-
-  // pool
-
-  VkDescriptorPoolSize poolSize{
-    .type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-    .descriptorCount = 1,
-  };
-  VkDescriptorPoolCreateInfo descriptorPoolCreateInfo{
-    .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
-    .maxSets = 1,
-    .poolSizeCount = 1,
-    .pPoolSizes = &poolSize
-  };
-  VK_CHECK(vkCreateDescriptorPool(device, &descriptorPoolCreateInfo, nullptr, &descriptorPool));
-
-  //
-
-  uint32_t variableDescriptorCount{ 1 };
-  VkDescriptorSetVariableDescriptorCountAllocateInfo descriptorSetVariableDescriptorCountAllocateInfo{
-    .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_ALLOCATE_INFO_EXT,
-    .descriptorSetCount = 1,
-    .pDescriptorCounts = &variableDescriptorCount
-  };
-  VkDescriptorSetAllocateInfo descriptorSetAllocateInfo{
-    .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
-    .pNext = &descriptorSetVariableDescriptorCountAllocateInfo,
-    .descriptorPool = descriptorPool,
-    .descriptorSetCount = 1,
-    .pSetLayouts = &textureDescriptorSetLayout
-  };
-  VK_CHECK(vkAllocateDescriptorSets(device, &descriptorSetAllocateInfo, &textureDescriptorSet));
-
-  //
-
-  VkWriteDescriptorSet writeDescriptorSet{
+  writeDescriptorSets[0] = {
     .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
     .dstSet = textureDescriptorSet,
     .dstBinding = 0,
@@ -956,7 +986,26 @@ int main()
     .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
     .pImageInfo = &textureDescriptorImageInfo
   };
-  vkUpdateDescriptorSets(device, 1, &writeDescriptorSet, 0, nullptr);
+
+  for (uint32_t i = 0; i < maxFramesInFlight; i++) {
+    VkDescriptorBufferInfo descriptorBufferInfo {
+      .buffer = shaderDataDevice.frame[i].buffer,
+      .offset = 0,
+      .range = VK_WHOLE_SIZE,
+    };
+
+    writeDescriptorSets[1 + i] = {
+      .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+      .dstSet = uniformBufferDescriptorSets[i],
+      .dstBinding = 0,
+      .descriptorCount = 1,
+      .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+      .pBufferInfo = &descriptorBufferInfo
+    };
+  }
+
+  // update all three descriptor sets
+  vkUpdateDescriptorSets(device, writeDescriptorSetsCount, writeDescriptorSets, 0, nullptr);
 
   //////////////////////////////////////////////////////////////////////
   // shaders
@@ -977,16 +1026,15 @@ int main()
   // pipeline
   //////////////////////////////////////////////////////////////////////
 
-  VkPushConstantRange pushConstantRange{
-    .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
-    .size = (sizeof (VkDeviceAddress))
+  VkDescriptorSetLayout descriptorSetLayouts[2] = {
+    uniformBufferDescriptorSetLayout,
+    textureDescriptorSetLayout,
   };
+
   VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{
     .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-    .setLayoutCount = 1,
-    .pSetLayouts = &textureDescriptorSetLayout,
-    .pushConstantRangeCount = 1,
-    .pPushConstantRanges = &pushConstantRange
+    .setLayoutCount = 2,
+    .pSetLayouts = descriptorSetLayouts,
   };
   VK_CHECK(vkCreatePipelineLayout(device, &pipelineLayoutCreateInfo, nullptr, &pipelineLayout));
 
@@ -1181,13 +1229,6 @@ int main()
       }
     }
 
-    // wait for fence
-    VK_CHECK(vkWaitForFences(device, 1, &fences[frameIndex], true, UINT64_MAX));
-    VK_CHECK(vkResetFences(device, 1, &fences[frameIndex]));
-
-    // acquire next image
-    VK_CHECK_SWAPCHAIN(vkAcquireNextImageKHR(device, swapchain, UINT64_MAX, presentSemaphores[frameIndex], VK_NULL_HANDLE, &imageIndex));
-
     // shader data
     XMMATRIX model = currentModel();
     XMMATRIX view = currentView();
@@ -1210,6 +1251,14 @@ int main()
       .size = flushSize,
     };
     vkFlushMappedMemoryRanges(device, 1, &shaderDataMemoryRange);
+
+
+    // wait for fence
+    VK_CHECK(vkWaitForFences(device, 1, &fences[frameIndex], true, UINT64_MAX));
+    VK_CHECK(vkResetFences(device, 1, &fences[frameIndex]));
+
+    // acquire next image
+    VK_CHECK_SWAPCHAIN(vkAcquireNextImageKHR(device, swapchain, UINT64_MAX, presentSemaphores[frameIndex], VK_NULL_HANDLE, &imageIndex));
 
     // command buffer
     VkCommandBuffer& commandBuffer = commandBuffers[frameIndex];
@@ -1298,11 +1347,14 @@ int main()
     vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
     VkDeviceSize vertexOffset{ 0 };
-    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &textureDescriptorSet, 0, nullptr);
+    VkDescriptorSet descriptorSets[2] = {
+      uniformBufferDescriptorSets[frameIndex],
+      textureDescriptorSet,
+    };
+    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 2, descriptorSets, 0, nullptr);
     vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexIndexBuffer, &vertexOffset);
     VkDeviceSize indexOffset{ vertexBufferSize };
     vkCmdBindIndexBuffer(commandBuffer, vertexIndexBuffer, indexOffset, VK_INDEX_TYPE_UINT32);
-    vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, (sizeof (VkDeviceAddress)), &shaderDataDevice.frame[frameIndex].deviceAddress);
     VkDeviceSize indexCount{ 9216 };
 
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelines[MAIN_PIPELINE]);
@@ -1398,6 +1450,7 @@ int main()
   vkDestroyImage(device, textureImage, nullptr);
   vkFreeMemory(device, textureImageMemory, nullptr);
 
+  vkDestroyDescriptorSetLayout(device, uniformBufferDescriptorSetLayout, nullptr);
   vkDestroyDescriptorSetLayout(device, textureDescriptorSetLayout, nullptr);
   vkDestroyDescriptorPool(device, descriptorPool, nullptr);
   vkDestroyPipelineLayout(device, pipelineLayout, nullptr);

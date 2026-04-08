@@ -22,26 +22,21 @@ struct ShaderData
   uint32_t Selected;
 };
 
-struct PushConstant {
-  vk::BufferPointer<ShaderData> data;
-};
+[[vk::binding(0, 0)]] ConstantBuffer<ShaderData> data;
 
-[[vk::push_constant]]
-struct PushConstant constants;
-
-[[vk::binding(0)]] SamplerState samplers[];
-[[vk::binding(0)]] Texture2D textures[];
+[[vk::binding(0, 1)]] SamplerState samplers[];
+[[vk::binding(0, 1)]] Texture2D textures[];
 
 [shader("vertex")]
 VSOutput VSMain(VSInput input)
 {
   VSOutput output = (VSOutput)0;
-  output.Position = mul(constants.data.Get().Transform, float4(input.Position.xyz, 1.0));
-  output.Normal = mul((float3x3)constants.data.Get().ModelView, input.Normal);
+  output.Position = mul(data.Transform, float4(input.Position.xyz, 1.0));
+  output.Normal = mul((float3x3)data.ModelView, input.Normal);
   output.Texture = input.Texture.xy;
 
-  float4 viewPosition = mul(constants.data.Get().ModelView, float4(input.Position.xyz, 1.0));
-  output.LightDirection = (constants.data.Get().LightPosition - viewPosition).xyz;
+  float4 viewPosition = mul(data.ModelView, float4(input.Position.xyz, 1.0));
+  output.LightDirection = (data.LightPosition - viewPosition).xyz;
   output.ViewDirection = -viewPosition.xyz;
 
   return output;
@@ -75,7 +70,7 @@ VSOutlineOutput VSOutlineMain(VSInput input)
 {
   VSOutlineOutput output = (VSOutlineOutput)0;
   float3 position = input.Position.xyz + input.Normal.xyz * 0.01;
-  output.Position = mul(constants.data.Get().Transform, float4(position, 1.0));
+  output.Position = mul(data.Transform, float4(position, 1.0));
   return output;
 }
 
