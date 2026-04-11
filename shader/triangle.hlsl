@@ -24,8 +24,15 @@ struct ShaderData
 
 [[vk::binding(0, 0)]] ConstantBuffer<ShaderData> data;
 
-[[vk::binding(0, 1)]] SamplerState samplers[];
-[[vk::binding(0, 1)]] Texture2D textures[];
+[[vk::binding(0, 1)]] SamplerState samplers[2];
+[[vk::binding(1, 1)]] Texture2D texture;
+
+struct PushConstant {
+  int SamplerIndex;
+};
+
+[[vk::push_constant]]
+struct PushConstant constants;
 
 [shader("vertex")]
 VSOutput VSMain(VSInput input)
@@ -45,7 +52,7 @@ VSOutput VSMain(VSInput input)
 [shader("pixel")]
 float4 PSMain(VSOutput input) : SV_TARGET
 {
-  float3 color = textures[0].Sample(samplers[0], input.Texture).bgr;
+  float3 color = texture.Sample(samplers[constants.SamplerIndex], input.Texture).bgr;
 
   float3 N = normalize(input.Normal);
   float3 L = normalize(input.LightDirection);

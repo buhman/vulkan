@@ -121,7 +121,7 @@ VkPipelineLayout pipelineLayout{ VK_NULL_HANDLE };
 VkImage textureImage{ VK_NULL_HANDLE };
 VkImageView textureImageView{ VK_NULL_HANDLE };
 VkDeviceMemory textureImageMemory{ VK_NULL_HANDLE };
-VkSampler textureSampler{ VK_NULL_HANDLE };
+VkSampler textureSamplers[3]{ VK_NULL_HANDLE, VK_NULL_HANDLE, VK_NULL_HANDLE };
 
 VkDescriptorPool descriptorPool{ VK_NULL_HANDLE };
 VkDescriptorSetLayout uniformBufferDescriptorSetLayout{ VK_NULL_HANDLE };
@@ -396,6 +396,10 @@ VkDeviceSize allocateFromMemoryRequirements(VkPhysicalDeviceMemoryProperties2 co
   VK_CHECK(vkAllocateMemory(device, &memoryAllocateInfo, nullptr, memory));
 
   return stride;
+}
+
+inline static int positive_modulo(int i, unsigned int n) {
+  return (i % n + n) % n;
 }
 
 int main()
@@ -892,7 +896,29 @@ int main()
 
   // texture sampler
 
-  VkSamplerCreateInfo samplerCreateInfo{
+  VkSamplerCreateInfo samplerCreateInfo0{
+    .sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
+    .magFilter = VK_FILTER_LINEAR,
+    .minFilter = VK_FILTER_LINEAR,
+    .mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR,
+    .addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+    .addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+    .anisotropyEnable = VK_FALSE,
+    .maxLod = 0.0, // (float)ddsFile->header.dwMipMapCount
+  };
+  VK_CHECK(vkCreateSampler(device, &samplerCreateInfo0, nullptr, &textureSamplers[0]));
+  VkSamplerCreateInfo samplerCreateInfo1{
+    .sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
+    .magFilter = VK_FILTER_LINEAR,
+    .minFilter = VK_FILTER_LINEAR,
+    .mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR,
+    .addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+    .addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+    .anisotropyEnable = VK_FALSE,
+    .maxLod = VK_LOD_CLAMP_NONE, // (float)ddsFile->header.dwMipMapCount,
+  };
+  VK_CHECK(vkCreateSampler(device, &samplerCreateInfo1, nullptr, &textureSamplers[1]));
+  VkSamplerCreateInfo samplerCreateInfo2{
     .sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
     .magFilter = VK_FILTER_LINEAR,
     .minFilter = VK_FILTER_LINEAR,
@@ -901,9 +927,9 @@ int main()
     .addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
     .anisotropyEnable = VK_TRUE,
     .maxAnisotropy = 16.0f,
-    .maxLod = (float)ddsFile->header.dwMipMapCount,
+    .maxLod = VK_LOD_CLAMP_NONE, // (float)ddsFile->header.dwMipMapCount,
   };
-  VK_CHECK(vkCreateSampler(device, &samplerCreateInfo, nullptr, &textureSampler));
+  VK_CHECK(vkCreateSampler(device, &samplerCreateInfo2, nullptr, &textureSamplers[2]));
 
   //////////////////////////////////////////////////////////////////////
   // descriptors
@@ -913,9 +939,13 @@ int main()
   // pool
   //
 
-  VkDescriptorPoolSize descriptorPoolSizes[2]{
+  VkDescriptorPoolSize descriptorPoolSizes[3]{
     {
-      .type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+      .type = VK_DESCRIPTOR_TYPE_SAMPLER,
+      .descriptorCount = 3,
+    },
+    {
+      .type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
       .descriptorCount = 1,
     },
     {
@@ -926,7 +956,7 @@ int main()
   VkDescriptorPoolCreateInfo descriptorPoolCreateInfo{
     .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
     .maxSets = 3,
-    .poolSizeCount = 2,
+    .poolSizeCount = 3,
     .pPoolSizes = descriptorPoolSizes
   };
   VK_CHECK(vkCreateDescriptorPool(device, &descriptorPoolCreateInfo, nullptr, &descriptorPool));
@@ -966,17 +996,25 @@ int main()
   // texture descriptor set layout/allocation
   //
 
-  VkDescriptorSetLayoutBinding textureDescriptorSetLayoutBinding{
-    .binding = 0,
-    .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-    .descriptorCount = 1,
-    .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT
+  VkDescriptorSetLayoutBinding textureDescriptorSetLayoutBindings[2]{
+    {
+      .binding = 0,
+      .descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER,
+      .descriptorCount = 3,
+      .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT
+    },
+    {
+      .binding = 1,
+      .descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+      .descriptorCount = 1,
+      .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT
+    }
   };
 
   VkDescriptorSetLayoutCreateInfo textureDescriptorSetLayoutCreateInfo{
     .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-    .bindingCount = 1,
-    .pBindings = &textureDescriptorSetLayoutBinding
+    .bindingCount = 2,
+    .pBindings = textureDescriptorSetLayoutBindings
   };
   VK_CHECK(vkCreateDescriptorSetLayout(device, &textureDescriptorSetLayoutCreateInfo, nullptr, &textureDescriptorSetLayout));
 
@@ -992,22 +1030,39 @@ int main()
   // descriptor set writes
   //////////////////////////////////////////////////////////////////////
 
-  constexpr int writeDescriptorSetsCount = 1 + maxFramesInFlight;
+  constexpr int writeDescriptorSetsCount = 2 + maxFramesInFlight;
   VkWriteDescriptorSet writeDescriptorSets[writeDescriptorSetsCount];
 
-  VkDescriptorImageInfo textureDescriptorImageInfo = {
-    .sampler = textureSampler,
-    .imageView = textureImageView,
-    .imageLayout = VK_IMAGE_LAYOUT_READ_ONLY_OPTIMAL
+  VkDescriptorImageInfo textureSamplerDescriptorImageInfos[3] = {
+    {
+      .sampler = textureSamplers[0],
+    },
+    {
+      .sampler = textureSamplers[1],
+    },
+    {
+      .sampler = textureSamplers[2],
+    },
   };
-
   writeDescriptorSets[0] = {
     .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
     .dstSet = textureDescriptorSet,
     .dstBinding = 0,
+    .descriptorCount = 3,
+    .descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER,
+    .pImageInfo = textureSamplerDescriptorImageInfos
+  };
+  VkDescriptorImageInfo textureImageDescriptorImageInfo = {
+    .imageView = textureImageView,
+    .imageLayout = VK_IMAGE_LAYOUT_READ_ONLY_OPTIMAL
+  };
+  writeDescriptorSets[1] = {
+    .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+    .dstSet = textureDescriptorSet,
+    .dstBinding = 1,
     .descriptorCount = 1,
-    .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-    .pImageInfo = &textureDescriptorImageInfo
+    .descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+    .pImageInfo = &textureImageDescriptorImageInfo
   };
 
   for (uint32_t i = 0; i < maxFramesInFlight; i++) {
@@ -1017,7 +1072,7 @@ int main()
       .range = VK_WHOLE_SIZE,
     };
 
-    writeDescriptorSets[1 + i] = {
+    writeDescriptorSets[2 + i] = {
       .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
       .dstSet = uniformBufferDescriptorSets[i],
       .dstBinding = 0,
@@ -1054,10 +1109,17 @@ int main()
     textureDescriptorSetLayout,
   };
 
+  VkPushConstantRange pushConstantRange{
+    .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+    .size = (sizeof (int32_t))
+  };
+
   VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{
     .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
     .setLayoutCount = 2,
     .pSetLayouts = descriptorSetLayouts,
+    .pushConstantRangeCount = 1,
+    .pPushConstantRanges = &pushConstantRange
   };
   VK_CHECK(vkCreatePipelineLayout(device, &pipelineLayoutCreateInfo, nullptr, &pipelineLayout));
 
@@ -1236,6 +1298,7 @@ int main()
   uint32_t frameIndex{ 0 };
   uint32_t imageIndex{ 0 };
   bool quit{ false };
+  int32_t samplerIndex{ 0 };
   while (quit == false) {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
@@ -1245,6 +1308,20 @@ int main()
       if (event.type == SDL_EVENT_KEY_DOWN) {
         if (event.key.key == SDLK_ESCAPE) {
           quit = true;
+        }
+        if (!event.key.repeat) {
+          switch (event.key.key) {
+          case SDLK_LEFT:
+            samplerIndex = positive_modulo(samplerIndex - 1, 3);
+            printf("samplerIndex: %d\n", samplerIndex);
+            break;
+          case SDLK_RIGHT:
+            samplerIndex = positive_modulo(samplerIndex + 1, 3);
+            printf("samplerIndex: %d\n", samplerIndex);
+            break;
+          default:
+            break;
+          }
         }
       }
       if (event.type == SDL_EVENT_WINDOW_RESIZED) {
@@ -1378,6 +1455,7 @@ int main()
     vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexIndexBuffer, &vertexOffset);
     VkDeviceSize indexOffset{ vertexBufferSize };
     vkCmdBindIndexBuffer(commandBuffer, vertexIndexBuffer, indexOffset, VK_INDEX_TYPE_UINT32);
+    vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, (sizeof (int32_t)), &samplerIndex);
     VkDeviceSize indexCount{ 2400 };
 
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelines[MAIN_PIPELINE]);
@@ -1469,7 +1547,9 @@ int main()
   vkFreeMemory(device, vertexIndexBufferMemory, nullptr);
 
   vkDestroyImageView(device, textureImageView, nullptr);
-  vkDestroySampler(device, textureSampler, nullptr);
+  vkDestroySampler(device, textureSamplers[0], nullptr);
+  vkDestroySampler(device, textureSamplers[1], nullptr);
+  vkDestroySampler(device, textureSamplers[2], nullptr);
   vkDestroyImage(device, textureImage, nullptr);
   vkFreeMemory(device, textureImageMemory, nullptr);
 
