@@ -9,6 +9,7 @@
 
 #include "new.h"
 #include "file.h"
+#include "dds_validate.h"
 
 template <typename T>
 inline static constexpr T min(T a, T b)
@@ -216,7 +217,7 @@ float theta = 0;
 XMMATRIX currentModel()
 {
   theta += 0.01;
-  return XMMatrixTranslation(0, 0, -0.5) * XMMatrixRotationX(theta);
+  return XMMatrixTranslation(0, 0, 0.0) * XMMatrixRotationX(theta) * XMMatrixRotationZ(XM_PI * 0.5f);
 }
 
 void recreateSwapchain(VkSurfaceFormatKHR surfaceFormat, VkFormat depthFormat, VkPhysicalDeviceMemoryProperties const & memoryProperties, VkSurfaceCapabilitiesKHR const & surfaceCapabilities)
@@ -446,6 +447,8 @@ int main()
       printf("  maxSamplerAllocationCount %u\n", properties.properties.limits.maxSamplerAllocationCount);
       printf("  nonCoherentAtomSize %lu\n", properties.properties.limits.nonCoherentAtomSize);
       printf("  minUniformBufferOffsetAlignment %lu\n", properties.properties.limits.minUniformBufferOffsetAlignment);
+      printf("  maxSamplerLodBias %f\n", properties.properties.limits.maxSamplerLodBias);
+      printf("  maxSamplerAnisotropy %f\n", properties.properties.limits.maxSamplerAnisotropy);
       physicalDeviceProperties = properties.properties;
     }
   }
@@ -586,9 +589,9 @@ int main()
 
   {
     uint32_t vertexSize;
-    void const * vertexStart = file::open("position_normal_texture.vtx", &vertexSize);
+    void const * vertexStart = file::open("checker.vtx", &vertexSize);
     uint32_t indexSize;
-    void const * indexStart = file::open("index.idx", &indexSize);
+    void const * indexStart = file::open("checker.idx", &indexSize);
     vertexBufferSize = vertexSize;
     indexBufferSize = indexSize;
 
@@ -709,14 +712,25 @@ int main()
   // texture
   //////////////////////////////////////////////////////////////////////
 
+  uint32_t checkerSize;
+  void const * checkerStart = file::open("checker.dds", &checkerSize);
+  void * checkerData;
+  uint32_t * mipOffsets;
+  DDS_FILE const * ddsFile = dds_validate(checkerStart, checkerSize, &mipOffsets, &checkerData);
+  uint32_t checkerDataSize = checkerSize - (sizeof (DDS_FILE));
+
   VkFormat textureFormat{ VK_FORMAT_B8G8R8A8_SRGB };
 
   VkImageCreateInfo textureImageCreateInfo{
     .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
     .imageType = VK_IMAGE_TYPE_2D,
     .format = textureFormat,
-    .extent = {.width = 858, .height = 858, .depth = 1 },
-    .mipLevels = 1,
+    .extent = {
+      .width = ddsFile->header.dwWidth,
+      .height = ddsFile->header.dwHeight,
+      .depth = 1
+    },
+    .mipLevels = ddsFile->header.dwMipMapCount,
     .arrayLayers = 1,
     .samples = VK_SAMPLE_COUNT_1_BIT,
     .tiling = VK_IMAGE_TILING_OPTIMAL,
@@ -748,7 +762,7 @@ int main()
     .format = textureFormat,
     .subresourceRange{
       .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-      .levelCount = 1,
+      .levelCount = ddsFile->header.dwMipMapCount,
       .layerCount = 1
     }
   };
@@ -756,13 +770,10 @@ int main()
 
   // texture transfer: source buffer
 
-  uint32_t spriteSize;
-  void const * spriteStart = file::open("sprite.data", &spriteSize);
-
   VkBuffer textureSourceBuffer{};
   VkBufferCreateInfo textureSourceBufferCreateInfo{
     .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-    .size = spriteSize,
+    .size = checkerDataSize,
     .usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT
   };
   VK_CHECK(vkCreateBuffer(device, &textureSourceBufferCreateInfo, nullptr, &textureSourceBuffer));
@@ -783,7 +794,7 @@ int main()
 
   void * textureSourceMappedData;
   VK_CHECK(vkMapMemory(device, textureSourceBufferMemory, 0, textureSourceBufferCreateInfo.size, 0, &textureSourceMappedData));
-  memcpy((void *)(((ptrdiff_t)textureSourceMappedData) + 0), spriteStart, spriteSize);
+  memcpy((void *)(((ptrdiff_t)textureSourceMappedData) + 0), checkerData, checkerDataSize);
   vkUnmapMemory(device, textureSourceBufferMemory);
 
   VkFenceCreateInfo textureFenceCreateInfo{
@@ -818,7 +829,7 @@ int main()
     .image = textureImage,
     .subresourceRange = {
       .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-      .levelCount = 1,
+      .levelCount = ddsFile->header.dwMipMapCount,
       .layerCount = 1
     }
   };
@@ -828,16 +839,25 @@ int main()
     .pImageMemoryBarriers = &barrierTextureImage
   };
   vkCmdPipelineBarrier2(textureCommandBuffer, &barrierTextureImageDependencyInfo);
-  VkBufferImageCopy copyRegion{
-    .bufferOffset = 0,
-    .imageSubresource{
-      .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-      .mipLevel = 0,
-      .layerCount = 1
-    },
-    .imageExtent{ .width = 858, .height = 858, .depth = 1 },
-  };
-  vkCmdCopyBufferToImage(textureCommandBuffer, textureSourceBuffer, textureImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copyRegion);
+  VkBufferImageCopy * copyRegions = NewM<VkBufferImageCopy>(ddsFile->header.dwMipMapCount);
+  for (uint32_t level = 0; level < ddsFile->header.dwMipMapCount; level++) {
+    copyRegions[level] = {
+      .bufferOffset = mipOffsets[level],
+      .imageSubresource{
+        .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+        .mipLevel = level,
+        .layerCount = 1
+      },
+      .imageExtent{
+        .width = max(1u, ddsFile->header.dwWidth >> level),
+        .height = max(1u, ddsFile->header.dwHeight >> level),
+        .depth = 1
+      },
+    };
+  }
+  vkCmdCopyBufferToImage(textureCommandBuffer, textureSourceBuffer, textureImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, ddsFile->header.dwMipMapCount, copyRegions);
+  free(mipOffsets);
+  free(copyRegions);
 
   VkImageMemoryBarrier2 barrierTextureRead{
     .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
@@ -848,7 +868,7 @@ int main()
     .oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
     .newLayout = VK_IMAGE_LAYOUT_READ_ONLY_OPTIMAL,
     .image = textureImage,
-    .subresourceRange = { .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, .levelCount = 1, .layerCount = 1 }
+    .subresourceRange = { .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, .levelCount = ddsFile->header.dwMipMapCount, .layerCount = 1 }
   };
   VkDependencyInfo barrierTextureReadDependencyInfo{
     .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
@@ -877,8 +897,11 @@ int main()
     .magFilter = VK_FILTER_LINEAR,
     .minFilter = VK_FILTER_LINEAR,
     .mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR,
-    .anisotropyEnable = VK_FALSE,
-    .maxLod = 1,
+    .addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+    .addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+    .anisotropyEnable = VK_TRUE,
+    .maxAnisotropy = 16.0f,
+    .maxLod = (float)ddsFile->header.dwMipMapCount,
   };
   VK_CHECK(vkCreateSampler(device, &samplerCreateInfo, nullptr, &textureSampler));
 
@@ -1041,14 +1064,14 @@ int main()
   VkVertexInputBindingDescription vertexBindingDescriptions[1]{
     {
       .binding = 0,
-      .stride = (3 * (sizeof (float)) * 3),
+      .stride = ((3 + 3 + 2) * (sizeof (float))),
       .inputRate = VK_VERTEX_INPUT_RATE_VERTEX
     }
   };
   VkVertexInputAttributeDescription vertexAttributeDescriptions[3]{
     { .location = 0, .binding = 0, .format = VK_FORMAT_R32G32B32_SFLOAT, .offset = 3 * 4 * 0 },
     { .location = 1, .binding = 0, .format = VK_FORMAT_R32G32B32_SFLOAT, .offset = 3 * 4 * 1 },
-    { .location = 2, .binding = 0, .format = VK_FORMAT_R32G32B32_SFLOAT, .offset = 3 * 4 * 2 },
+    { .location = 2, .binding = 0, .format = VK_FORMAT_R32G32_SFLOAT, .offset = 3 * 4 * 2 },
   };
   VkPipelineVertexInputStateCreateInfo vertexInputState{
     .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
@@ -1355,13 +1378,13 @@ int main()
     vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexIndexBuffer, &vertexOffset);
     VkDeviceSize indexOffset{ vertexBufferSize };
     vkCmdBindIndexBuffer(commandBuffer, vertexIndexBuffer, indexOffset, VK_INDEX_TYPE_UINT32);
-    VkDeviceSize indexCount{ 9216 };
+    VkDeviceSize indexCount{ 2400 };
 
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelines[MAIN_PIPELINE]);
     vkCmdDrawIndexed(commandBuffer, indexCount, 3, 0, 0, 0);
 
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelines[OUTLINE_PIPELINE]);
-    vkCmdDrawIndexed(commandBuffer, indexCount, 3, 0, 0, 0);
+    //vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelines[OUTLINE_PIPELINE]);
+    //vkCmdDrawIndexed(commandBuffer, indexCount, 3, 0, 0, 0);
 
     vkCmdEndRendering(commandBuffer);
 

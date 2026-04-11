@@ -1,4 +1,6 @@
 shader/triangle.spv
-index.idx
-position_normal_texture.vtx
+checker.idx
+checker.vtx
+checker.data
+checker.dds
 sprite.data

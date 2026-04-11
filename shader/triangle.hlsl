@@ -33,7 +33,7 @@ VSOutput VSMain(VSInput input)
   VSOutput output = (VSOutput)0;
   output.Position = mul(data.Transform, float4(input.Position.xyz, 1.0));
   output.Normal = mul((float3x3)data.ModelView, input.Normal);
-  output.Texture = input.Texture.xy;
+  output.Texture = input.Texture.xy * 1.0;
 
   float4 viewPosition = mul(data.ModelView, float4(input.Position.xyz, 1.0));
   output.LightDirection = (data.LightPosition - viewPosition).xyz;
@@ -56,6 +56,8 @@ float4 PSMain(VSOutput input) : SV_TARGET
   const float specularIntensity = 0.8;
   float3 specular = pow(max(dot(R, V), 0), a) * specularIntensity;
   float3 diffuse = max(dot(N, L), 0.001);
+  diffuse = 1.0;
+  specular = 0.0;
 
   return float4(diffuse * color + specular, 1.0);
 }

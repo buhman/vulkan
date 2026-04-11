@@ -39,7 +39,8 @@ OBJS = \
 	src/main.o \
 	src/volk/volk.o \
 	src/file.o \
-	src/pack.o
+	src/pack.o \
+	src/dds_validate.o
 
 ifeq ($(UNAME),Darwin)
 LIBS = \
