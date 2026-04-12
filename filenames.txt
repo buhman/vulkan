@@ -1,4 +1,7 @@
 shader/triangle.spv
+shader/collada.spv
+data/scenes/shadow_test/shadow_test.vtx
+data/scenes/shadow_test/shadow_test.idx
 checker.idx
 checker.vtx
 checker.data

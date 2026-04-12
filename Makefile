@@ -21,10 +21,11 @@ CFLAGS += -Wno-error=array-bounds
 CFLAGS += -Wno-unknown-pragmas
 CFLAGS += -fno-strict-aliasing
 CFLAGS += -I./include
+CFLAGS += -I./data
 CFLAGS += -I../SDL3-dist/include
 CFLAGS += -fpic
 
-FLAGS += -fstack-protector -fstack-protector-all -fno-omit-frame-pointer -fsanitize=address
+#FLAGS += -fstack-protector -fstack-protector-all -fno-omit-frame-pointer -fsanitize=address
 
 LDFLAGS += -lm
 ifeq ($(UNAME),Linux)
@@ -40,7 +41,14 @@ OBJS = \
 	src/volk/volk.o \
 	src/file.o \
 	src/pack.o \
-	src/dds_validate.o
+	src/dds_validate.o \
+	src/vulkan_helper.o \
+	src/collada/scene/vulkan.o \
+	src/collada/scene.o \
+	src/collada/node_state.o
+
+SCENES = \
+	data/scenes/shadow_test/shadow_test.o
 
 ifeq ($(UNAME),Darwin)
 LIBS = \
@@ -61,7 +69,7 @@ all: main
 %.o: %.s
 	$(AS) $< -o $@
 
-main: $(OBJS) $(LIBS) $(BINS) $(SHADERS)
+main: $(OBJS) $(LIBS) $(SCENES)
 	$(CC) $(ARCH) $(LDFLAGS) $(FLAGS) $(OPT) $(DEBUG) $^ -o $@
 
 %.spv: %.hlsl
