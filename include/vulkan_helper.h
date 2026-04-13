@@ -16,3 +16,12 @@ VkDeviceSize allocateFromMemoryRequirements(VkDevice device,
                                             VkMemoryAllocateFlags memoryAllocateFlags,
                                             uint32_t count,
                                             VkDeviceMemory * memory);
+
+VkDeviceSize allocateFromMemoryRequirements2(VkDevice device,
+                                             VkPhysicalDeviceMemoryProperties const & physicalDeviceMemoryProperties,
+                                             VkMemoryPropertyFlags memoryPropertyFlags,
+                                             VkMemoryAllocateFlags memoryAllocateFlags,
+                                             uint32_t memoryRequirementsCount,
+                                             VkMemoryRequirements const * memoryRequirements,
+                                             VkDeviceMemory * memory,
+                                             VkDeviceSize * offsets);

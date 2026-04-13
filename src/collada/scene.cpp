@@ -8,9 +8,12 @@ namespace collada::scene {
   {
     this->descriptor = descriptor;
 
-    vulkan.create_pipelines(descriptor);
     vulkan.load_vertex_index_buffer(descriptor->position_normal_texture_buffer,
                                     descriptor->index_buffer);
+    vulkan.create_uniform_buffers(descriptor);
+    vulkan.create_descriptor_sets();
+    vulkan.write_descriptor_sets(descriptor);
+    vulkan.create_pipelines(descriptor);
 
     node_state.allocate_node_instances(descriptor->nodes, descriptor->nodes_count);
   }
@@ -46,5 +49,10 @@ namespace collada::scene {
                                view,
                                descriptor->nodes_count,
                                node_state.node_instances);
+  }
+
+  void state::unload_scene()
+  {
+    node_state.deallocate_node_instances(descriptor->nodes_count);
   }
 }

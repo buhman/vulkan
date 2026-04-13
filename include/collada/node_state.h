@@ -9,5 +9,6 @@ namespace collada::node_state {
 
     void allocate_node_instances(types::node const * const * const nodes, int nodes_count);
     void update_node_world_transform(instance_types::node & node_instance);
+    void deallocate_node_instances(int nodes_count);
   };
 };

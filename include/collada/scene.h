@@ -19,5 +19,7 @@ namespace collada::scene {
     void update(XMMATRIX const & projection,
                 XMMATRIX const & view,
                 float t);
+
+    void unload_scene();
   };
 }

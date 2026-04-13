@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #include "volk/volk.h"
 #include "vulkan/vk_enum_string_helper.h"
@@ -61,4 +62,43 @@ VkDeviceSize allocateFromMemoryRequirements(VkDevice device,
   VK_CHECK(vkAllocateMemory(device, &memoryAllocateInfo, nullptr, memory));
 
   return stride;
+}
+
+VkDeviceSize allocateFromMemoryRequirements2(VkDevice device,
+                                             VkPhysicalDeviceMemoryProperties const & physicalDeviceMemoryProperties,
+                                             VkMemoryPropertyFlags memoryPropertyFlags,
+                                             VkMemoryAllocateFlags memoryAllocateFlags,
+                                             uint32_t memoryRequirementsCount,
+                                             VkMemoryRequirements const * memoryRequirements,
+                                             VkDeviceMemory * memory,
+                                             VkDeviceSize * offsets)
+{
+  assert(memoryRequirementsCount > 0);
+  uint32_t memoryTypeBits = memoryRequirements[0].memoryTypeBits;
+  for (uint32_t i = 1; i < memoryRequirementsCount; i++) {
+    assert(memoryRequirements[i].memoryTypeBits == memoryTypeBits);
+  }
+  uint32_t memoryTypeIndex = findMemoryTypeIndex(physicalDeviceMemoryProperties,
+                                                 memoryTypeBits,
+                                                 memoryPropertyFlags);
+  VkDeviceSize offset = 0;
+  for (uint32_t i = 0; i < memoryRequirementsCount; i++) {
+    offset = roundAlignment(offset, memoryRequirements[i].alignment);
+    offsets[i] = offset;
+    offset += memoryRequirements[i].size;
+  }
+
+  VkMemoryAllocateFlagsInfo memoryAllocateFlagsInfo{
+    .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO,
+    .flags = memoryAllocateFlags,
+  };
+  VkMemoryAllocateInfo memoryAllocateInfo{
+    .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+    .pNext = &memoryAllocateFlagsInfo,
+    .allocationSize = offset,
+    .memoryTypeIndex = memoryTypeIndex,
+  };
+  VK_CHECK(vkAllocateMemory(device, &memoryAllocateInfo, nullptr, memory));
+
+  return offset;
 }

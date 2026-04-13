@@ -66,6 +66,14 @@ namespace collada::node_state {
     }
   }
 
+  void state::deallocate_node_instances(int nodes_count)
+  {
+    for (int i = 0; i < nodes_count; i++) {
+      free(node_instances[i].transforms);
+    }
+    free(node_instances);
+  }
+
   //////////////////////////////////////////////////////////////////////
   // world matrix
   //////////////////////////////////////////////////////////////////////

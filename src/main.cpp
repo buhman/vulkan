@@ -1174,16 +1174,13 @@ int main()
 
   collada_state.vulkan.initial_state(instance,
                                      device,
-                                     pipelineLayout,
-                                     uniformBufferDescriptorSetLayout,
                                      physicalDeviceProperties,
                                      physicalDeviceMemoryProperties,
                                      surfaceFormat.format,
-                                     depthFormat,
-                                     &shaderData,
-                                     &shaderDataDevice);
+                                     depthFormat);
 
-  collada_state.load_scene(&shadow_test::descriptor);
+  collada::types::descriptor const * collada_scene_descriptor = &shadow_test::descriptor;
+  collada_state.load_scene(collada_scene_descriptor);
 
   //////////////////////////////////////////////////////////////////////
   // loop
@@ -1365,17 +1362,11 @@ int main()
     //vkCmdDrawIndexed(commandBuffer, indexCount, 1, 0, 0, 0);
     */
 
-    collada_state.vulkan.commandBuffer = commandBuffer;
-    collada_state.vulkan.frameIndex = frameIndex;
+    collada_state.vulkan.change_frame(commandBuffer, frameIndex);
 
     XMMATRIX projection = currentProjection();
     XMMATRIX view = currentView();
     collada_state.update(projection, view, 0);
-
-    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                            collada_state.vulkan.pipelineLayout,
-                            0, 1, &uniformBufferDescriptorSets[frameIndex],
-                            0, nullptr);
 
     collada_state.draw();
 
@@ -1440,6 +1431,10 @@ int main()
   }
 
   VK_CHECK(vkDeviceWaitIdle(device));
+
+  collada_state.vulkan.destroy_all(collada_scene_descriptor);
+  collada_state.unload_scene();
+
   for (uint32_t i = 0; i < maxFramesInFlight; i++) {
     vkDestroyFence(device, fences[i], nullptr);
     vkDestroySemaphore(device, presentSemaphores[i], nullptr);

@@ -14,17 +14,54 @@ struct VSOutput
   float3 ViewDirection : NORMAL2;
 };
 
-struct ShaderData
+struct Node
+{
+  column_major float4x4 ModelView;
+  //int MaterialIndex;
+};
+
+struct Scene
 {
   column_major float4x4 Projection;
-  column_major float4x4 ModelView[16];
   float4 LightPosition; // view space
 };
 
-[[vk::binding(0, 0)]] ConstantBuffer<ShaderData> data;
+struct MaterialColor
+{
+  float4 Emission;
+  float4 Ambient;
+  float4 Diffuse;
+  float4 Specular;
+};
+
+/*
+struct Nodes {
+  Node n[16];
+};
+
+struct MaterialColors {
+  MaterialColor mc[16];
+};
+*/
+
+struct SceneNodes {
+  Scene Scene;
+};
+
+struct Nodes {
+  Node n[11];
+};
+
+// set 0: per-frame
+[[vk::binding(0, 0)]] ConstantBuffer<Scene> Scene;
+[[vk::binding(1, 0)]] ConstantBuffer<Nodes> Nodes;
+//[[vk::binding(1, 0)]] cbuffer asdf { Nodes Nodes; }
+
+// set 1: constant
+//[[vk::binding(0, 1)]] ConstantBuffer<MaterialColor[]> MaterialColors;
 
 struct PushConstant {
-  int ModelViewIndex;
+  int NodeIndex;
 };
 
 [[vk::push_constant]]
@@ -33,15 +70,16 @@ struct PushConstant constants;
 [shader("vertex")]
 VSOutput VSMain(VSInput input)
 {
-  float4x4 modelView = data.ModelView[constants.ModelViewIndex];
+  //[constants.NodeIndex]
+  float4x4 modelView = Nodes.n[constants.NodeIndex].ModelView;
 
   VSOutput output = (VSOutput)0;
-  output.Position = mul(data.Projection, mul(modelView, float4(input.Position.xyz, 1.0))) * float4(-1, -1, 1, 1);
+  output.Position = mul(Scene.Projection, mul(modelView, float4(input.Position.xyz, 1.0))) * float4(-1, -1, 1, 1);
   output.Normal = mul((float3x3)modelView, input.Normal);
   output.Texture = input.Texture.xy * 1.0;
 
   float4 viewPosition = mul(modelView, float4(input.Position.xyz, 1.0));
-  output.LightDirection = (data.LightPosition - viewPosition).xyz;
+  output.LightDirection = (Scene.LightPosition - viewPosition).xyz;
   output.ViewDirection = -viewPosition.xyz;
 
   return output;

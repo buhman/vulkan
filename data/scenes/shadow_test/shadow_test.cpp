@@ -1575,6 +1575,15 @@ material const material_material__148_material = {
   .effect = &effect_material__148,
 };
 
+material const * const materials[] = {
+  &material_coloreffectr5g54b179_material,
+  &material_coloreffectr134g110b8_material,
+  &material_coloreffectr255g229b0_material,
+  &material_coloreffectr6g134b6_material,
+  &material_coloreffectr88g88b225_material,
+  &material_material__148_material,
+};
+
 input_element const input_elements_position_0_3_normal_0_3_texcoord_0_3[] = {
   {
     .semantic = "POSITION",
@@ -2078,9 +2087,9 @@ instance_light const instance_lights_node_point001[] = {
 };
 
 channel const * const node_channels_node_point001[] = {
-  &node_channel_node_point001_translation_y,
-  &node_channel_node_point001_translation_z,
   &node_channel_node_point001_translation_x,
+  &node_channel_node_point001_translation_z,
+  &node_channel_node_point001_translation_y,
 };
 
 node const node_node_point001 = {
@@ -2168,8 +2177,8 @@ instance_light const instance_lights_node_point002[] = {
 };
 
 channel const * const node_channels_node_point002[] = {
-  &node_channel_node_point002_translation_z,
   &node_channel_node_point002_translation_x,
+  &node_channel_node_point002_translation_z,
   &node_channel_node_point002_translation_y,
 };
 
@@ -2199,10 +2208,7 @@ node const node_node_point002 = {
 transform const transforms_node_camera001[] = {
   {
     .type = transform_type::MATRIX,
-    .matrix = {-0.9161802f, 0.3124457f, -0.2509807f, -3.604237f,
-               -0.4006261f, -0.7305838f, 0.5529431f, 4.948456f,
-               -0.01059775f, 0.6071451f, 0.7945203f, 0.0f,
-               0.0f, 0.0f, 0.0f, 1.0f},
+    .matrix = {-0.9161802f, 0.3124457f, -0.2509807f, -3.604237f, -0.4006261f, -0.7305838f, 0.5529431f, 4.948456f, -0.01059775f, 0.6071451f, 0.7945203f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f},
   },
 };
 
@@ -2273,6 +2279,9 @@ collada::types::descriptor const descriptor = {
 
   .images = images,
   .images_count = (sizeof (images)) / (sizeof (images[0])),
+
+  .materials = materials,
+  .materials_count = (sizeof (materials)) / (sizeof (materials[0])),
 
   .position_normal_texture_buffer = "data/scenes/shadow_test/shadow_test.vtx",
   .joint_weight_buffer = "data/scenes/shadow_test/shadow_test.vjw",

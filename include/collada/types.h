@@ -399,6 +399,9 @@ namespace collada::types {
     image const * const * const images;
     int const images_count;
 
+    material const * const * const materials;
+    int const materials_count;
+
     //animation const * const animations;
     //int const animations_count;
 

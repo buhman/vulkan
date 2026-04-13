@@ -102,28 +102,19 @@ namespace collada::scene {
 
   void vulkan::initial_state(VkInstance instance,
                              VkDevice device,
-                             VkPipelineLayout pipelineLayout,
-                             VkDescriptorSetLayout descriptorSetLayout,
                              VkPhysicalDeviceProperties const & physicalDeviceProperties,
                              VkPhysicalDeviceMemoryProperties const & physicalDeviceMemoryProperties,
                              VkFormat colorFormat,
-                             VkFormat depthFormat,
-                             ShaderData * shaderData,
-                             ShaderDataDevice const * shaderDataDevice)
+                             VkFormat depthFormat)
   {
     this->instance = instance;
     this->device = device;
-    this->pipelineLayout = pipelineLayout;
-    this->descriptorSetLayout = descriptorSetLayout;
 
     this->physicalDeviceProperties = physicalDeviceProperties;
     this->physicalDeviceMemoryProperties = physicalDeviceMemoryProperties;
 
     this->colorFormat = colorFormat;
     this->depthFormat = depthFormat;
-
-    this->shaderData = shaderData;
-    this->shaderDataDevice = shaderDataDevice;
 
     load_shader();
   }
@@ -188,6 +179,253 @@ namespace collada::scene {
     vkUnmapMemory(device, vertexIndex.memory);
   }
 
+
+  //////////////////////////////////////////////////////////////////////
+  // uniform buffers
+  //////////////////////////////////////////////////////////////////////
+
+  void vulkan::create_uniform_buffers(collada::types::descriptor const * const descriptor)
+  {
+    VkMemoryRequirements memoryRequirements[uniformBufferDescriptorCount];
+    VkDeviceSize offsets[uniformBufferDescriptorCount];
+
+    shaderData.nodes = NewM<Node>(descriptor->nodes_count);
+    shaderData.materialColors = NewM<MaterialColor>(descriptor->materials_count);
+
+    uint32_t memoryRequirementsIndex = 0;
+    // per-frame
+    for (uint32_t i = 0; i < maxFrames; i++) {
+      // scene buffer
+      VkBufferCreateInfo sceneBufferCreateInfo{
+        .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+        .size = (sizeof (Scene)),
+        .usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+        .sharingMode = VK_SHARING_MODE_EXCLUSIVE
+      };
+
+      VK_CHECK(vkCreateBuffer(device, &sceneBufferCreateInfo, nullptr, &shaderDataDevice.frame[i].sceneBuffer));
+      vkGetBufferMemoryRequirements(device, shaderDataDevice.frame[i].sceneBuffer, &memoryRequirements[memoryRequirementsIndex++]);
+
+      // nodes buffer
+      VkBufferCreateInfo nodesBufferCreateInfo{
+        .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+        .size = (sizeof (Node)) * descriptor->nodes_count,
+        .usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+        .sharingMode = VK_SHARING_MODE_EXCLUSIVE
+      };
+      VK_CHECK(vkCreateBuffer(device, &nodesBufferCreateInfo, nullptr, &shaderDataDevice.frame[i].nodesBuffer));
+      vkGetBufferMemoryRequirements(device, shaderDataDevice.frame[i].nodesBuffer, &memoryRequirements[memoryRequirementsIndex++]);
+    };
+
+    // material color buffer
+    VkBufferCreateInfo materialColorsBufferCreateInfo{
+      .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+      .size = (sizeof (MaterialColor)) * descriptor->materials_count,
+      .usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+      .sharingMode = VK_SHARING_MODE_EXCLUSIVE
+    };
+    VK_CHECK(vkCreateBuffer(device, &materialColorsBufferCreateInfo, nullptr, &shaderDataDevice.constant.materialColorsBuffer));
+    vkGetBufferMemoryRequirements(device, shaderDataDevice.constant.materialColorsBuffer, &memoryRequirements[memoryRequirementsIndex++]);
+
+    assert(memoryRequirementsIndex == uniformBufferDescriptorCount);
+
+    VkMemoryPropertyFlags memoryPropertyFlags{ VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT };
+    VkMemoryAllocateFlags memoryAllocateFlags{ };
+    VkDeviceSize allocationSize = allocateFromMemoryRequirements2(device,
+                                                                  physicalDeviceMemoryProperties,
+                                                                  memoryPropertyFlags,
+                                                                  memoryAllocateFlags,
+                                                                  uniformBufferDescriptorCount,
+                                                                  memoryRequirements,
+                                                                  &shaderDataDevice.memory,
+                                                                  offsets);
+
+    VkDeviceSize offset{ 0 };
+    VkDeviceSize size{ VK_WHOLE_SIZE };
+    VkMemoryMapFlags flags{ 0 };
+    VK_CHECK(vkMapMemory(device, shaderDataDevice.memory, offset, size, flags, &shaderDataDevice.mappedData));
+
+    uint32_t offsetsIndex = 0;
+    // this must match the same order as memoryRequirements
+    for (uint32_t i = 0; i < maxFrames; i++) {
+      shaderDataDevice.frame[i].sceneOffset = offsets[offsetsIndex];
+      shaderDataDevice.frame[i].sceneSize = memoryRequirements[offsetsIndex++].size;
+      shaderDataDevice.frame[i].sceneMapped = (void *)(((size_t)shaderDataDevice.mappedData) + shaderDataDevice.frame[i].sceneOffset);
+      VK_CHECK(vkBindBufferMemory(device, shaderDataDevice.frame[i].sceneBuffer, shaderDataDevice.memory, shaderDataDevice.frame[i].sceneOffset));
+
+      shaderDataDevice.frame[i].nodesOffset = offsets[offsetsIndex];
+      shaderDataDevice.frame[i].nodesSize = memoryRequirements[offsetsIndex++].size;
+      shaderDataDevice.frame[i].nodesMapped = (void *)(((size_t)shaderDataDevice.mappedData) + shaderDataDevice.frame[i].nodesOffset);
+      VK_CHECK(vkBindBufferMemory(device, shaderDataDevice.frame[i].nodesBuffer, shaderDataDevice.memory, shaderDataDevice.frame[i].nodesOffset));
+    }
+    shaderDataDevice.constant.materialColorsOffset = offsets[offsetsIndex];
+    shaderDataDevice.constant.materialColorsSize = memoryRequirements[offsetsIndex++].size;
+    shaderDataDevice.constant.materialColorsMapped = (void *)(((size_t)shaderDataDevice.mappedData) + shaderDataDevice.constant.materialColorsOffset);
+    VK_CHECK(vkBindBufferMemory(device, shaderDataDevice.constant.materialColorsBuffer, shaderDataDevice.memory, shaderDataDevice.constant.materialColorsOffset));
+
+    // if materialColorSize rounded to a multiple of nonCoherentAtomSize is larger than the size of the allocated memory, round down to VK_WHOLE_SIZE
+    if (shaderDataDevice.constant.materialColorsOffset + shaderDataDevice.constant.materialColorsSize > allocationSize) {
+      shaderDataDevice.constant.materialColorsSize = VK_WHOLE_SIZE;
+    }
+
+    assert(offsetsIndex == uniformBufferDescriptorCount);
+  }
+
+  //////////////////////////////////////////////////////////////////////
+  // descriptor sets
+  //////////////////////////////////////////////////////////////////////
+
+  void vulkan::create_descriptor_sets()
+  {
+    //
+    // pool
+    //
+    VkDescriptorPoolSize descriptorPoolSizes[1]{
+      {
+        .type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+        .descriptorCount = uniformBufferDescriptorCount + 1, // why + 1?
+      }
+    };
+    VkDescriptorPoolCreateInfo descriptorPoolCreateInfo{
+      .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+      .maxSets = 2,
+      .poolSizeCount = 1,
+      .pPoolSizes = descriptorPoolSizes
+    };
+    VK_CHECK(vkCreateDescriptorPool(device, &descriptorPoolCreateInfo, nullptr, &descriptorPool));
+
+    //
+    // uniform buffer descriptor set layout/allocation (set 0, per-frame)
+    //
+    {
+      constexpr int bindingCount = 2;
+      VkDescriptorSetLayoutBinding descriptorSetLayoutBindings[bindingCount]{
+        {
+          .binding = 0,
+          .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+          .descriptorCount = 1,
+          .stageFlags = VK_SHADER_STAGE_VERTEX_BIT
+        },
+        {
+          .binding = 1,
+          .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+          .descriptorCount = 1,
+          .stageFlags = VK_SHADER_STAGE_VERTEX_BIT
+        }
+      };
+
+      VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo{
+        .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+        .bindingCount = bindingCount,
+        .pBindings = descriptorSetLayoutBindings
+      };
+      VK_CHECK(vkCreateDescriptorSetLayout(device, &descriptorSetLayoutCreateInfo, nullptr, &descriptorSetLayouts[0]));
+
+      VkDescriptorSetLayout setLayouts[maxFrames];
+      for (uint32_t i = 0; i < maxFrames; i++) {
+        setLayouts[i] = descriptorSetLayouts[0];
+      };
+
+      VkDescriptorSetAllocateInfo descriptorSetAllocateInfo{
+        .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+        .descriptorPool = descriptorPool,
+        .descriptorSetCount = maxFrames,
+        .pSetLayouts = setLayouts
+      };
+      VK_CHECK(vkAllocateDescriptorSets(device, &descriptorSetAllocateInfo, descriptorSets0));
+    }
+
+    //
+    // uniform buffer descriptor set layout/allocation (set 1, constant)
+    //
+    {
+      constexpr int bindingCount = 1;
+      VkDescriptorSetLayoutBinding descriptorSetLayoutBindings[bindingCount]{
+        {
+          .binding = 0,
+          .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+          .descriptorCount = 1,
+          .stageFlags = VK_SHADER_STAGE_VERTEX_BIT
+        },
+      };
+
+      VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo{
+        .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+        .bindingCount = bindingCount,
+        .pBindings = descriptorSetLayoutBindings
+      };
+      VK_CHECK(vkCreateDescriptorSetLayout(device, &descriptorSetLayoutCreateInfo, nullptr, &descriptorSetLayouts[1]));
+
+      VkDescriptorSetAllocateInfo descriptorSetAllocateInfo{
+        .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+        .descriptorPool = descriptorPool,
+        .descriptorSetCount = 1,
+        .pSetLayouts = &descriptorSetLayouts[1]
+      };
+      VK_CHECK(vkAllocateDescriptorSets(device, &descriptorSetAllocateInfo, &descriptorSet1));
+    }
+  }
+
+  //////////////////////////////////////////////////////////////////////
+  // descriptor set writes
+  //////////////////////////////////////////////////////////////////////
+
+  void vulkan::write_descriptor_sets(collada::types::descriptor const * const descriptor)
+  {
+    VkWriteDescriptorSet writeDescriptorSets[uniformBufferDescriptorCount];
+    uint32_t writeIndex = 0;
+
+    VkDescriptorBufferInfo sceneDescriptorBufferInfos[maxFrames];
+    VkDescriptorBufferInfo nodesDescriptorBufferInfos[maxFrames];
+
+    for (uint32_t i = 0; i < maxFrames; i++) {
+      sceneDescriptorBufferInfos[i] = {
+        .buffer = shaderDataDevice.frame[i].sceneBuffer,
+        .offset = 0,
+        .range = shaderDataDevice.frame[i].sceneSize,
+      };
+      writeDescriptorSets[writeIndex++] = {
+        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+        .dstSet = descriptorSets0[i],
+        .dstBinding = 0,
+        .descriptorCount = 1,
+        .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+        .pBufferInfo = &sceneDescriptorBufferInfos[i]
+      };
+      nodesDescriptorBufferInfos[i] = {
+        .buffer = shaderDataDevice.frame[i].nodesBuffer,
+        .offset = 0,
+        .range = shaderDataDevice.frame[i].nodesSize,
+      };
+      writeDescriptorSets[writeIndex++] = {
+        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+        .dstSet = descriptorSets0[i],
+        .dstBinding = 1,
+        .descriptorCount = 1,
+        .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+        .pBufferInfo = &nodesDescriptorBufferInfos[i]
+      };
+    }
+
+    VkDescriptorBufferInfo materialColorsDescriptorBufferInfo{
+      .buffer = shaderDataDevice.constant.materialColorsBuffer,
+      .offset = 0,
+      .range = shaderDataDevice.constant.materialColorsSize,
+    };
+    writeDescriptorSets[writeIndex++] = {
+      .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+      .dstSet = descriptorSet1,
+      .dstBinding = 0,
+      .descriptorCount = 1,
+      .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+      .pBufferInfo = &materialColorsDescriptorBufferInfo
+    };
+
+    assert(writeIndex == uniformBufferDescriptorCount);
+
+    vkUpdateDescriptorSets(device, writeIndex, writeDescriptorSets, 0, nullptr);
+  }
+
   //////////////////////////////////////////////////////////////////////
   // shader
   //////////////////////////////////////////////////////////////////////
@@ -218,8 +456,8 @@ namespace collada::scene {
 
     VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{
       .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-      .setLayoutCount = 1,
-      .pSetLayouts = &descriptorSetLayout,
+      .setLayoutCount = 2,
+      .pSetLayouts = descriptorSetLayouts,
       .pushConstantRangeCount = 1,
       .pPushConstantRanges = &pushConstantRange
     };
@@ -336,6 +574,8 @@ namespace collada::scene {
     pipelines = NewM<VkPipeline>(descriptor->inputs_list_count);
     VK_CHECK(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, descriptor->inputs_list_count, pipelineCreateInfos, nullptr, pipelines));
 
+    free(pipelineCreateInfos);
+
     free(vertexBindingDescriptions);
     for (int i = 0; i < descriptor->inputs_list_count; i++) {
       free((void *)vertexInputStates[i].pVertexAttributeDescriptions);
@@ -387,32 +627,40 @@ namespace collada::scene {
                                    instance_types::node const * const node_instances)
   {
     // store
-    XMStoreFloat4x4(&shaderData->projection, projection);
+    XMStoreFloat4x4(&shaderData.scene.projection, projection);
     XMVECTOR lightPosition = XMVector3Transform(XMVectorSet(-42, -40, 156, 0), view);
-    XMStoreFloat4(&shaderData->lightPosition, lightPosition);
+    XMStoreFloat4(&shaderData.scene.lightPosition, lightPosition);
 
     for (int i = 0; i < nodes_count; i++) {
       XMMATRIX model_view = node_instances[i].world * view;
-      XMStoreFloat4x4(&shaderData->modelView[i], model_view);
+      XMStoreFloat4x4(&shaderData.nodes[i].modelView, model_view);
     }
 
     // copy
-
-    size_t frameOffset = shaderDataDevice->stride * frameIndex;
-    void * frameData = (void *)(((VkDeviceSize)shaderDataDevice->mappedData) + frameOffset);
-    VkDeviceSize frameSize{ (sizeof (ShaderData)) };
-    memcpy(frameData, &shaderData->projection, frameSize);
+    memcpy(shaderDataDevice.frame[frameIndex].sceneMapped, &shaderData.scene, (sizeof (Scene)));
+    memcpy(shaderDataDevice.frame[frameIndex].nodesMapped, &shaderData.nodes[0], (sizeof (Node)) * nodes_count);
 
     // flush
 
-    VkDeviceSize flushSize{ roundAlignment(frameSize, physicalDeviceProperties.limits.nonCoherentAtomSize) };
-    VkMappedMemoryRange shaderDataMemoryRange{
-      .sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE,
-      .memory = shaderDataDevice->memory,
-      .offset = frameOffset,
-      .size = flushSize,
+    VkDeviceSize sceneFlushSize{ shaderDataDevice.frame[frameIndex].sceneSize };
+    VkDeviceSize nodesFlushSize{ shaderDataDevice.frame[frameIndex].nodesSize };
+    //fprintf(stderr, "sceneFlushSize %ld\n", sceneFlushSize);
+    //fprintf(stderr, "nodesFlushSize %ld\n", nodesFlushSize);
+    VkMappedMemoryRange shaderDataMemoryRanges[2]{
+      {
+        .sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE,
+        .memory = shaderDataDevice.memory,
+        .offset = shaderDataDevice.frame[frameIndex].sceneOffset,
+        .size = roundAlignment(sceneFlushSize, physicalDeviceProperties.limits.nonCoherentAtomSize),
+      },
+      {
+        .sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE,
+        .memory = shaderDataDevice.memory,
+        .offset = shaderDataDevice.frame[frameIndex].nodesOffset,
+        .size = roundAlignment(nodesFlushSize, physicalDeviceProperties.limits.nonCoherentAtomSize),
+      }
     };
-    vkFlushMappedMemoryRanges(device, 1, &shaderDataMemoryRange);
+    vkFlushMappedMemoryRanges(device, 2, shaderDataMemoryRanges);
   }
 
   void vulkan::draw_node(int32_t node_index,
@@ -422,5 +670,46 @@ namespace collada::scene {
     vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, (sizeof (int32_t)), &node_index);
 
     draw_instance_geometries(node.instance_geometries, node.instance_geometries_count);
+  }
+
+  void vulkan::change_frame(VkCommandBuffer commandBuffer, uint32_t frameIndex)
+  {
+    this->commandBuffer = commandBuffer;
+    this->frameIndex = frameIndex;
+    VkDescriptorSet descriptorSets[2] = {
+      descriptorSets0[frameIndex],
+      descriptorSet1,
+    };
+    vkCmdBindDescriptorSets(commandBuffer,
+                            VK_PIPELINE_BIND_POINT_GRAPHICS,
+                            pipelineLayout,
+                            0, 2, descriptorSets,
+                            0, nullptr);
+  }
+
+  void vulkan::destroy_all(collada::types::descriptor const * const descriptor)
+  {
+    free(shaderData.nodes);
+    free(shaderData.materialColors);
+
+    vkDestroyBuffer(device, vertexIndex.buffer, nullptr);
+    vkFreeMemory(device, vertexIndex.memory, nullptr);
+
+    for (uint32_t i = 0; i < maxFrames; i++) {
+      vkDestroyBuffer(device, shaderDataDevice.frame[i].sceneBuffer, nullptr);
+      vkDestroyBuffer(device, shaderDataDevice.frame[i].nodesBuffer, nullptr);
+    }
+    vkDestroyBuffer(device, shaderDataDevice.constant.materialColorsBuffer, nullptr);
+    vkFreeMemory(device, shaderDataDevice.memory, nullptr);
+
+    vkDestroyDescriptorSetLayout(device, descriptorSetLayouts[0], nullptr);
+    vkDestroyDescriptorSetLayout(device, descriptorSetLayouts[1], nullptr);
+    vkDestroyDescriptorPool(device, descriptorPool, nullptr);
+    vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
+    for (int i = 0; i < descriptor->inputs_list_count; i++) {
+      vkDestroyPipeline(device, pipelines[i], nullptr);
+    }
+    free(pipelines);
+    vkDestroyShaderModule(device, shaderModule, nullptr);
   }
 }
