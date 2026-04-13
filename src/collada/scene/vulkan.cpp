@@ -181,7 +181,7 @@ namespace collada::scene {
 
 
   //////////////////////////////////////////////////////////////////////
-  // uniform buffers
+  // uniform and storage buffers
   //////////////////////////////////////////////////////////////////////
 
   void vulkan::create_uniform_buffers(collada::types::descriptor const * const descriptor)
@@ -210,7 +210,7 @@ namespace collada::scene {
       VkBufferCreateInfo nodesBufferCreateInfo{
         .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
         .size = (sizeof (Node)) * descriptor->nodes_count,
-        .usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+        .usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
         .sharingMode = VK_SHARING_MODE_EXCLUSIVE
       };
       VK_CHECK(vkCreateBuffer(device, &nodesBufferCreateInfo, nullptr, &shaderDataDevice.frame[i].nodesBuffer));
@@ -221,7 +221,7 @@ namespace collada::scene {
     VkBufferCreateInfo materialColorsBufferCreateInfo{
       .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
       .size = (sizeof (MaterialColor)) * descriptor->materials_count,
-      .usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+      .usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
       .sharingMode = VK_SHARING_MODE_EXCLUSIVE
     };
     VK_CHECK(vkCreateBuffer(device, &materialColorsBufferCreateInfo, nullptr, &shaderDataDevice.constant.materialColorsBuffer));
@@ -231,14 +231,14 @@ namespace collada::scene {
 
     VkMemoryPropertyFlags memoryPropertyFlags{ VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT };
     VkMemoryAllocateFlags memoryAllocateFlags{ };
-    VkDeviceSize allocationSize = allocateFromMemoryRequirements2(device,
-                                                                  physicalDeviceMemoryProperties,
-                                                                  memoryPropertyFlags,
-                                                                  memoryAllocateFlags,
-                                                                  uniformBufferDescriptorCount,
-                                                                  memoryRequirements,
-                                                                  &shaderDataDevice.memory,
-                                                                  offsets);
+    allocateFromMemoryRequirements2(device,
+                                    physicalDeviceMemoryProperties,
+                                    memoryPropertyFlags,
+                                    memoryAllocateFlags,
+                                    uniformBufferDescriptorCount,
+                                    memoryRequirements,
+                                    &shaderDataDevice.memory,
+                                    offsets);
 
     VkDeviceSize offset{ 0 };
     VkDeviceSize size{ VK_WHOLE_SIZE };
@@ -263,11 +263,6 @@ namespace collada::scene {
     shaderDataDevice.constant.materialColorsMapped = (void *)(((size_t)shaderDataDevice.mappedData) + shaderDataDevice.constant.materialColorsOffset);
     VK_CHECK(vkBindBufferMemory(device, shaderDataDevice.constant.materialColorsBuffer, shaderDataDevice.memory, shaderDataDevice.constant.materialColorsOffset));
 
-    // if materialColorSize rounded to a multiple of nonCoherentAtomSize is larger than the size of the allocated memory, round down to VK_WHOLE_SIZE
-    if (shaderDataDevice.constant.materialColorsOffset + shaderDataDevice.constant.materialColorsSize > allocationSize) {
-      shaderDataDevice.constant.materialColorsSize = VK_WHOLE_SIZE;
-    }
-
     assert(offsetsIndex == uniformBufferDescriptorCount);
   }
 
@@ -280,16 +275,20 @@ namespace collada::scene {
     //
     // pool
     //
-    VkDescriptorPoolSize descriptorPoolSizes[1]{
+    VkDescriptorPoolSize descriptorPoolSizes[2]{
       {
         .type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-        .descriptorCount = uniformBufferDescriptorCount + 1, // why + 1?
+        .descriptorCount = maxFrames + 1, // why +1?
+      },
+      {
+        .type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+        .descriptorCount = maxFrames + 1, // +1 for materialColors
       }
     };
     VkDescriptorPoolCreateInfo descriptorPoolCreateInfo{
       .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
       .maxSets = 2,
-      .poolSizeCount = 1,
+      .poolSizeCount = 2,
       .pPoolSizes = descriptorPoolSizes
     };
     VK_CHECK(vkCreateDescriptorPool(device, &descriptorPoolCreateInfo, nullptr, &descriptorPool));
@@ -308,7 +307,7 @@ namespace collada::scene {
         },
         {
           .binding = 1,
-          .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+          .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
           .descriptorCount = 1,
           .stageFlags = VK_SHADER_STAGE_VERTEX_BIT
         }
@@ -343,9 +342,9 @@ namespace collada::scene {
       VkDescriptorSetLayoutBinding descriptorSetLayoutBindings[bindingCount]{
         {
           .binding = 0,
-          .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+          .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
           .descriptorCount = 1,
-          .stageFlags = VK_SHADER_STAGE_VERTEX_BIT
+          .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT
         },
       };
 
@@ -402,7 +401,7 @@ namespace collada::scene {
         .dstSet = descriptorSets0[i],
         .dstBinding = 1,
         .descriptorCount = 1,
-        .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+        .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
         .pBufferInfo = &nodesDescriptorBufferInfos[i]
       };
     }
@@ -417,13 +416,70 @@ namespace collada::scene {
       .dstSet = descriptorSet1,
       .dstBinding = 0,
       .descriptorCount = 1,
-      .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+      .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
       .pBufferInfo = &materialColorsDescriptorBufferInfo
     };
 
     assert(writeIndex == uniformBufferDescriptorCount);
 
     vkUpdateDescriptorSets(device, writeIndex, writeDescriptorSets, 0, nullptr);
+  }
+
+  //////////////////////////////////////////////////////////////////////
+  // material constants
+  //////////////////////////////////////////////////////////////////////
+
+  void vulkan::load_material_constants(collada::types::descriptor const * const descriptor)
+  {
+    // store
+    for (int i = 0; i < descriptor->materials_count; i++) {
+      collada::types::effect const * const effect = descriptor->materials[i]->effect;
+      switch (effect->type) {
+      case collada::types::effect_type::BLINN:
+        shaderData.materialColors[i].emission = *(XMFLOAT4 *)(&effect->blinn.emission.color);
+        shaderData.materialColors[i].ambient = *(XMFLOAT4 *)(&effect->blinn.ambient.color);
+        shaderData.materialColors[i].diffuse = *(XMFLOAT4 *)(&effect->blinn.diffuse.color);
+        shaderData.materialColors[i].specular = *(XMFLOAT4 *)(&effect->blinn.specular.color);
+        break;
+      case collada::types::effect_type::LAMBERT:
+        shaderData.materialColors[i].emission = *(XMFLOAT4 *)(&effect->lambert.emission.color);
+        shaderData.materialColors[i].ambient = *(XMFLOAT4 *)(&effect->lambert.ambient.color);
+        shaderData.materialColors[i].diffuse = *(XMFLOAT4 *)(&effect->lambert.diffuse.color);
+        shaderData.materialColors[i].specular = XMFLOAT4{0, 0, 0, 0};
+        break;
+      case collada::types::effect_type::PHONG:
+        shaderData.materialColors[i].emission = *(XMFLOAT4 *)(&effect->phong.emission.color);
+        shaderData.materialColors[i].ambient = *(XMFLOAT4 *)(&effect->phong.ambient.color);
+        shaderData.materialColors[i].diffuse = *(XMFLOAT4 *)(&effect->phong.diffuse.color);
+        shaderData.materialColors[i].specular = *(XMFLOAT4 *)(&effect->phong.specular.color);
+        break;
+      case collada::types::effect_type::CONSTANT:
+        shaderData.materialColors[i].emission = *(XMFLOAT4 *)(&effect->constant.color);
+        shaderData.materialColors[i].ambient = XMFLOAT4{0, 0, 0, 0};
+        shaderData.materialColors[i].diffuse = XMFLOAT4{0, 0, 0, 0};
+        shaderData.materialColors[i].specular = XMFLOAT4{0, 0, 0, 0};
+        break;
+      default:
+        assert(false);
+        break;
+      }
+    }
+
+    // copy
+    memcpy(shaderDataDevice.constant.materialColorsMapped, &shaderData.materialColors[0], (sizeof (MaterialColor)) * descriptor->materials_count);
+
+    // flush
+
+    VkDeviceSize materialColorsFlushSize{ shaderDataDevice.constant.materialColorsSize };
+    VkMappedMemoryRange shaderDataMemoryRanges[1]{
+      {
+        .sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE,
+        .memory = shaderDataDevice.memory,
+        .offset = shaderDataDevice.constant.materialColorsOffset,
+        .size = roundAlignment(materialColorsFlushSize, physicalDeviceProperties.limits.nonCoherentAtomSize),
+      },
+    };
+    vkFlushMappedMemoryRanges(device, 1, shaderDataMemoryRanges);
   }
 
   //////////////////////////////////////////////////////////////////////
@@ -449,9 +505,12 @@ namespace collada::scene {
 
   void vulkan::create_pipelines(collada::types::descriptor const * const descriptor)
   {
-    VkPushConstantRange pushConstantRange{
-      .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
-      .size = (sizeof (int32_t))
+    VkPushConstantRange pushConstantRanges[1]{
+      {
+        .stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+        .offset = 0,
+        .size = (sizeof (PushConstant))
+      }
     };
 
     VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{
@@ -459,7 +518,7 @@ namespace collada::scene {
       .setLayoutCount = 2,
       .pSetLayouts = descriptorSetLayouts,
       .pushConstantRangeCount = 1,
-      .pPushConstantRanges = &pushConstantRange
+      .pPushConstantRanges = pushConstantRanges
     };
     VK_CHECK(vkCreatePipelineLayout(device, &pipelineLayoutCreateInfo, nullptr, &pipelineLayout));
 
@@ -599,7 +658,10 @@ namespace collada::scene {
       types::instance_material const& instance_material = instance_materials[j];
       types::triangles const& triangles = mesh.triangles[instance_material.element_index];
 
-      //set_instance_material(instance_material);
+      VkShaderStageFlags stageFlags{ VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT };
+      uint32_t materialIndex = instance_material.material_index;
+      uint32_t offset{ (offsetof (PushConstant, materialIndex)) };
+      vkCmdPushConstants(commandBuffer, pipelineLayout, stageFlags, offset, (sizeof (uint32_t)), &materialIndex);
 
       VkDeviceSize vertexOffset{ (VkDeviceSize)mesh.vertex_buffer_offset };
       vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexIndex.buffer, &vertexOffset);
@@ -667,7 +729,9 @@ namespace collada::scene {
                          types::node const & node,
                          instance_types::node const & node_instance)
   {
-    vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, (sizeof (int32_t)), &node_index);
+    VkShaderStageFlags stageFlags{ VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT };
+    uint32_t offset{ (offsetof (PushConstant, nodeIndex)) };
+    vkCmdPushConstants(commandBuffer, pipelineLayout, stageFlags, offset, (sizeof (uint32_t)), &node_index);
 
     draw_instance_geometries(node.instance_geometries, node.instance_geometries_count);
   }

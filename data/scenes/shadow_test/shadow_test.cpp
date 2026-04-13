@@ -1740,7 +1740,7 @@ transform const transforms_node_plane001[] = {
 instance_material const instance_geometry_instance_materials_node_plane001_0[] = {
   {
     .element_index = 0, // an index into mesh.triangles
-    .material = &material_material__148_material,
+    .material_index = 5, // an index into materials
 
     .emission = { .input_set = -1 },
     .ambient = { .input_set = -1 },
@@ -1850,7 +1850,7 @@ transform const transforms_node_torus_knot001[] = {
 instance_material const instance_geometry_instance_materials_node_torus_knot001_0[] = {
   {
     .element_index = 0, // an index into mesh.triangles
-    .material = &material_coloreffectr134g110b8_material,
+    .material_index = 1, // an index into materials
 
     .emission = { .input_set = -1 },
     .ambient = { .input_set = -1 },
@@ -1956,7 +1956,7 @@ transform const transforms_node_cone001[] = {
 instance_material const instance_geometry_instance_materials_node_cone001_0[] = {
   {
     .element_index = 0, // an index into mesh.triangles
-    .material = &material_coloreffectr6g134b6_material,
+    .material_index = 3, // an index into materials
 
     .emission = { .input_set = -1 },
     .ambient = { .input_set = -1 },
@@ -2020,7 +2020,7 @@ transform const transforms_node_box001[] = {
 instance_material const instance_geometry_instance_materials_node_box001_0[] = {
   {
     .element_index = 0, // an index into mesh.triangles
-    .material = &material_coloreffectr88g88b225_material,
+    .material_index = 4, // an index into materials
 
     .emission = { .input_set = -1 },
     .ambient = { .input_set = -1 },
@@ -2087,9 +2087,9 @@ instance_light const instance_lights_node_point001[] = {
 };
 
 channel const * const node_channels_node_point001[] = {
+  &node_channel_node_point001_translation_y,
   &node_channel_node_point001_translation_x,
   &node_channel_node_point001_translation_z,
-  &node_channel_node_point001_translation_y,
 };
 
 node const node_node_point001 = {
@@ -2177,9 +2177,9 @@ instance_light const instance_lights_node_point002[] = {
 };
 
 channel const * const node_channels_node_point002[] = {
-  &node_channel_node_point002_translation_x,
   &node_channel_node_point002_translation_z,
   &node_channel_node_point002_translation_y,
+  &node_channel_node_point002_translation_x,
 };
 
 node const node_node_point002 = {

@@ -12,12 +12,12 @@ struct VSOutput
   float2 Texture : TEXCOORD0;
   float3 LightDirection : NORMAL1;
   float3 ViewDirection : NORMAL2;
+  nointerpolation int MaterialIndex : materialindex;
 };
 
 struct Node
 {
   column_major float4x4 ModelView;
-  //int MaterialIndex;
 };
 
 struct Scene
@@ -34,44 +34,24 @@ struct MaterialColor
   float4 Specular;
 };
 
-/*
-struct Nodes {
-  Node n[16];
-};
-
-struct MaterialColors {
-  MaterialColor mc[16];
-};
-*/
-
-struct SceneNodes {
-  Scene Scene;
-};
-
-struct Nodes {
-  Node n[11];
-};
-
 // set 0: per-frame
 [[vk::binding(0, 0)]] ConstantBuffer<Scene> Scene;
-[[vk::binding(1, 0)]] ConstantBuffer<Nodes> Nodes;
-//[[vk::binding(1, 0)]] cbuffer asdf { Nodes Nodes; }
+[[vk::binding(1, 0)]] StructuredBuffer<Node> Nodes;
 
 // set 1: constant
-//[[vk::binding(0, 1)]] ConstantBuffer<MaterialColor[]> MaterialColors;
+[[vk::binding(0, 1)]] StructuredBuffer<MaterialColor> MaterialColors;
 
 struct PushConstant {
   int NodeIndex;
+  int MaterialIndex;
 };
 
-[[vk::push_constant]]
-struct PushConstant constants;
+[[vk::push_constant]] PushConstant constants;
 
 [shader("vertex")]
 VSOutput VSMain(VSInput input)
 {
-  //[constants.NodeIndex]
-  float4x4 modelView = Nodes.n[constants.NodeIndex].ModelView;
+  float4x4 modelView = Nodes[constants.NodeIndex].ModelView;
 
   VSOutput output = (VSOutput)0;
   output.Position = mul(Scene.Projection, mul(modelView, float4(input.Position.xyz, 1.0))) * float4(-1, -1, 1, 1);
@@ -89,6 +69,7 @@ VSOutput VSMain(VSInput input)
 float4 PSMain(VSOutput input) : SV_TARGET
 {
   //float3 color = texture.Sample(samplers[0], input.Texture).bgr;
+  float4 diffuseColor = MaterialColors[constants.MaterialIndex].Diffuse;
 
   float3 N = normalize(input.Normal);
   float3 L = normalize(input.LightDirection);
@@ -100,5 +81,5 @@ float4 PSMain(VSOutput input) : SV_TARGET
   float3 specular = pow(max(dot(R, V), 0), a) * specularIntensity;
   float3 diffuse = max(dot(N, L), 0.001);
 
-  return float4(diffuse + specular, 1.0);
+  return float4(diffuse * diffuseColor.xyz + specular, 1.0);
 }

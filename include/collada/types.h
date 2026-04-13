@@ -241,7 +241,7 @@ namespace collada::types {
 
   struct instance_material {
     int const element_index; // an index into mesh.triangles
-    types::material const * const material;
+    int const material_index; // an index into materials
 
     // heavily simplified from collada data model
     bind_vertex_input const emission;

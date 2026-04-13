@@ -14,18 +14,17 @@ namespace collada::scene {
   };
   struct Node {
     XMFLOAT4X4 modelView;
-    //int materialIndex;
-    //int _padding0[3];
-    //int _padding1[4 * 3];
   };
-  static_assert((sizeof (Node)) % 64 == 0);
   struct MaterialColor {
     XMFLOAT4 emission;
     XMFLOAT4 ambient;
     XMFLOAT4 diffuse;
     XMFLOAT4 specular;
   };
-  static_assert((sizeof (MaterialColor)) % 64 == 0);
+  struct PushConstant {
+    int nodeIndex;
+    int materialIndex;
+  };
 
   struct vulkan {
     // externally initialized, opaque handle
@@ -121,6 +120,7 @@ namespace collada::scene {
     void create_uniform_buffers(collada::types::descriptor const * const descriptor);
     void create_descriptor_sets();
     void write_descriptor_sets(collada::types::descriptor const * const descriptor);
+    void load_material_constants(collada::types::descriptor const * const descriptor);
 
     //////////////////////////////////////////////////////////////////////
     // called by state::draw
