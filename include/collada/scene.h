@@ -16,9 +16,9 @@ namespace collada::scene {
     void load_scene(types::descriptor const * const descriptor);
     void draw();
 
-    void update(XMMATRIX const & projection,
-                XMMATRIX const & view,
-                float t);
+    int find_node_index_by_name(const char * name);
+
+    void update(float t);
 
     void unload_scene();
   };

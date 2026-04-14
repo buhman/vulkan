@@ -45,7 +45,8 @@ OBJS = \
 	src/vulkan_helper.o \
 	src/collada/scene/vulkan.o \
 	src/collada/scene.o \
-	src/collada/node_state.o
+	src/collada/node_state.o \
+	src/collada/animate.o
 
 SCENES = \
 	data/scenes/shadow_test/shadow_test.o

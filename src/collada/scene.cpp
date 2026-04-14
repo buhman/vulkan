@@ -1,6 +1,9 @@
-#include "collada/scene.h"
-
+#include <string.h>
+#include <stdlib.h>
 #include <stdio.h>
+
+#include "collada/scene.h"
+#include "collada/animate.h"
 
 namespace collada::scene {
 
@@ -35,21 +38,25 @@ namespace collada::scene {
     }
   }
 
-  void state::update(XMMATRIX const & projection,
-                     XMMATRIX const & view,
-                     float t)
+  int state::find_node_index_by_name(const char * name)
   {
-    //t = animate::loop(t / 1.0f, 1.0f);
+    for (int i = 0; i < descriptor->nodes_count; i++) {
+      if (strcmp(descriptor->nodes[i]->name, name) == 0) {
+        return i;
+      }
+    }
+    fprintf(stderr, "node `%s` not found in scene\n", name);
+    exit(EXIT_FAILURE);
+  }
+
+  void state::update(float t)
+  {
+    t = animate::loop(t, 3.3f);
 
     for (int i = 0; i < descriptor->nodes_count; i++) {
-      //animate::animate_node(node_state.node_instances[i], t);
+      animate::animate_node(node_state.node_instances[i], t);
       node_state.update_node_world_transform(node_state.node_instances[i]);
     }
-
-    vulkan.transfer_transforms(projection,
-                               view,
-                               descriptor->nodes_count,
-                               node_state.node_instances);
   }
 
   void state::unload_scene()

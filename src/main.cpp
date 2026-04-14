@@ -112,9 +112,10 @@ XMMATRIX currentProjection()
   return projection;
 }
 
-XMMATRIX currentView()
+XMMATRIX currentView(collada::instance_types::node const & camera_node)
 {
-  XMVECTOR eye = XMVectorSet(-57, 159, 269, 0);
+
+  XMVECTOR eye = XMVector3Transform(XMVectorZero(), camera_node.world);
   XMVECTOR at = XMVectorSet(0, 0, 0, 0);
   XMVECTOR up = XMVectorSet(0, 0, 1, 0);
   XMMATRIX view = XMMatrixLookAtLH(eye, at, up);
@@ -274,6 +275,14 @@ void recreateSwapchain(VkSurfaceFormatKHR surfaceFormat, VkFormat depthFormat, V
 
 inline static int positive_modulo(int i, unsigned int n) {
   return (i % n + n) % n;
+}
+
+inline static double getTime(int64_t start_time)
+{
+  int64_t current_time;
+  SDL_GetCurrentTime(&current_time);
+  int64_t time = current_time - start_time;
+  return (double)(time / 1000) * 0.000001;
 }
 
 int main()
@@ -1191,6 +1200,11 @@ int main()
   uint32_t imageIndex{ 0 };
   bool quit{ false };
   int32_t samplerIndex{ 0 };
+  int64_t start_time;
+  SDL_GetCurrentTime(&start_time);
+
+  int cameraIndex = collada_state.find_node_index_by_name("Camera001");
+
   while (quit == false) {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
@@ -1364,10 +1378,16 @@ int main()
 
     collada_state.vulkan.change_frame(commandBuffer, frameIndex);
 
-    XMMATRIX projection = currentProjection();
-    XMMATRIX view = currentView();
-    collada_state.update(projection, view, 0);
+    double time = getTime(start_time);
+    collada_state.update(time / 3.0f);
 
+    XMMATRIX projection = currentProjection();
+    XMMATRIX view = currentView(collada_state.node_state.node_instances[cameraIndex]);
+
+    collada_state.vulkan.transfer_transforms(projection,
+                                             view,
+                                             collada_state.descriptor->nodes_count,
+                                             collada_state.node_state.node_instances);
     collada_state.draw();
 
     vkCmdEndRendering(commandBuffer);
