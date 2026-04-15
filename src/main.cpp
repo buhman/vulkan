@@ -112,11 +112,12 @@ XMMATRIX currentProjection()
   return projection;
 }
 
-XMMATRIX currentView(collada::instance_types::node const & camera_node)
+XMMATRIX currentView(collada::instance_types::node const & camera_node,
+                     collada::instance_types::node const & camera_target_node)
 {
 
   XMVECTOR eye = XMVector3Transform(XMVectorZero(), camera_node.world);
-  XMVECTOR at = XMVectorSet(0, 0, 0, 0);
+  XMVECTOR at = XMVector3Transform(XMVectorZero(), camera_target_node.world);
   XMVECTOR up = XMVectorSet(0, 0, 1, 0);
   XMMATRIX view = XMMatrixLookAtLH(eye, at, up);
   return view;
@@ -1204,6 +1205,7 @@ int main()
   SDL_GetCurrentTime(&start_time);
 
   int cameraIndex = collada_state.find_node_index_by_name("Camera001");
+  int cameraTargetIndex = collada_state.find_node_index_by_name("Camera001.Target");
 
   while (quit == false) {
     SDL_Event event;
@@ -1379,10 +1381,11 @@ int main()
     collada_state.vulkan.change_frame(commandBuffer, frameIndex);
 
     double time = getTime(start_time);
-    collada_state.update(time / 3.0f);
+    collada_state.update(time / 5.0f);
 
     XMMATRIX projection = currentProjection();
-    XMMATRIX view = currentView(collada_state.node_state.node_instances[cameraIndex]);
+    XMMATRIX view = currentView(collada_state.node_state.node_instances[cameraIndex],
+                                collada_state.node_state.node_instances[cameraTargetIndex]);
 
     collada_state.vulkan.transfer_transforms(projection,
                                              view,
