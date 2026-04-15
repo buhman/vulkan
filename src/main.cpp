@@ -1206,6 +1206,7 @@ int main()
 
   int cameraIndex = collada_state.find_node_index_by_name("Camera001");
   int cameraTargetIndex = collada_state.find_node_index_by_name("Camera001.Target");
+  int lightIndex = collada_state.find_node_index_by_name("DirectLight");
 
   while (quit == false) {
     SDL_Event event;
@@ -1387,8 +1388,12 @@ int main()
     XMMATRIX view = currentView(collada_state.node_state.node_instances[cameraIndex],
                                 collada_state.node_state.node_instances[cameraTargetIndex]);
 
+    collada::instance_types::node const & lightNode = collada_state.node_state.node_instances[lightIndex];
+    XMVECTOR lightPositionWorld = XMVector3Transform(XMVectorZero(), lightNode.world);
+
     collada_state.vulkan.transfer_transforms(projection,
                                              view,
+                                             lightPositionWorld,
                                              collada_state.descriptor->nodes_count,
                                              collada_state.node_state.node_instances);
     collada_state.draw();

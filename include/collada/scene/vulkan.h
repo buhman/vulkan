@@ -143,6 +143,7 @@ namespace collada::scene {
 
     void transfer_transforms(XMMATRIX const & projection,
                              XMMATRIX const & view,
+                             XMVECTOR const & light_position_world,
                              int nodes_count,
                              instance_types::node const * const node_instances);
 

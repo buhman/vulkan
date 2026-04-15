@@ -70,6 +70,8 @@ float4 PSMain(VSOutput input) : SV_TARGET
 {
   //float3 color = texture.Sample(samplers[0], input.Texture).bgr;
   float4 diffuseColor = MaterialColors[constants.MaterialIndex].Diffuse;
+  float4 specularColor = MaterialColors[constants.MaterialIndex].Specular;
+  float4 emissionColor = MaterialColors[constants.MaterialIndex].Emission;
 
   float3 N = normalize(input.Normal);
   float3 L = normalize(input.LightDirection);
@@ -81,5 +83,5 @@ float4 PSMain(VSOutput input) : SV_TARGET
   float3 specular = pow(max(dot(R, V), 0), a) * specularIntensity;
   float3 diffuse = max(dot(N, L), 0.001);
 
-  return float4(diffuse * diffuseColor.xyz + specular, 1.0);
+  return float4(diffuse * diffuseColor.xyz + specular * specularColor.xyz + emissionColor.xyz, 1.0);
 }

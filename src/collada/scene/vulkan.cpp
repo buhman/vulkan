@@ -685,13 +685,14 @@ namespace collada::scene {
 
   void vulkan::transfer_transforms(XMMATRIX const & projection,
                                    XMMATRIX const & view,
+                                   XMVECTOR const & light_position_world,
                                    int nodes_count,
                                    instance_types::node const * const node_instances)
   {
     // store
     XMStoreFloat4x4(&shaderData.scene.projection, projection);
-    XMVECTOR lightPosition = XMVector3Transform(XMVectorSet(-42, -40, 156, 0), view);
-    XMStoreFloat4(&shaderData.scene.lightPosition, lightPosition);
+    XMVECTOR lightPositionView = XMVector3Transform(light_position_world, view);
+    XMStoreFloat4(&shaderData.scene.lightPosition, lightPositionView);
 
     for (int i = 0; i < nodes_count; i++) {
       XMMATRIX model_view = node_instances[i].world * view;
