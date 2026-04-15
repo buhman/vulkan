@@ -17,6 +17,7 @@ namespace collada::scene {
     void draw();
 
     int find_node_index_by_name(const char * name);
+    int find_material_index_by_name(const char * name);
 
     void update(float t);
 

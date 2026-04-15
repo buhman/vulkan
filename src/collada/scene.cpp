@@ -49,6 +49,17 @@ namespace collada::scene {
     exit(EXIT_FAILURE);
   }
 
+  int state::find_material_index_by_name(const char * name)
+  {
+    for (int i = 0; i < descriptor->materials_count; i++) {
+      if (strcmp(descriptor->materials[i]->name, name) == 0) {
+        return i;
+      }
+    }
+    fprintf(stderr, "node `%s` not found in scene\n", name);
+    exit(EXIT_FAILURE);
+  }
+
   void state::update(float t)
   {
     t = animate::loop(t, 3.3f);

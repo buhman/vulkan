@@ -105,7 +105,9 @@ namespace collada::scene {
                              VkPhysicalDeviceProperties const & physicalDeviceProperties,
                              VkPhysicalDeviceMemoryProperties const & physicalDeviceMemoryProperties,
                              VkFormat colorFormat,
-                             VkFormat depthFormat)
+                             VkFormat depthFormat,
+                             VkSampler linearSampler,
+                             VkImageView shadowDepthImageView)
   {
     this->instance = instance;
     this->device = device;
@@ -115,6 +117,9 @@ namespace collada::scene {
 
     this->colorFormat = colorFormat;
     this->depthFormat = depthFormat;
+
+    this->linearSampler = linearSampler;
+    this->shadowDepthImageView = shadowDepthImageView;
 
     load_shader();
   }
@@ -275,7 +280,8 @@ namespace collada::scene {
     //
     // pool
     //
-    VkDescriptorPoolSize descriptorPoolSizes[2]{
+    constexpr int descriptorPoolSizesCount = 4;
+    VkDescriptorPoolSize descriptorPoolSizes[descriptorPoolSizesCount]{
       {
         .type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
         .descriptorCount = maxFrames + 1, // why +1?
@@ -283,12 +289,20 @@ namespace collada::scene {
       {
         .type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
         .descriptorCount = maxFrames + 1, // +1 for materialColors
-      }
+      },
+      {
+        .type = VK_DESCRIPTOR_TYPE_SAMPLER,
+        .descriptorCount = 1,
+      },
+      {
+        .type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+        .descriptorCount = 1,
+      },
     };
     VkDescriptorPoolCreateInfo descriptorPoolCreateInfo{
       .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
       .maxSets = 2,
-      .poolSizeCount = 2,
+      .poolSizeCount = descriptorPoolSizesCount,
       .pPoolSizes = descriptorPoolSizes
     };
     VK_CHECK(vkCreateDescriptorPool(device, &descriptorPoolCreateInfo, nullptr, &descriptorPool));
@@ -338,7 +352,7 @@ namespace collada::scene {
     // uniform buffer descriptor set layout/allocation (set 1, constant)
     //
     {
-      constexpr int bindingCount = 1;
+      constexpr int bindingCount = 3;
       VkDescriptorSetLayoutBinding descriptorSetLayoutBindings[bindingCount]{
         {
           .binding = 0,
@@ -346,6 +360,18 @@ namespace collada::scene {
           .descriptorCount = 1,
           .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT
         },
+        {
+          .binding = 1,
+          .descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER,
+          .descriptorCount = 1,
+          .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT
+        },
+        {
+          .binding = 2,
+          .descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+          .descriptorCount = 1,
+          .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT
+        }
       };
 
       VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo{
@@ -371,7 +397,7 @@ namespace collada::scene {
 
   void vulkan::write_descriptor_sets(collada::types::descriptor const * const descriptor)
   {
-    VkWriteDescriptorSet writeDescriptorSets[uniformBufferDescriptorCount];
+    VkWriteDescriptorSet writeDescriptorSets[descriptorCount];
     uint32_t writeIndex = 0;
 
     VkDescriptorBufferInfo sceneDescriptorBufferInfos[maxFrames];
@@ -419,8 +445,31 @@ namespace collada::scene {
       .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
       .pBufferInfo = &materialColorsDescriptorBufferInfo
     };
+    VkDescriptorImageInfo samplerDescriptorImageInfo = {
+      .sampler = linearSampler,
+    };
+    writeDescriptorSets[writeIndex++] = {
+      .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+      .dstSet = descriptorSet1,
+      .dstBinding = 1,
+      .descriptorCount = 1,
+      .descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER,
+      .pImageInfo = &samplerDescriptorImageInfo
+    };
+    VkDescriptorImageInfo sampledImageDescriptorImageInfo = {
+      .imageView = shadowDepthImageView,
+      .imageLayout = VK_IMAGE_LAYOUT_READ_ONLY_OPTIMAL
+    };
+    writeDescriptorSets[writeIndex++] = {
+      .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+      .dstSet = descriptorSet1,
+      .dstBinding = 2,
+      .descriptorCount = 1,
+      .descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+      .pImageInfo = &sampledImageDescriptorImageInfo
+    };
 
-    assert(writeIndex == uniformBufferDescriptorCount);
+    assert(writeIndex == descriptorCount);
 
     vkUpdateDescriptorSets(device, writeIndex, writeDescriptorSets, 0, nullptr);
   }
@@ -622,6 +671,13 @@ namespace collada::scene {
       .frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
       .lineWidth = 1.0f
     };
+    VkPipelineRasterizationStateCreateInfo shadowRasterizationState{
+      .sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
+      //.cullMode = VK_CULL_MODE_BACK_BIT,
+      .cullMode = VK_CULL_MODE_NONE,
+      .frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
+      .lineWidth = 1.0f
+    };
     VkPipelineMultisampleStateCreateInfo multisampleState{
       .sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
       .rasterizationSamples = VK_SAMPLE_COUNT_1_BIT
@@ -647,7 +703,7 @@ namespace collada::scene {
         .pVertexInputState = &vertexInputStates[i],
         .pInputAssemblyState = &inputAssemblyState,
         .pViewportState = &viewportState,
-        .pRasterizationState = &rasterizationState,
+        .pRasterizationState = &shadowRasterizationState,
         .pMultisampleState = &multisampleState,
         .pDepthStencilState = &depthStencilState,
         .pColorBlendState = &colorBlendState,
@@ -699,11 +755,14 @@ namespace collada::scene {
 
     for (int j = 0; j < instance_materials_count; j++) {
       types::instance_material const& instance_material = instance_materials[j];
+      int materialIndex = instance_material.material_index;
+      if (materialIndex == excludeMaterialIndex) {
+        continue;
+      }
       types::triangles const& triangles = mesh.triangles[instance_material.element_index];
 
       VkShaderStageFlags stageFlags{ VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT };
-      uint32_t materialIndex = instance_material.material_index;
-      uint32_t offset{ (offsetof (PushConstant, materialIndex)) };
+      constexpr uint32_t offset{ (offsetof (PushConstant, materialIndex)) };
       vkCmdPushConstants(commandBuffer, pipelineLayout, stageFlags, offset, (sizeof (uint32_t)), &materialIndex);
 
       VkDeviceSize vertexOffset{ (VkDeviceSize)mesh.vertex_buffer_offset };
@@ -778,7 +837,7 @@ namespace collada::scene {
                          instance_types::node const & node_instance)
   {
     VkShaderStageFlags stageFlags{ VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT };
-    uint32_t offset{ (offsetof (PushConstant, nodeIndex)) };
+    constexpr uint32_t offset{ (offsetof (PushConstant, nodeIndex)) };
     vkCmdPushConstants(commandBuffer, pipelineLayout, stageFlags, offset, (sizeof (uint32_t)), &node_index);
 
     draw_instance_geometries(node.instance_geometries, node.instance_geometries_count);

@@ -39,6 +39,9 @@ namespace collada::scene {
     // externally initialized, enum
     VkFormat colorFormat;
     VkFormat depthFormat;
+    // externally initialized
+    VkSampler linearSampler;
+    VkImageView shadowDepthImageView;
 
     //
     // method initialized
@@ -57,6 +60,7 @@ namespace collada::scene {
     static constexpr uint32_t perFrameDescriptorCount = 2;
     static constexpr uint32_t constantDescriptorCount = 1;
     static constexpr uint32_t uniformBufferDescriptorCount = maxFrames * perFrameDescriptorCount + constantDescriptorCount;
+    static constexpr uint32_t descriptorCount = uniformBufferDescriptorCount + 2;
 
     VkDescriptorSetLayout descriptorSetLayouts[2]; // unrelated to maxFrames, unrelated to descriptorCount
     VkDescriptorSet descriptorSets0[maxFrames];
@@ -93,6 +97,7 @@ namespace collada::scene {
     VkCommandBuffer commandBuffer;
     uint32_t frameIndex;
     uint32_t pipelineIndex;
+    int excludeMaterialIndex;
 
     //////////////////////////////////////////////////////////////////////
     // called directly
@@ -103,7 +108,9 @@ namespace collada::scene {
                        VkPhysicalDeviceProperties const & physicalDeviceProperties,
                        VkPhysicalDeviceMemoryProperties const & physicalDeviceMemoryProperties,
                        VkFormat colorFormat,
-                       VkFormat depthFormat);
+                       VkFormat depthFormat,
+                       VkSampler linearSampler,
+                       VkImageView shadowDepthImageView);
 
     void change_frame(VkCommandBuffer commandBuffer, uint32_t frameIndex);
     void destroy_all(collada::types::descriptor const * const descriptor);

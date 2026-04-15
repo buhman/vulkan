@@ -53,6 +53,7 @@ VkDeviceMemory depthMemory{ VK_NULL_HANDLE };
 
 VkImage shadowDepthImage{ VK_NULL_HANDLE };
 VkImageView shadowDepthImageView{ VK_NULL_HANDLE };
+VkImageView shadowDepthImageViewDepth{ VK_NULL_HANDLE };
 VkDeviceMemory shadowDepthMemory{ VK_NULL_HANDLE };
 
 VkBuffer vertexIndexBuffer{ VK_NULL_HANDLE };
@@ -504,6 +505,20 @@ int main()
               &shadowDepthImage,
               &shadowDepthMemory,
               &shadowDepthImageView);
+
+
+  VkImageViewCreateInfo imageViewCreateInfo{
+    .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+    .image = shadowDepthImage,
+    .viewType = VK_IMAGE_VIEW_TYPE_2D,
+    .format = depthFormat,
+    .subresourceRange{
+      .aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT,
+      .levelCount = 1,
+      .layerCount = 1
+    }
+  };
+  VK_CHECK(vkCreateImageView(device, &imageViewCreateInfo, nullptr, &shadowDepthImageViewDepth));
 
   //////////////////////////////////////////////////////////////////////
   // mesh
@@ -1221,7 +1236,9 @@ int main()
                                      physicalDeviceProperties,
                                      physicalDeviceMemoryProperties,
                                      surfaceFormat.format,
-                                     depthFormat);
+                                     depthFormat,
+                                     textureSamplers[0],
+                                     shadowDepthImageViewDepth);
 
   collada::types::descriptor const * collada_scene_descriptor = &shadow_test::descriptor;
   collada_state.load_scene(collada_scene_descriptor);
@@ -1242,6 +1259,7 @@ int main()
   int cameraTargetIndex = collada_state.find_node_index_by_name("Camera001.Target");
   int lightIndex = collada_state.find_node_index_by_name("DirectLight");
   int lightTargetIndex = collada_state.find_node_index_by_name("DirectLight.Target");
+  int lightMaterialIndex = collada_state.find_material_index_by_name("LightMaterial");
 
   while (quit == false) {
     SDL_Event event;
@@ -1278,7 +1296,7 @@ int main()
     //////////////////////////////////////////////////////////////////////
 
     double time = getTime(start_time);
-    collada_state.update(time / 5.0f);
+    collada_state.update(time / 8.0f);
 
     //////////////////////////////////////////////////////////////////////
     // fence
@@ -1370,7 +1388,7 @@ int main()
     };
     vkCmdSetScissor(commandBuffer, 0, 1, &shadowScissor);
 
-    // draw
+    // transfer
 
     {
       collada_state.vulkan.change_frame(commandBuffer, frameIndex);
@@ -1378,7 +1396,7 @@ int main()
       XMMATRIX projection = currentProjection();
       XMMATRIX view = currentView(collada_state.node_state.node_instances[cameraIndex],
                                   collada_state.node_state.node_instances[cameraTargetIndex]);
-      XMMATRIX shadowProjection = XMMatrixOrthographicLH(300, 300, 0.1, 1000);
+      XMMATRIX shadowProjection = XMMatrixOrthographicLH(300, 300, 0.1, 500);
       XMMATRIX shadowView = currentView(collada_state.node_state.node_instances[lightIndex],
                                         collada_state.node_state.node_instances[lightTargetIndex]);
 
@@ -1394,6 +1412,9 @@ int main()
                                                collada_state.node_state.node_instances);
     }
 
+    // draw
+
+    collada_state.vulkan.excludeMaterialIndex = lightMaterialIndex;
     collada_state.vulkan.pipelineIndex = 0; // shadow pipeline
     collada_state.draw();
 
@@ -1514,6 +1535,7 @@ int main()
 
     // draw
 
+    collada_state.vulkan.excludeMaterialIndex = -1;
     collada_state.vulkan.pipelineIndex = 1; // non-shadow pipeline
     collada_state.draw();
 
@@ -1627,6 +1649,7 @@ int main()
   vkDestroyImage(device, shadowDepthImage, nullptr);
   vkFreeMemory(device, shadowDepthMemory, nullptr);
   vkDestroyImageView(device, shadowDepthImageView, nullptr);
+  vkDestroyImageView(device, shadowDepthImageViewDepth, nullptr);
 
   vkDestroyBuffer(device, vertexIndexBuffer, nullptr);
   vkFreeMemory(device, vertexIndexBufferMemory, nullptr);

@@ -1989,30 +1989,37 @@ effect const effect_lightmaterial = {
 };
 
 material const material_coloreffectr5g54b179_material = {
+  .name = "ColorEffectR5G54B179-material",
   .effect = &effect_coloreffectr5g54b179,
 };
 
 material const material_coloreffectr255g229b0_material = {
+  .name = "ColorEffectR255G229B0-material",
   .effect = &effect_coloreffectr255g229b0,
 };
 
 material const material_planematerial_material = {
+  .name = "PlaneMaterial",
   .effect = &effect_planematerial,
 };
 
 material const material_torusmaterial_material = {
+  .name = "TorusMaterial",
   .effect = &effect_torusmaterial,
 };
 
 material const material_conematerial_material = {
+  .name = "ConeMaterial",
   .effect = &effect_conematerial,
 };
 
 material const material_boxmaterial_material = {
+  .name = "BoxMaterial",
   .effect = &effect_boxmaterial,
 };
 
 material const material_lightmaterial_material = {
+  .name = "LightMaterial",
   .effect = &effect_lightmaterial,
 };
 
@@ -2275,9 +2282,9 @@ instance_light const instance_lights_node_camera001_target[] = {
 };
 
 channel const * const node_channels_node_camera001_target[] = {
-  &node_channel_node_camera001_target_translation_x,
   &node_channel_node_camera001_target_translation_z,
   &node_channel_node_camera001_target_translation_y,
+  &node_channel_node_camera001_target_translation_x,
 };
 
 node const node_node_camera001_target = {
@@ -2563,9 +2570,9 @@ instance_light const instance_lights_node_lighthelper[] = {
 };
 
 channel const * const node_channels_node_lighthelper[] = {
-  &node_channel_node_lighthelper_translation_x,
   &node_channel_node_lighthelper_translation_z,
   &node_channel_node_lighthelper_translation_y,
+  &node_channel_node_lighthelper_translation_x,
 };
 
 node const node_node_lighthelper = {
@@ -2752,8 +2759,8 @@ instance_light const instance_lights_node_camerahelper[] = {
 };
 
 channel const * const node_channels_node_camerahelper[] = {
-  &node_channel_node_camerahelper_translation_y,
   &node_channel_node_camerahelper_translation_x,
+  &node_channel_node_camerahelper_translation_y,
   &node_channel_node_camerahelper_translation_z,
 };
 

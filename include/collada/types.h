@@ -232,6 +232,7 @@ namespace collada::types {
   };
 
   struct material {
+    char const * const name;
     types::effect const * const effect;
   };
 

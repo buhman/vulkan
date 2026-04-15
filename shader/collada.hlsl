@@ -8,11 +8,12 @@ struct VSInput
 struct VSOutput
 {
   float4 Position : SV_POSITION;
+  float4 ShadowPosition : ShadowPosition;
   float3 Normal : NORMAL0;
   float2 Texture : TEXCOORD0;
   float3 LightDirection : NORMAL1;
   float3 ViewDirection : NORMAL2;
-  nointerpolation int MaterialIndex : materialindex;
+  nointerpolation int MaterialIndex : MaterialIndex;
 };
 
 struct VSShadowOutput
@@ -48,6 +49,8 @@ struct MaterialColor
 
 // set 1: constant
 [[vk::binding(0, 1)]] StructuredBuffer<MaterialColor> MaterialColors;
+[[vk::binding(1, 1)]] SamplerState LinearSampler;
+[[vk::binding(2, 1)]] Texture2D ShadowTexture;
 
 struct PushConstant {
   int NodeIndex;
@@ -71,9 +74,11 @@ float4 getProjection(float4x4 projection, float4 viewPosition)
 VSOutput VSMain(VSInput input)
 {
   float4 viewPosition = getView(Scene.View, input.Position);
+  float4 shadowPosition = getProjection(Scene.ShadowProjection, getView(Scene.ShadowView, input.Position));
 
   VSOutput output = (VSOutput)0;
   output.Position = getProjection(Scene.Projection, viewPosition);
+  output.ShadowPosition = shadowPosition * float4(0.5, 0.5, 1.0, 1.0) + float4(0.5, 0.5, 0.0, 0.0);
   output.Normal = mul((float3x3)Scene.View, mul((float3x3)Nodes[constants.NodeIndex].World, input.Normal));
   output.Texture = input.Texture.xy * 1.0;
 
@@ -81,6 +86,31 @@ VSOutput VSMain(VSInput input)
   output.ViewDirection = -viewPosition.xyz;
 
   return output;
+}
+
+float Shadow(float3 position, float bias)
+{
+  float sampledDepth = ShadowTexture.Sample(LinearSampler, position.xy).x;
+  float shadow = (position.z - bias) > sampledDepth ? 0.1 : 1.0;
+  return shadow;
+}
+
+float ShadowPCF(float3 position, float bias)
+{
+  float2 dimensions;
+  ShadowTexture.GetDimensions(dimensions.x, dimensions.y);
+  float2 texelSize = 1.0 / dimensions;
+
+  float shadow = 0.0;
+
+  for (int x = -1; x <= 1; x++) {
+    for (int y = -1; y <= 1; y++) {
+      float2 offset = texelSize * float2(x, y);
+      shadow += Shadow(position + float3(offset, 0), bias);
+    }
+  }
+
+  return shadow / 9.0;
 }
 
 [shader("pixel")]
@@ -101,7 +131,14 @@ float4 PSMain(VSOutput input) : SV_TARGET
   float3 specular = pow(max(dot(R, V), 0), a) * specularIntensity;
   float3 diffuse = max(dot(N, L), 0.001);
 
-  return float4(diffuse * diffuseColor.xyz + specular * specularColor.xyz + emissionColor.xyz, 1.0);
+  float3 diffuseSpecular = diffuse * diffuseColor.xyz + specular * specularColor.xyz;
+
+  float3 shadowPosition = input.ShadowPosition.xyz / input.ShadowPosition.w;
+  float shadowBias = max(0.05 * (1.0 - dot(N, L)), 0.005);
+
+  //float shadowIntensity = Shadow(shadowPosition, shadowBias);
+  float shadowIntensity = ShadowPCF(shadowPosition, shadowBias);
+  return float4(diffuseSpecular * shadowIntensity + emissionColor.xyz, 1.0);
 }
 
 [shader("vertex")]
