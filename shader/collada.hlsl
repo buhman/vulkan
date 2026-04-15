@@ -134,7 +134,7 @@ float4 PSMain(VSOutput input) : SV_TARGET
   float3 diffuseSpecular = diffuse * diffuseColor.xyz + specular * specularColor.xyz;
 
   float3 shadowPosition = input.ShadowPosition.xyz / input.ShadowPosition.w;
-  float shadowBias = max(0.05 * (1.0 - dot(N, L)), 0.005);
+  float shadowBias = max(0.01 * (1.0 - dot(N, L)), 0.002);
 
   //float shadowIntensity = Shadow(shadowPosition, shadowBias);
   float shadowIntensity = ShadowPCF(shadowPosition, shadowBias);
