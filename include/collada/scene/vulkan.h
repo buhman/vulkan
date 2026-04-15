@@ -10,10 +10,13 @@ namespace collada::scene {
   // these structures are not vulkan-specific
   struct Scene {
     XMFLOAT4X4 projection;
+    XMFLOAT4X4 view;
+    XMFLOAT4X4 shadowProjection;
+    XMFLOAT4X4 shadowView;
     XMFLOAT4 lightPosition;
   };
   struct Node {
-    XMFLOAT4X4 modelView;
+    XMFLOAT4X4 world;
   };
   struct MaterialColor {
     XMFLOAT4 emission;
@@ -89,6 +92,7 @@ namespace collada::scene {
     // per-frame
     VkCommandBuffer commandBuffer;
     uint32_t frameIndex;
+    uint32_t pipelineIndex;
 
     //////////////////////////////////////////////////////////////////////
     // called directly
@@ -101,7 +105,8 @@ namespace collada::scene {
                        VkFormat colorFormat,
                        VkFormat depthFormat);
 
-    void per_frame_state(uint32_t frameIndex);
+    void change_frame(VkCommandBuffer commandBuffer, uint32_t frameIndex);
+    void destroy_all(collada::types::descriptor const * const descriptor);
 
     //////////////////////////////////////////////////////////////////////
     // called by initial_state
@@ -143,15 +148,10 @@ namespace collada::scene {
 
     void transfer_transforms(XMMATRIX const & projection,
                              XMMATRIX const & view,
+                             XMMATRIX const & shadowProjection,
+                             XMMATRIX const & shadowView,
                              XMVECTOR const & light_position_world,
                              int nodes_count,
                              instance_types::node const * const node_instances);
-
-    //////////////////////////////////////////////////////////////////////
-    // called by main
-    //////////////////////////////////////////////////////////////////////
-
-    void change_frame(VkCommandBuffer commandBuffer, uint32_t frameIndex);
-    void destroy_all(collada::types::descriptor const * const descriptor);
   };
 }

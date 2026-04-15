@@ -49,7 +49,11 @@ VkImageView * swapchainImageViews{ nullptr };
 
 VkImage depthImage{ VK_NULL_HANDLE };
 VkImageView depthImageView{ VK_NULL_HANDLE };
-VkDeviceMemory depthImageMemory{ VK_NULL_HANDLE };
+VkDeviceMemory depthMemory{ VK_NULL_HANDLE };
+
+VkImage shadowDepthImage{ VK_NULL_HANDLE };
+VkImageView shadowDepthImageView{ VK_NULL_HANDLE };
+VkDeviceMemory shadowDepthMemory{ VK_NULL_HANDLE };
 
 VkBuffer vertexIndexBuffer{ VK_NULL_HANDLE };
 VkDeviceMemory vertexIndexBufferMemory{ VK_NULL_HANDLE };
@@ -129,6 +133,60 @@ XMMATRIX currentModel()
 {
   theta += 0.01;
   return XMMatrixTranslation(0, 0, 0.0) * XMMatrixRotationX(theta) * XMMatrixRotationZ(XM_PI * 0.5f);
+}
+
+void createDepth(VkPhysicalDeviceMemoryProperties const & physicalDeviceMemoryProperties,
+                 uint32_t width,
+                 uint32_t height,
+                 VkFormat format,
+                 VkImageUsageFlags usage,
+                 VkImage * image,
+                 VkDeviceMemory * memory,
+                 VkImageView * imageView)
+{
+  VkImageCreateInfo imageCreateInfo{
+    .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+    .imageType = VK_IMAGE_TYPE_2D,
+    .format = format,
+    .extent{
+      .width = width,
+      .height = height,
+      .depth = 1,
+    },
+    .mipLevels = 1,
+    .arrayLayers = 1,
+    .samples = VK_SAMPLE_COUNT_1_BIT,
+    .tiling = VK_IMAGE_TILING_OPTIMAL,
+    .usage = usage,
+    .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+  };
+  VK_CHECK(vkCreateImage(device, &imageCreateInfo, nullptr, image));
+
+  VkMemoryRequirements memoryRequirements;
+  vkGetImageMemoryRequirements(device, depthImage, &memoryRequirements);
+  VkMemoryPropertyFlags memoryPropertyFlags{ VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT };
+  VkMemoryAllocateFlags memoryAllocateFlags{ };
+  allocateFromMemoryRequirements(device,
+                                 physicalDeviceMemoryProperties,
+                                 memoryRequirements,
+                                 memoryPropertyFlags,
+                                 memoryAllocateFlags,
+                                 1,
+                                 memory);
+  VK_CHECK(vkBindImageMemory(device, *image, *memory, 0));
+
+  VkImageViewCreateInfo imageViewCreateInfo{
+    .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+    .image = *image,
+    .viewType = VK_IMAGE_VIEW_TYPE_2D,
+    .format = format,
+    .subresourceRange{
+      .aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT,
+      .levelCount = 1,
+      .layerCount = 1
+    }
+  };
+  VK_CHECK(vkCreateImageView(device, &imageViewCreateInfo, nullptr, imageView));
 }
 
 void recreateSwapchain(VkSurfaceFormatKHR surfaceFormat, VkFormat depthFormat, VkPhysicalDeviceMemoryProperties const & physicalDeviceMemoryProperties, VkSurfaceCapabilitiesKHR const & surfaceCapabilities)
@@ -220,58 +278,21 @@ void recreateSwapchain(VkSurfaceFormatKHR surfaceFormat, VkFormat depthFormat, V
   if (depthImage != VK_NULL_HANDLE) {
     vkDestroyImage(device, depthImage, nullptr);
   }
-  if (depthImageMemory != VK_NULL_HANDLE) {
-    vkFreeMemory(device, depthImageMemory, nullptr);
+  if (depthMemory != VK_NULL_HANDLE) {
+    vkFreeMemory(device, depthMemory, nullptr);
   }
   if (depthImageView != VK_NULL_HANDLE) {
     vkDestroyImageView(device, depthImageView, nullptr);
   }
 
-  VkImageCreateInfo depthImageCreateInfo{
-    .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
-    .imageType = VK_IMAGE_TYPE_2D,
-    .format = depthFormat,
-    .extent{
-      .width = imageExtent.width,
-      .height = imageExtent.height,
-      .depth = 1,
-    },
-    .mipLevels = 1,
-    .arrayLayers = 1,
-    .samples = VK_SAMPLE_COUNT_1_BIT,
-    .tiling = VK_IMAGE_TILING_OPTIMAL,
-    .usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-    .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-  };
-  VK_CHECK(vkCreateImage(device, &depthImageCreateInfo, nullptr, &depthImage));
-
-  VkMemoryRequirements depthImageMemoryRequirements;
-  vkGetImageMemoryRequirements(device, depthImage, &depthImageMemoryRequirements);
-  VkMemoryPropertyFlags depthImageMemoryPropertyFlags{
-    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
-  };
-  VkMemoryAllocateFlags depthImageMemoryAllocateFlags{ };
-  allocateFromMemoryRequirements(device,
-                                 physicalDeviceMemoryProperties,
-                                 depthImageMemoryRequirements,
-                                 depthImageMemoryPropertyFlags,
-                                 depthImageMemoryAllocateFlags,
-                                 1,
-                                 &depthImageMemory);
-  VK_CHECK(vkBindImageMemory(device, depthImage, depthImageMemory, 0));
-
-  VkImageViewCreateInfo depthViewCreateInfo{
-    .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-    .image = depthImage,
-    .viewType = VK_IMAGE_VIEW_TYPE_2D,
-    .format = depthFormat,
-    .subresourceRange{
-      .aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT,
-      .levelCount = 1,
-      .layerCount = 1
-    }
-  };
-  VK_CHECK(vkCreateImageView(device, &depthViewCreateInfo, nullptr, &depthImageView));
+  createDepth(physicalDeviceMemoryProperties,
+              imageExtent.width,
+              imageExtent.height,
+              depthFormat,
+              VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+              &depthImage,
+              &depthMemory,
+              &depthImageView);
 }
 
 inline static int positive_modulo(int i, unsigned int n) {
@@ -470,6 +491,19 @@ int main()
   printf("depthFormat: %s\n", string_VkFormat(depthFormat));
 
   recreateSwapchain(surfaceFormat, depthFormat, physicalDeviceMemoryProperties, surfaceCapabilities);
+
+  //////////////////////////////////////////////////////////////////////
+  // shadow
+  //////////////////////////////////////////////////////////////////////
+
+  createDepth(physicalDeviceMemoryProperties,
+              1024,
+              1024,
+              depthFormat,
+              VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+              &shadowDepthImage,
+              &shadowDepthMemory,
+              &shadowDepthImageView);
 
   //////////////////////////////////////////////////////////////////////
   // mesh
@@ -1207,6 +1241,7 @@ int main()
   int cameraIndex = collada_state.find_node_index_by_name("Camera001");
   int cameraTargetIndex = collada_state.find_node_index_by_name("Camera001.Target");
   int lightIndex = collada_state.find_node_index_by_name("DirectLight");
+  int lightTargetIndex = collada_state.find_node_index_by_name("DirectLight.Target");
 
   while (quit == false) {
     SDL_Event event;
@@ -1238,31 +1273,16 @@ int main()
       }
     }
 
-    // shader data
+    //////////////////////////////////////////////////////////////////////
+    // collada update
+    //////////////////////////////////////////////////////////////////////
 
-    /*
-    XMMATRIX model = currentModel();
-    XMMATRIX view = currentView();
-    XMMATRIX modelView = model * view;
-    XMMATRIX transform = modelView * currentProjection();
-    XMStoreFloat4x4(&shaderData.transform, transform);
-    XMStoreFloat4x4(&shaderData.modelView, modelView);
-    XMVECTOR lightPosition = XMVector3Transform(XMVectorSet(-3, -3, 0, 0), view);
-    XMStoreFloat4(&shaderData.lightPosition, lightPosition);
+    double time = getTime(start_time);
+    collada_state.update(time / 5.0f);
 
-    size_t frameOffset = shaderDataDevice.stride * frameIndex;
-    void * frameData = (void *)(((VkDeviceSize)shaderDataDevice.mappedData) + frameOffset);
-    VkDeviceSize frameSize{ (sizeof (ShaderData)) };
-    memcpy(frameData, &shaderData, frameSize);
-    VkDeviceSize flushSize{ roundAlignment(frameSize, physicalDeviceProperties.limits.nonCoherentAtomSize) };
-    VkMappedMemoryRange shaderDataMemoryRange{
-      .sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE,
-      .memory = shaderDataDevice.memory,
-      .offset = frameOffset,
-      .size = flushSize,
-    };
-    vkFlushMappedMemoryRanges(device, 1, &shaderDataMemoryRange);
-    */
+    //////////////////////////////////////////////////////////////////////
+    // fence
+    //////////////////////////////////////////////////////////////////////
 
     // wait for fence
     VK_CHECK(vkWaitForFences(device, 1, &fences[frameIndex], true, UINT64_MAX));
@@ -1280,8 +1300,139 @@ int main()
     };
     VK_CHECK(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
 
-    VkImageMemoryBarrier2 outputBarriers[2]{
+    //////////////////////////////////////////////////////////////////////
+    // shadow render
+    //////////////////////////////////////////////////////////////////////
+
+    // barrier
+
+    VkImageMemoryBarrier2 shadowBarriers[1]{
       VkImageMemoryBarrier2{
+        .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
+        .srcStageMask = VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT,
+        .srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+        .dstStageMask = VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT,
+        .dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+        .oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+        .newLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL,
+        .image = shadowDepthImage,
+        .subresourceRange{
+          .aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT,
+          .levelCount = 1,
+          .layerCount = 1
+        }
+      }
+    };
+    VkDependencyInfo shadowBarrierDependencyInfo{
+      .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
+      .imageMemoryBarrierCount = 1,
+      .pImageMemoryBarriers = shadowBarriers
+    };
+    vkCmdPipelineBarrier2(commandBuffer, &shadowBarrierDependencyInfo);
+
+    // attachments
+
+    VkRenderingAttachmentInfo shadowDepthRenderingAttachmentInfo{
+      .sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
+      .imageView = shadowDepthImageView,
+      .imageLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL,
+      .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
+      .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
+      .clearValue{ .depthStencil{ 1.0f, 0 } }
+    };
+
+    VkRenderingInfo shadowRenderingInfo{
+      .sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
+      .renderArea{ .extent{ .width = 1024, .height = 1024 } },
+      .layerCount = 1,
+      .colorAttachmentCount = 0,
+      .pDepthAttachment = &shadowDepthRenderingAttachmentInfo,
+      .pStencilAttachment = &shadowDepthRenderingAttachmentInfo,
+    };
+    vkCmdBeginRendering(commandBuffer, &shadowRenderingInfo);
+
+    // viewport/scissor
+
+    VkViewport shadowViewport{
+      .x = 0,
+      .y = 0,
+      .width = 1024,
+      .height = 1024,
+      .minDepth = 0.0f,
+      .maxDepth = 1.0f
+    };
+    vkCmdSetViewport(commandBuffer, 0, 1, &shadowViewport);
+    VkRect2D shadowScissor{
+      .extent{
+        .width = 1024,
+        .height = 1024
+      }
+    };
+    vkCmdSetScissor(commandBuffer, 0, 1, &shadowScissor);
+
+    // draw
+
+    {
+      collada_state.vulkan.change_frame(commandBuffer, frameIndex);
+
+      XMMATRIX projection = currentProjection();
+      XMMATRIX view = currentView(collada_state.node_state.node_instances[cameraIndex],
+                                  collada_state.node_state.node_instances[cameraTargetIndex]);
+      XMMATRIX shadowProjection = XMMatrixOrthographicLH(300, 300, 0.1, 1000);
+      XMMATRIX shadowView = currentView(collada_state.node_state.node_instances[lightIndex],
+                                        collada_state.node_state.node_instances[lightTargetIndex]);
+
+      collada::instance_types::node const & lightNode = collada_state.node_state.node_instances[lightIndex];
+      XMVECTOR lightPositionWorld = XMVector3Transform(XMVectorZero(), lightNode.world);
+
+      collada_state.vulkan.transfer_transforms(projection,
+                                               view,
+                                               shadowProjection,
+                                               shadowView,
+                                               lightPositionWorld,
+                                               collada_state.descriptor->nodes_count,
+                                               collada_state.node_state.node_instances);
+    }
+
+    collada_state.vulkan.pipelineIndex = 0; // shadow pipeline
+    collada_state.draw();
+
+    vkCmdEndRendering(commandBuffer);
+
+    // barrier
+
+    {
+      VkImageMemoryBarrier2 shadowBarriers[1]{
+        {
+          .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
+          .srcStageMask = VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT,
+          .srcAccessMask = VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+          .dstStageMask = VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
+          .dstAccessMask = VK_ACCESS_2_INPUT_ATTACHMENT_READ_BIT,
+          .oldLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL,
+          .newLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL,
+          .image = shadowDepthImage,
+          .subresourceRange{
+            .aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT,
+            .levelCount = 1,
+            .layerCount = 1
+          }
+        }
+      };
+      VkDependencyInfo shadowBarrierDependencyInfo{
+        .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
+        .imageMemoryBarrierCount = 1,
+        .pImageMemoryBarriers = shadowBarriers
+      };
+      vkCmdPipelineBarrier2(commandBuffer, &shadowBarrierDependencyInfo);
+    }
+
+    //////////////////////////////////////////////////////////////////////
+    // render
+    //////////////////////////////////////////////////////////////////////
+
+    VkImageMemoryBarrier2 outputBarriers[2]{
+      {
         .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
         .srcStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
         .srcAccessMask = 0,
@@ -1296,11 +1447,11 @@ int main()
           .layerCount = 1
         }
       },
-      VkImageMemoryBarrier2{
+      {
         .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
         .srcStageMask = VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT,
         .srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-        .dstStageMask = VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT,
+        .dstStageMask = VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT,
         .dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
         .oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
         .newLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL,
@@ -1318,6 +1469,8 @@ int main()
       .pImageMemoryBarriers = outputBarriers
     };
     vkCmdPipelineBarrier2(commandBuffer, &barrierDependencyInfo);
+
+    // attachments
 
     VkRenderingAttachmentInfo colorRenderingAttachmentInfo{
       .sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
@@ -1359,68 +1512,58 @@ int main()
     VkRect2D scissor{ .extent{ .width = (uint32_t)windowSize.x, .height = (uint32_t)windowSize.y } };
     vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-    /*
-    VkDescriptorSet descriptorSets[2] = {
-      uniformBufferDescriptorSets[frameIndex],
-      textureDescriptorSet,
-    };
-    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 2, descriptorSets, 0, nullptr);
-    VkDeviceSize vertexOffset{ 0 };
-    vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexIndexBuffer, &vertexOffset);
-    VkDeviceSize indexOffset{ vertexBufferSize };
-    vkCmdBindIndexBuffer(commandBuffer, vertexIndexBuffer, indexOffset, VK_INDEX_TYPE_UINT32);
-    vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, (sizeof (int32_t)), &samplerIndex);
-    VkDeviceSize indexCount{ 2400 };
+    // draw
 
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelines[MAIN_PIPELINE]);
-    vkCmdDrawIndexed(commandBuffer, indexCount, 1, 0, 0, 0);
-
-    //vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelines[OUTLINE_PIPELINE]);
-    //vkCmdDrawIndexed(commandBuffer, indexCount, 1, 0, 0, 0);
-    */
-
-    collada_state.vulkan.change_frame(commandBuffer, frameIndex);
-
-    double time = getTime(start_time);
-    collada_state.update(time / 5.0f);
-
-    XMMATRIX projection = currentProjection();
-    XMMATRIX view = currentView(collada_state.node_state.node_instances[cameraIndex],
-                                collada_state.node_state.node_instances[cameraTargetIndex]);
-
-    collada::instance_types::node const & lightNode = collada_state.node_state.node_instances[lightIndex];
-    XMVECTOR lightPositionWorld = XMVector3Transform(XMVectorZero(), lightNode.world);
-
-    collada_state.vulkan.transfer_transforms(projection,
-                                             view,
-                                             lightPositionWorld,
-                                             collada_state.descriptor->nodes_count,
-                                             collada_state.node_state.node_instances);
+    collada_state.vulkan.pipelineIndex = 1; // non-shadow pipeline
     collada_state.draw();
 
     vkCmdEndRendering(commandBuffer);
 
-    VkImageMemoryBarrier2 barrierPresent{
-      .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
-      .srcStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
-      .srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-      .dstStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
-      .dstAccessMask = 0,
-      .oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-      .newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-      .image = swapchainImages[imageIndex],
-      .subresourceRange{ .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, .levelCount = 1, .layerCount = 1 }
+    // barrier
+
+    VkImageMemoryBarrier2 presentBarriers[1]{
+      {
+        .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
+        .srcStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+        .srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+        .dstStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+        .dstAccessMask = 0,
+        .oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+        .newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+        .image = swapchainImages[imageIndex],
+        .subresourceRange{ .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, .levelCount = 1, .layerCount = 1 }
+      },
+      /*
+      {
+        .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
+        .srcStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+        .srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+        .dstStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+        .dstAccessMask = 0,
+        .oldLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL,
+        .newLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+        .image = shadowDepthImage,
+        .subresourceRange{
+          .aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT,
+          .levelCount = 1,
+          .layerCount = 1
+        }
+      }
+      */
     };
     VkDependencyInfo barrierPresentDependencyInfo{
       .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
       .imageMemoryBarrierCount = 1,
-      .pImageMemoryBarriers = &barrierPresent
+      .pImageMemoryBarriers = presentBarriers
     };
     vkCmdPipelineBarrier2(commandBuffer, &barrierPresentDependencyInfo);
 
     VK_CHECK(vkEndCommandBuffer(commandBuffer));
 
+    //////////////////////////////////////////////////////////////////////
     // submit to graphics queue
+    //////////////////////////////////////////////////////////////////////
+
     VkPipelineStageFlags waitStages = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
     VkSubmitInfo submitInfo{
       .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
@@ -1478,8 +1621,12 @@ int main()
   }
 
   vkDestroyImage(device, depthImage, nullptr);
-  vkFreeMemory(device, depthImageMemory, nullptr);
+  vkFreeMemory(device, depthMemory, nullptr);
   vkDestroyImageView(device, depthImageView, nullptr);
+
+  vkDestroyImage(device, shadowDepthImage, nullptr);
+  vkFreeMemory(device, shadowDepthMemory, nullptr);
+  vkDestroyImageView(device, shadowDepthImageView, nullptr);
 
   vkDestroyBuffer(device, vertexIndexBuffer, nullptr);
   vkFreeMemory(device, vertexIndexBufferMemory, nullptr);

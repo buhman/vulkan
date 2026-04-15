@@ -542,6 +542,21 @@ namespace collada::scene {
       }
     };
 
+    VkPipelineShaderStageCreateInfo shadowShaderStages[2]{
+      {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+        .stage = VK_SHADER_STAGE_VERTEX_BIT,
+        .module = shaderModule,
+        .pName = "VSShadowMain"
+      },
+      {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+        .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
+        .module = shaderModule,
+        .pName = "PSShadowMain"
+      }
+    };
+
     VkPipelineViewportStateCreateInfo viewportState{
       .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
       .viewportCount = 1,
@@ -584,6 +599,14 @@ namespace collada::scene {
       .stencilAttachmentFormat = depthFormat
     };
 
+    VkPipelineRenderingCreateInfo shadowRenderingCreateInfo{
+      .sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
+      //.colorAttachmentCount = 1,
+      //.pColorAttachmentFormats = &colorFormat,
+      .depthAttachmentFormat = depthFormat,
+      .stencilAttachmentFormat = depthFormat
+    };
+
     VkPipelineColorBlendAttachmentState blendAttachment{
       .colorWriteMask = 0xF
     };
@@ -610,10 +633,30 @@ namespace collada::scene {
                                vertexInputStates,
                                vertexBindingDescriptions);
 
-    VkGraphicsPipelineCreateInfo * pipelineCreateInfos = NewM<VkGraphicsPipelineCreateInfo>(descriptor->inputs_list_count);
+    // piplineCount must match destroy_all
+    int pipelineCount = descriptor->inputs_list_count * 2;
+    VkGraphicsPipelineCreateInfo * pipelineCreateInfos = NewM<VkGraphicsPipelineCreateInfo>(pipelineCount);
 
     for (int i = 0; i < descriptor->inputs_list_count; i++) {
-      pipelineCreateInfos[i] = {
+      // shadow
+      pipelineCreateInfos[i * 2 + 0] = {
+        .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
+        .pNext = &shadowRenderingCreateInfo,
+        .stageCount = 2,
+        .pStages = shadowShaderStages,
+        .pVertexInputState = &vertexInputStates[i],
+        .pInputAssemblyState = &inputAssemblyState,
+        .pViewportState = &viewportState,
+        .pRasterizationState = &rasterizationState,
+        .pMultisampleState = &multisampleState,
+        .pDepthStencilState = &depthStencilState,
+        .pColorBlendState = &colorBlendState,
+        .pDynamicState = &dynamicState,
+        .layout = pipelineLayout
+      };
+
+      // non-shadow
+      pipelineCreateInfos[i * 2 + 1] = {
         .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
         .pNext = &renderingCreateInfo,
         .stageCount = 2,
@@ -630,8 +673,8 @@ namespace collada::scene {
       };
     };
 
-    pipelines = NewM<VkPipeline>(descriptor->inputs_list_count);
-    VK_CHECK(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, descriptor->inputs_list_count, pipelineCreateInfos, nullptr, pipelines));
+    pipelines = NewM<VkPipeline>(pipelineCount);
+    VK_CHECK(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, pipelineCount, pipelineCreateInfos, nullptr, pipelines));
 
     free(pipelineCreateInfos);
 
@@ -665,7 +708,7 @@ namespace collada::scene {
 
       VkDeviceSize vertexOffset{ (VkDeviceSize)mesh.vertex_buffer_offset };
       vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexIndex.buffer, &vertexOffset);
-      vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelines[triangles.inputs_index]);
+      vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelines[triangles.inputs_index * 2 + pipelineIndex]);
 
       uint32_t indexCount = triangles.count * 3;
       vkCmdDrawIndexed(commandBuffer, indexCount, 1, triangles.index_offset, 0, 0);
@@ -685,18 +728,22 @@ namespace collada::scene {
 
   void vulkan::transfer_transforms(XMMATRIX const & projection,
                                    XMMATRIX const & view,
+                                   XMMATRIX const & shadowProjection,
+                                   XMMATRIX const & shadowView,
                                    XMVECTOR const & light_position_world,
                                    int nodes_count,
                                    instance_types::node const * const node_instances)
   {
     // store
     XMStoreFloat4x4(&shaderData.scene.projection, projection);
+    XMStoreFloat4x4(&shaderData.scene.view, view);
+    XMStoreFloat4x4(&shaderData.scene.shadowProjection, shadowProjection);
+    XMStoreFloat4x4(&shaderData.scene.shadowView, shadowView);
     XMVECTOR lightPositionView = XMVector3Transform(light_position_world, view);
     XMStoreFloat4(&shaderData.scene.lightPosition, lightPositionView);
 
     for (int i = 0; i < nodes_count; i++) {
-      XMMATRIX model_view = node_instances[i].world * view;
-      XMStoreFloat4x4(&shaderData.nodes[i].modelView, model_view);
+      XMStoreFloat4x4(&shaderData.nodes[i].world, node_instances[i].world);
     }
 
     // copy
@@ -771,7 +818,9 @@ namespace collada::scene {
     vkDestroyDescriptorSetLayout(device, descriptorSetLayouts[1], nullptr);
     vkDestroyDescriptorPool(device, descriptorPool, nullptr);
     vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
-    for (int i = 0; i < descriptor->inputs_list_count; i++) {
+    // pipelineCount must match create_pipelines
+    int pipelineCount = descriptor->inputs_list_count * 2;
+    for (int i = 0; i < pipelineCount; i++) {
       vkDestroyPipeline(device, pipelines[i], nullptr);
     }
     free(pipelines);
