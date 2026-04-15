@@ -236,14 +236,15 @@ namespace collada::scene {
 
     VkMemoryPropertyFlags memoryPropertyFlags{ VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT };
     VkMemoryAllocateFlags memoryAllocateFlags{ };
-    allocateFromMemoryRequirements2(device,
-                                    physicalDeviceMemoryProperties,
-                                    memoryPropertyFlags,
-                                    memoryAllocateFlags,
-                                    uniformBufferDescriptorCount,
-                                    memoryRequirements,
-                                    &shaderDataDevice.memory,
-                                    offsets);
+    shaderDataDevice.memorySize = allocateFromMemoryRequirements2(device,
+                                                                  physicalDeviceProperties,
+                                                                  physicalDeviceMemoryProperties,
+                                                                  memoryPropertyFlags,
+                                                                  memoryAllocateFlags,
+                                                                  uniformBufferDescriptorCount,
+                                                                  memoryRequirements,
+                                                                  &shaderDataDevice.memory,
+                                                                  offsets);
 
     VkDeviceSize offset{ 0 };
     VkDeviceSize size{ VK_WHOLE_SIZE };
@@ -301,7 +302,7 @@ namespace collada::scene {
     };
     VkDescriptorPoolCreateInfo descriptorPoolCreateInfo{
       .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
-      .maxSets = 2,
+      .maxSets = maxFrames + 1, // +1 for descriptorSet1
       .poolSizeCount = descriptorPoolSizesCount,
       .pPoolSizes = descriptorPoolSizes
     };
@@ -519,16 +520,20 @@ namespace collada::scene {
 
     // flush
 
-    VkDeviceSize materialColorsFlushSize{ shaderDataDevice.constant.materialColorsSize };
-    VkMappedMemoryRange shaderDataMemoryRanges[1]{
+    VkMappedMemoryRange mappedMemoryRanges[1]{
       {
         .sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE,
         .memory = shaderDataDevice.memory,
         .offset = shaderDataDevice.constant.materialColorsOffset,
-        .size = roundAlignment(materialColorsFlushSize, physicalDeviceProperties.limits.nonCoherentAtomSize),
+        .size = shaderDataDevice.constant.materialColorsSize,
       },
     };
-    vkFlushMappedMemoryRanges(device, 1, shaderDataMemoryRanges);
+    alignMappedMemoryRanges(physicalDeviceProperties.limits.nonCoherentAtomSize,
+                            shaderDataDevice.memorySize,
+                            1, mappedMemoryRanges);
+    //fprintf(stderr, "flush materials start %ld %ld %ld %ld : %ld\n", offset, size, alignedOffset, alignedSize, shaderDataDevice.memorySize);
+    vkFlushMappedMemoryRanges(device, 1, mappedMemoryRanges);
+    //fprintf(stderr, "flush materials end\n");
   }
 
   //////////////////////////////////////////////////////////////////////
@@ -811,25 +816,25 @@ namespace collada::scene {
 
     // flush
 
-    VkDeviceSize sceneFlushSize{ shaderDataDevice.frame[frameIndex].sceneSize };
-    VkDeviceSize nodesFlushSize{ shaderDataDevice.frame[frameIndex].nodesSize };
-    //fprintf(stderr, "sceneFlushSize %ld\n", sceneFlushSize);
-    //fprintf(stderr, "nodesFlushSize %ld\n", nodesFlushSize);
-    VkMappedMemoryRange shaderDataMemoryRanges[2]{
+    VkMappedMemoryRange mappedMemoryRanges[2]{
       {
         .sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE,
         .memory = shaderDataDevice.memory,
         .offset = shaderDataDevice.frame[frameIndex].sceneOffset,
-        .size = roundAlignment(sceneFlushSize, physicalDeviceProperties.limits.nonCoherentAtomSize),
+        .size = shaderDataDevice.frame[frameIndex].sceneSize,
       },
       {
         .sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE,
         .memory = shaderDataDevice.memory,
         .offset = shaderDataDevice.frame[frameIndex].nodesOffset,
-        .size = roundAlignment(nodesFlushSize, physicalDeviceProperties.limits.nonCoherentAtomSize),
+        .size = shaderDataDevice.frame[frameIndex].nodesSize,
       }
     };
-    vkFlushMappedMemoryRanges(device, 2, shaderDataMemoryRanges);
+    alignMappedMemoryRanges(physicalDeviceProperties.limits.nonCoherentAtomSize,
+                            shaderDataDevice.memorySize,
+                            2,
+                            mappedMemoryRanges);
+    vkFlushMappedMemoryRanges(device, 2, mappedMemoryRanges);
   }
 
   void vulkan::draw_node(int32_t node_index,

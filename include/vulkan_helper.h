@@ -2,11 +2,34 @@
 
 #include <assert.h>
 
+inline static constexpr VkDeviceSize roundDownAlignment(VkDeviceSize offset, VkDeviceSize alignment)
+{
+  // must be a power of two
+  assert(alignment && ((alignment & (alignment - 1)) == 0));
+  return offset & ~(alignment - 1);
+}
+
 inline static constexpr VkDeviceSize roundAlignment(VkDeviceSize offset, VkDeviceSize alignment)
 {
   // must be a power of two
   assert(alignment && ((alignment & (alignment - 1)) == 0));
   return (offset + (alignment - 1)) & (-alignment);
+}
+
+inline static constexpr void alignMappedMemoryRanges(uint32_t nonCoherentAtomSize,
+                                                     VkDeviceSize memorySize,
+                                                     uint32_t count,
+                                                     VkMappedMemoryRange * ranges)
+{
+  for (uint32_t i = 0; i < count; i++) {
+    VkDeviceSize alignedOffset{ roundDownAlignment(ranges[i].offset, nonCoherentAtomSize) };
+    VkDeviceSize alignedSize{ roundAlignment(ranges[i].size + (ranges[i].offset - alignedOffset), nonCoherentAtomSize) };
+    if (alignedOffset + alignedSize > memorySize) {
+      alignedSize = VK_WHOLE_SIZE;
+    }
+    ranges[i].offset = alignedOffset;
+    ranges[i].size = alignedSize;
+  }
 }
 
 VkDeviceSize allocateFromMemoryRequirements(VkDevice device,
@@ -18,6 +41,7 @@ VkDeviceSize allocateFromMemoryRequirements(VkDevice device,
                                             VkDeviceMemory * memory);
 
 VkDeviceSize allocateFromMemoryRequirements2(VkDevice device,
+                                             VkPhysicalDeviceProperties const & physicalDeviceProperties,
                                              VkPhysicalDeviceMemoryProperties const & physicalDeviceMemoryProperties,
                                              VkMemoryPropertyFlags memoryPropertyFlags,
                                              VkMemoryAllocateFlags memoryAllocateFlags,

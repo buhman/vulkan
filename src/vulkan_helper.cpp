@@ -65,6 +65,7 @@ VkDeviceSize allocateFromMemoryRequirements(VkDevice device,
 }
 
 VkDeviceSize allocateFromMemoryRequirements2(VkDevice device,
+                                             VkPhysicalDeviceProperties const & physicalDeviceProperties,
                                              VkPhysicalDeviceMemoryProperties const & physicalDeviceMemoryProperties,
                                              VkMemoryPropertyFlags memoryPropertyFlags,
                                              VkMemoryAllocateFlags memoryAllocateFlags,
@@ -95,10 +96,10 @@ VkDeviceSize allocateFromMemoryRequirements2(VkDevice device,
   VkMemoryAllocateInfo memoryAllocateInfo{
     .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
     .pNext = &memoryAllocateFlagsInfo,
-    .allocationSize = offset,
+    .allocationSize = roundAlignment(offset, physicalDeviceProperties.limits.nonCoherentAtomSize),
     .memoryTypeIndex = memoryTypeIndex,
   };
   VK_CHECK(vkAllocateMemory(device, &memoryAllocateInfo, nullptr, memory));
 
-  return offset;
+  return memoryAllocateInfo.allocationSize;
 }

@@ -73,6 +73,7 @@ namespace collada::scene {
     } shaderData;
     struct {
       VkDeviceMemory memory;
+      VkDeviceSize memorySize;
       void * mappedData;
       struct {  // must match perFrameDescriptorCount
         VkBuffer sceneBuffer;

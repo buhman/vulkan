@@ -200,10 +200,6 @@ void recreateSwapchain(VkSurfaceFormatKHR surfaceFormat, VkFormat depthFormat, V
     .width = surfaceCapabilities.currentExtent.width,
     .height = surfaceCapabilities.currentExtent.height,
   };
-  if ((imageExtent.width == ~0u) && (imageExtent.width == ~0u)) {
-    imageExtent.width = windowSize.x;
-    imageExtent.height = windowSize.y;
-  }
   VkFormat imageFormat{ surfaceFormat.format };
   VkColorSpaceKHR imageColorSpace{ surfaceFormat.colorSpace };
 
@@ -463,6 +459,10 @@ int main()
   SDL_CHECK(SDL_GetWindowSize(window, &windowSize.x, &windowSize.y));
   VkSurfaceCapabilitiesKHR surfaceCapabilities{};
   VK_CHECK(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &surfaceCapabilities));
+  if ((surfaceCapabilities.currentExtent.width == ~0u) && (surfaceCapabilities.currentExtent.width == ~0u)) {
+    surfaceCapabilities.currentExtent.width = windowSize.x;
+    surfaceCapabilities.currentExtent.height = windowSize.y;
+  }
   printf("surfaceCapabilities currentExtent %d %d\n", surfaceCapabilities.currentExtent.width, surfaceCapabilities.currentExtent.height);
 
   // surface format
@@ -1623,6 +1623,10 @@ int main()
       updateSwapchain = false;
       VK_CHECK(vkDeviceWaitIdle(device));
       VK_CHECK(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &surfaceCapabilities));
+      if ((surfaceCapabilities.currentExtent.width == ~0u) && (surfaceCapabilities.currentExtent.width == ~0u)) {
+        surfaceCapabilities.currentExtent.width = windowSize.x;
+        surfaceCapabilities.currentExtent.height = windowSize.y;
+      }
       recreateSwapchain(surfaceFormat, depthFormat, physicalDeviceMemoryProperties, surfaceCapabilities);
     }
   }
