@@ -169,7 +169,7 @@ namespace collada::scene {
     // copy data
 
     void * vertexIndexMappedData;
-    VK_CHECK(vkMapMemory(device, vertexIndex.memory, 0, vertexIndexBufferCreateInfo.size, 0, &vertexIndexMappedData));
+    VK_CHECK(vkMapMemory(device, vertexIndex.memory, 0, VK_WHOLE_SIZE, 0, &vertexIndexMappedData));
     memcpy((void *)(((ptrdiff_t)vertexIndexMappedData) + 0), vertexStart, vertexSize);
     memcpy((void *)(((ptrdiff_t)vertexIndexMappedData) + vertexSize), indexStart, indexSize);
 

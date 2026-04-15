@@ -164,7 +164,7 @@ void createDepth(VkPhysicalDeviceMemoryProperties const & physicalDeviceMemoryPr
   VK_CHECK(vkCreateImage(device, &imageCreateInfo, nullptr, image));
 
   VkMemoryRequirements memoryRequirements;
-  vkGetImageMemoryRequirements(device, depthImage, &memoryRequirements);
+  vkGetImageMemoryRequirements(device, *image, &memoryRequirements);
   VkMemoryPropertyFlags memoryPropertyFlags{ VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT };
   VkMemoryAllocateFlags memoryAllocateFlags{ };
   allocateFromMemoryRequirements(device,
@@ -561,7 +561,7 @@ int main()
     VK_CHECK(vkBindBufferMemory(device, vertexIndexBuffer, vertexIndexBufferMemory, 0));
 
     void * vertexIndexMappedData;
-    VK_CHECK(vkMapMemory(device, vertexIndexBufferMemory, 0, vertexIndexBufferCreateInfo.size, 0, &vertexIndexMappedData));
+    VK_CHECK(vkMapMemory(device, vertexIndexBufferMemory, 0, VK_WHOLE_SIZE, 0, &vertexIndexMappedData));
     memcpy((void *)(((ptrdiff_t)vertexIndexMappedData) + 0), vertexStart, vertexSize);
     memcpy((void *)(((ptrdiff_t)vertexIndexMappedData) + vertexSize), indexStart, indexSize);
 
