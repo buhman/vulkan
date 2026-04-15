@@ -200,6 +200,10 @@ void recreateSwapchain(VkSurfaceFormatKHR surfaceFormat, VkFormat depthFormat, V
     .width = surfaceCapabilities.currentExtent.width,
     .height = surfaceCapabilities.currentExtent.height,
   };
+  if ((imageExtent.width == ~0u) && (imageExtent.width == ~0u)) {
+    imageExtent.width = windowSize.x;
+    imageExtent.height = windowSize.y;
+  }
   VkFormat imageFormat{ surfaceFormat.format };
   VkColorSpaceKHR imageColorSpace{ surfaceFormat.colorSpace };
 
