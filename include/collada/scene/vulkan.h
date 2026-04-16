@@ -46,6 +46,7 @@ namespace collada::scene {
     static constexpr uint32_t uniformBufferDescriptorCount = maxFrames * perFrameDescriptorCount + constantDescriptorCount;
     // +3: linear sampler, shadow sampled image, scene sampled image (array)
     static constexpr uint32_t bindingCount = uniformBufferDescriptorCount + 3;
+    static constexpr int shaderVariantCount = 3;
 
     // externally initialized, opaque handle
     VkInstance instance;

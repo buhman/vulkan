@@ -327,13 +327,13 @@ namespace collada::scene {
           .binding = 0,
           .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
           .descriptorCount = 1,
-          .stageFlags = VK_SHADER_STAGE_VERTEX_BIT
+          .stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_GEOMETRY_BIT
         },
         {
           .binding = 1,
           .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
           .descriptorCount = 1,
-          .stageFlags = VK_SHADER_STAGE_VERTEX_BIT
+          .stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_GEOMETRY_BIT
         }
       };
 
@@ -655,7 +655,7 @@ namespace collada::scene {
   {
     VkPushConstantRange pushConstantRanges[1]{
       {
-        .stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+        .stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_GEOMETRY_BIT,
         .offset = 0,
         .size = (sizeof (PushConstant))
       }
@@ -687,6 +687,27 @@ namespace collada::scene {
         .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
         .module = shaderModule,
         .pName = "PSMain"
+      }
+    };
+
+    VkPipelineShaderStageCreateInfo geometryShaderStages[3]{
+      {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+        .stage = VK_SHADER_STAGE_VERTEX_BIT,
+        .module = shaderModule,
+        .pName = "VSGeometryMain"
+      },
+      {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+        .stage = VK_SHADER_STAGE_GEOMETRY_BIT,
+        .module = shaderModule,
+        .pName = "GSGeometryMain"
+      },
+      {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+        .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
+        .module = shaderModule,
+        .pName = "PSGeometryMain"
       }
     };
 
@@ -788,13 +809,12 @@ namespace collada::scene {
                                vertexInputStates,
                                vertexBindingDescriptions);
 
-    // piplineCount must match destroy_all
-    int pipelineCount = descriptor->inputs_list_count * 2;
+    int pipelineCount = descriptor->inputs_list_count * shaderVariantCount;
     VkGraphicsPipelineCreateInfo * pipelineCreateInfos = NewM<VkGraphicsPipelineCreateInfo>(pipelineCount);
 
     for (int i = 0; i < descriptor->inputs_list_count; i++) {
       // shadow
-      pipelineCreateInfos[i * 2 + 0] = {
+      pipelineCreateInfos[i * shaderVariantCount + 0] = {
         .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
         .pNext = &shadowRenderingCreateInfo,
         .stageCount = 2,
@@ -811,11 +831,28 @@ namespace collada::scene {
       };
 
       // non-shadow
-      pipelineCreateInfos[i * 2 + 1] = {
+      pipelineCreateInfos[i * shaderVariantCount + 1] = {
         .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
         .pNext = &renderingCreateInfo,
         .stageCount = 2,
         .pStages = shaderStages,
+        .pVertexInputState = &vertexInputStates[i],
+        .pInputAssemblyState = &inputAssemblyState,
+        .pViewportState = &viewportState,
+        .pRasterizationState = &rasterizationState,
+        .pMultisampleState = &multisampleState,
+        .pDepthStencilState = &depthStencilState,
+        .pColorBlendState = &colorBlendState,
+        .pDynamicState = &dynamicState,
+        .layout = pipelineLayout
+      };
+
+      // geometry
+      pipelineCreateInfos[i * shaderVariantCount + 2] = {
+        .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
+        .pNext = &renderingCreateInfo,
+        .stageCount = 3,
+        .pStages = geometryShaderStages,
         .pVertexInputState = &vertexInputStates[i],
         .pInputAssemblyState = &inputAssemblyState,
         .pViewportState = &viewportState,
@@ -860,13 +897,13 @@ namespace collada::scene {
       }
       types::triangles const& triangles = mesh.triangles[instance_material.element_index];
 
-      VkShaderStageFlags stageFlags{ VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT };
+      VkShaderStageFlags stageFlags{ VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_GEOMETRY_BIT };
       constexpr uint32_t offset{ (offsetof (PushConstant, materialIndex)) };
       vkCmdPushConstants(commandBuffer, pipelineLayout, stageFlags, offset, (sizeof (uint32_t)), &materialIndex);
 
       VkDeviceSize vertexOffset{ (VkDeviceSize)mesh.vertex_buffer_offset };
       vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexIndex.buffer, &vertexOffset);
-      vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelines[triangles.inputs_index * 2 + pipelineIndex]);
+      vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelines[triangles.inputs_index * shaderVariantCount + pipelineIndex]);
 
       uint32_t indexCount = triangles.count * 3;
       vkCmdDrawIndexed(commandBuffer, indexCount, 1, triangles.index_offset, 0, 0);
@@ -935,7 +972,7 @@ namespace collada::scene {
                          types::node const & node,
                          instance_types::node const & node_instance)
   {
-    VkShaderStageFlags stageFlags{ VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT };
+    VkShaderStageFlags stageFlags{ VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_GEOMETRY_BIT };
     constexpr uint32_t offset{ (offsetof (PushConstant, nodeIndex)) };
     vkCmdPushConstants(commandBuffer, pipelineLayout, stageFlags, offset, (sizeof (uint32_t)), &node_index);
 
@@ -983,8 +1020,7 @@ namespace collada::scene {
     vkDestroyDescriptorSetLayout(device, descriptorSetLayouts[1], nullptr);
     vkDestroyDescriptorPool(device, descriptorPool, nullptr);
     vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
-    // pipelineCount must match create_pipelines
-    int pipelineCount = descriptor->inputs_list_count * 2;
+    int pipelineCount = descriptor->inputs_list_count * shaderVariantCount;
     for (int i = 0; i < pipelineCount; i++) {
       vkDestroyPipeline(device, pipelines[i], nullptr);
     }

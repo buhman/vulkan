@@ -169,6 +169,57 @@ float4 PSMain(VSOutput input) : SV_TARGET
   return float4(diffuseSpecular * shadowIntensity + emissionColor.xyz, 1.0);
 }
 
+struct VSGeometryOutput
+{
+  float4 Position : SV_POSITION;
+  float3 Normal : Normal;
+};
+
+[shader("vertex")]
+VSGeometryOutput VSGeometryMain(VSInput input)
+{
+  VSGeometryOutput output = (VSGeometryOutput)0;
+  output.Position = float4(input.Position, 1.0);
+  output.Normal = input.Normal;
+  return output;
+}
+
+struct GSGeometryOutput
+{
+  float4 Position : SV_POSITION;
+  float3 Color : Color;
+};
+
+[shader("geometry")]
+[maxvertexcount(6)]
+void GSGeometryMain(triangle VSGeometryOutput input[3], inout LineStream<GSGeometryOutput> outputStream)
+{
+  float normalLength = 2.0;
+
+  for (int i = 0; i < 3; i++) {
+    float3 position = input[i].Position.xyz;
+    float3 normal = input[i].Normal;
+    float3 positionNormal = position + normal * normalLength;
+
+    GSGeometryOutput output = (GSGeometryOutput)0;
+    output.Position = getProjection(Scene.Projection, getView(Scene.View, position));
+    output.Color = float3(1, 0, 0);
+    outputStream.Append(output);
+
+    output.Position = getProjection(Scene.Projection, getView(Scene.View, positionNormal));
+    output.Color = float3(0, 1, 0);
+    outputStream.Append(output);
+
+    outputStream.RestartStrip();
+  }
+}
+
+[shader("pixel")]
+float4 PSGeometryMain(GSGeometryOutput input) : SV_TARGET
+{
+  return float4(input.Color, 1.0);
+}
+
 [shader("vertex")]
 VSShadowOutput VSShadowMain(VSInput input)
 {

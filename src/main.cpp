@@ -154,6 +154,19 @@ void createDepth(VkDeviceSize nonCoherentAtomSize,
   VK_CHECK(vkCreateImageView(device, &imageViewCreateInfo, nullptr, imageView));
 }
 
+void createCubeDepth(VkDeviceSize nonCoherentAtomSize,
+                     VkPhysicalDeviceMemoryProperties const & physicalDeviceMemoryProperties,
+                     uint32_t width,
+                     uint32_t height,
+                     VkFormat format,
+                     VkImageUsageFlags usage,
+                     VkImage * image,
+                     VkDeviceMemory * memory,
+                     VkImageView * imageView)
+{
+
+}
+
 void recreateSwapchain(VkSurfaceFormatKHR surfaceFormat,
                        VkFormat depthFormat,
                        VkDeviceSize nonCoherentAtomSize,
@@ -402,7 +415,8 @@ int main()
     .dynamicRendering = true,
   };
   VkPhysicalDeviceFeatures enabledFeatures{
-    .samplerAnisotropy = VK_TRUE
+    .geometryShader = true,
+    .samplerAnisotropy = true,
   };
   constexpr uint32_t enabledExtensionCount = 1;
   char const * enabledExtensionNames[enabledExtensionCount]{ VK_KHR_SWAPCHAIN_EXTENSION_NAME };
@@ -867,7 +881,7 @@ int main()
 
     VkViewport viewport{
       .x = 0,
-      .y = 0,//static_cast<float>(windowSize.y),
+      .y = 0,
       .width = static_cast<float>(windowSize.x),
       .height = static_cast<float>(windowSize.y),
       .minDepth = 0.0f,
@@ -881,6 +895,8 @@ int main()
 
     collada_state.vulkan.excludeMaterialIndex = -1;
     collada_state.vulkan.pipelineIndex = 1; // non-shadow pipeline
+    collada_state.draw();
+    collada_state.vulkan.pipelineIndex = 2; // geometry shader pipeline
     collada_state.draw();
 
     vkCmdEndRendering(commandBuffer);
