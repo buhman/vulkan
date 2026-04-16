@@ -17,6 +17,7 @@ namespace collada::scene {
     vulkan.create_descriptor_sets();
     vulkan.write_descriptor_sets(descriptor);
     vulkan.load_material_constants(descriptor);
+    vulkan.load_images(descriptor);
     vulkan.create_pipelines(descriptor);
 
     node_state.allocate_node_instances(descriptor->nodes, descriptor->nodes_count);

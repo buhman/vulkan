@@ -1747,7 +1747,13 @@ channel const node_channel_node_camera001_matrix = {
   .target_attribute = target_attribute::ALL,
 };
 
+// leaf_white_png
+image const image_leaf_white_png = {
+  .uri = "data/scenes/shadow_test/images/0_leaf_white.dds"
+};
+
 image const * const images[] = {
+  &image_leaf_white_png,
 };
 
 effect const effect_planematerial = {
@@ -1762,8 +1768,8 @@ effect const effect_planematerial = {
       .color = {0.6627451f, 0.5882353f, 0.6196079f, 1.0f},
     },
     .diffuse = {
-      .type = color_or_texture_type::COLOR,
-      .color = {0.6627451f, 0.5882353f, 0.6196079f, 1.0f},
+      .type = color_or_texture_type::TEXTURE,
+      .texture = { .image_index = 0 }, // leaf_white_png
     },
     .specular = {
       .type = color_or_texture_type::COLOR,
@@ -2215,7 +2221,7 @@ instance_material const instance_geometry_instance_materials_node_plane_0[] = {
 
     .emission = { .input_set = -1 },
     .ambient = { .input_set = -1 },
-    .diffuse = { .input_set = -1 },
+    .diffuse = { .input_set = 0 },
     .specular = { .input_set = -1 },
   },
 };
@@ -2283,8 +2289,8 @@ instance_light const instance_lights_node_camera001_target[] = {
 
 channel const * const node_channels_node_camera001_target[] = {
   &node_channel_node_camera001_target_translation_z,
-  &node_channel_node_camera001_target_translation_y,
   &node_channel_node_camera001_target_translation_x,
+  &node_channel_node_camera001_target_translation_y,
 };
 
 node const node_node_camera001_target = {
@@ -2570,9 +2576,9 @@ instance_light const instance_lights_node_lighthelper[] = {
 };
 
 channel const * const node_channels_node_lighthelper[] = {
-  &node_channel_node_lighthelper_translation_z,
-  &node_channel_node_lighthelper_translation_y,
   &node_channel_node_lighthelper_translation_x,
+  &node_channel_node_lighthelper_translation_y,
+  &node_channel_node_lighthelper_translation_z,
 };
 
 node const node_node_lighthelper = {
@@ -2759,9 +2765,9 @@ instance_light const instance_lights_node_camerahelper[] = {
 };
 
 channel const * const node_channels_node_camerahelper[] = {
+  &node_channel_node_camerahelper_translation_z,
   &node_channel_node_camerahelper_translation_x,
   &node_channel_node_camerahelper_translation_y,
-  &node_channel_node_camerahelper_translation_z,
 };
 
 node const node_node_camerahelper = {

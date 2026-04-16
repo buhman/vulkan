@@ -41,7 +41,7 @@ OBJS = \
 	src/volk/volk.o \
 	src/file.o \
 	src/pack.o \
-	src/dds_validate.o \
+	src/dds/validate.o \
 	src/vulkan_helper.o \
 	src/collada/scene/vulkan.o \
 	src/collada/scene.o \

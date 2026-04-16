@@ -9,7 +9,10 @@
 #include "collada/inputs.h"
 #include "collada/scene/vulkan.h"
 
+#include "minmax.h"
 #include "vulkan_helper.h"
+#include "dds/validate.h"
+#include "dds/vulkan.h"
 
 #include "check.h"
 #include "new.h"
@@ -102,6 +105,8 @@ namespace collada::scene {
 
   void vulkan::initial_state(VkInstance instance,
                              VkDevice device,
+                             VkQueue queue,
+                             VkCommandPool commandPool,
                              VkPhysicalDeviceProperties const & physicalDeviceProperties,
                              VkPhysicalDeviceMemoryProperties const & physicalDeviceMemoryProperties,
                              VkFormat colorFormat,
@@ -111,6 +116,8 @@ namespace collada::scene {
   {
     this->instance = instance;
     this->device = device;
+    this->queue = queue;
+    this->commandPool = commandPool;
 
     this->physicalDeviceProperties = physicalDeviceProperties;
     this->physicalDeviceMemoryProperties = physicalDeviceMemoryProperties;
@@ -155,14 +162,16 @@ namespace collada::scene {
     vkGetBufferMemoryRequirements(device, vertexIndex.buffer, &memoryRequirements);
     VkMemoryPropertyFlags memoryPropertyFlags{ VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT };
     VkMemoryAllocateFlags memoryAllocateFlags{};
-
+    VkDeviceSize stride;
     allocateFromMemoryRequirements(device,
+                                   physicalDeviceProperties.limits.nonCoherentAtomSize,
                                    physicalDeviceMemoryProperties,
                                    memoryRequirements,
                                    memoryPropertyFlags,
                                    memoryAllocateFlags,
                                    1,
-                                   &vertexIndex.memory);
+                                   &vertexIndex.memory,
+                                   &stride);
 
     VK_CHECK(vkBindBufferMemory(device, vertexIndex.buffer, vertexIndex.memory, 0));
 
@@ -237,7 +246,7 @@ namespace collada::scene {
     VkMemoryPropertyFlags memoryPropertyFlags{ VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT };
     VkMemoryAllocateFlags memoryAllocateFlags{ };
     shaderDataDevice.memorySize = allocateFromMemoryRequirements2(device,
-                                                                  physicalDeviceProperties,
+                                                                  physicalDeviceProperties.limits.nonCoherentAtomSize,
                                                                   physicalDeviceMemoryProperties,
                                                                   memoryPropertyFlags,
                                                                   memoryAllocateFlags,
@@ -531,9 +540,52 @@ namespace collada::scene {
     alignMappedMemoryRanges(physicalDeviceProperties.limits.nonCoherentAtomSize,
                             shaderDataDevice.memorySize,
                             1, mappedMemoryRanges);
-    //fprintf(stderr, "flush materials start %ld %ld %ld %ld : %ld\n", offset, size, alignedOffset, alignedSize, shaderDataDevice.memorySize);
     vkFlushMappedMemoryRanges(device, 1, mappedMemoryRanges);
-    //fprintf(stderr, "flush materials end\n");
+  }
+
+  //////////////////////////////////////////////////////////////////////
+  // material textures
+  //////////////////////////////////////////////////////////////////////
+
+  void vulkan::load_images(collada::types::descriptor const * const descriptor)
+  {
+    VkCommandBuffer commandBuffer{};
+    VkCommandBufferAllocateInfo commandBufferAllocateInfo{
+      .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+      .commandPool = commandPool,
+      .commandBufferCount = 1
+    };
+    VK_CHECK(vkAllocateCommandBuffers(device, &commandBufferAllocateInfo, &commandBuffer));
+
+    VkFenceCreateInfo fenceCreateInfo{
+      .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO
+    };
+    VkFence fence{};
+    VK_CHECK(vkCreateFence(device, &fenceCreateInfo, nullptr, &fence));
+
+    // images
+    images = NewM<Image>(descriptor->images_count);
+
+    for (int i = 0; i < descriptor->images_count; i++) {
+      createImageFromFilenameDDS(device,
+                                 queue,
+                                 commandBuffer,
+                                 fence,
+                                 physicalDeviceProperties.limits.nonCoherentAtomSize,
+                                 physicalDeviceMemoryProperties,
+                                 descriptor->images[i]->uri,
+                                 &images[i].image,
+                                 &images[i].memory,
+                                 &images[i].imageView);
+    }
+
+    // cleanup
+
+    vkDestroyFence(device, fence, nullptr);
+    vkFreeCommandBuffers(device,
+                         commandPool,
+                         1,
+                         &commandBuffer);
   }
 
   //////////////////////////////////////////////////////////////////////
@@ -865,6 +917,13 @@ namespace collada::scene {
 
   void vulkan::destroy_all(collada::types::descriptor const * const descriptor)
   {
+    for (int i = 0; i < descriptor->images_count; i++) {
+      vkDestroyImage(device, images[i].image, nullptr);
+      vkDestroyImageView(device, images[i].imageView, nullptr);
+      vkFreeMemory(device, images[i].memory, nullptr);
+    }
+    free(images);
+
     free(shaderData.nodes);
     free(shaderData.materialColors);
 

@@ -6,14 +6,24 @@
       <authoring_tool>OpenCOLLADA for 3ds Max;  Version: 1.6;  Revision: 68</authoring_tool>
       <source_data>file:///C:/Users/bilbo/Documents/wood/scenes/shadow_test.max</source_data>
     </contributor>
-    <created>2026-04-14T19:52:07</created>
-    <modified>2026-04-14T19:52:07</modified>
+    <created>2026-04-15T19:19:21</created>
+    <modified>2026-04-15T19:19:21</modified>
     <unit name="inch" meter="0.0254"/>
     <up_axis>Z_UP</up_axis>
   </asset>
   <library_effects>
     <effect id="PlaneMaterial">
       <profile_COMMON>
+        <newparam sid="leaf_white_png-surface">
+          <surface type="2D">
+            <init_from>leaf_white_png</init_from>
+          </surface>
+        </newparam>
+        <newparam sid="leaf_white_png-sampler">
+          <sampler2D>
+            <source>leaf_white_png-surface</source>
+          </sampler2D>
+        </newparam>
         <technique sid="common">
           <blinn>
             <emission>
@@ -23,7 +33,7 @@
               <color>0.6627451 0.5882353 0.6196079 1</color>
             </ambient>
             <diffuse>
-              <color>0.6627451 0.5882353 0.6196079 1</color>
+              <texture texture="leaf_white_png-sampler" texcoord="CHANNEL1"/>
             </diffuse>
             <specular>
               <color>0 0 0 1</color>
@@ -677,6 +687,11 @@
       </extra>
     </light>
   </library_lights>
+  <library_images>
+    <image id="leaf_white_png">
+      <init_from>./images/0_leaf_white.png</init_from>
+    </image>
+  </library_images>
   <library_visual_scenes>
     <visual_scene id="MaxScene">
       <node name="EnvironmentAmbientLight">
@@ -686,7 +701,9 @@
         <instance_geometry url="#geom-Plane">
           <bind_material>
             <technique_common>
-              <instance_material symbol="PlaneMaterial" target="#PlaneMaterial-material"/>
+              <instance_material symbol="PlaneMaterial" target="#PlaneMaterial-material">
+                <bind_vertex_input semantic="CHANNEL1" input_semantic="TEXCOORD" input_set="0"/>
+              </instance_material>
             </technique_common>
           </bind_material>
         </instance_geometry>

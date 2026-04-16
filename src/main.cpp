@@ -10,32 +10,15 @@
 #include "check.h"
 #include "new.h"
 #include "file.h"
-#include "dds_validate.h"
+#include "dds/validate.h"
 #include "vulkan_helper.h"
 #include "shader_data.h"
+#include "minmax.h"
 
 #include "collada/scene.h"
 #include "collada/scene/vulkan.h"
 
 #include "scenes/shadow_test/shadow_test.h"
-
-template <typename T>
-inline static constexpr T min(T a, T b)
-{
-  return (a < b) ? a : b;
-}
-
-template <typename T>
-inline static constexpr T max(T a, T b)
-{
-  return (a > b) ? a : b;
-}
-
-template <typename T>
-inline static constexpr T clamp(T n, T minVal, T maxVal)
-{
-  return min(max(n, minVal), maxVal);
-}
 
 VkInstance instance{ VK_NULL_HANDLE };
 VkDevice device{ VK_NULL_HANDLE };
@@ -136,7 +119,8 @@ XMMATRIX currentModel()
   return XMMatrixTranslation(0, 0, 0.0) * XMMatrixRotationX(theta) * XMMatrixRotationZ(XM_PI * 0.5f);
 }
 
-void createDepth(VkPhysicalDeviceMemoryProperties const & physicalDeviceMemoryProperties,
+void createDepth(VkDeviceSize nonCoherentAtomSize,
+                 VkPhysicalDeviceMemoryProperties const & physicalDeviceMemoryProperties,
                  uint32_t width,
                  uint32_t height,
                  VkFormat format,
@@ -167,13 +151,16 @@ void createDepth(VkPhysicalDeviceMemoryProperties const & physicalDeviceMemoryPr
   vkGetImageMemoryRequirements(device, *image, &memoryRequirements);
   VkMemoryPropertyFlags memoryPropertyFlags{ VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT };
   VkMemoryAllocateFlags memoryAllocateFlags{ };
+  VkDeviceSize stride;
   allocateFromMemoryRequirements(device,
+                                 nonCoherentAtomSize,
                                  physicalDeviceMemoryProperties,
                                  memoryRequirements,
                                  memoryPropertyFlags,
                                  memoryAllocateFlags,
                                  1,
-                                 memory);
+                                 memory,
+                                 &stride);
   VK_CHECK(vkBindImageMemory(device, *image, *memory, 0));
 
   VkImageViewCreateInfo imageViewCreateInfo{
@@ -190,7 +177,11 @@ void createDepth(VkPhysicalDeviceMemoryProperties const & physicalDeviceMemoryPr
   VK_CHECK(vkCreateImageView(device, &imageViewCreateInfo, nullptr, imageView));
 }
 
-void recreateSwapchain(VkSurfaceFormatKHR surfaceFormat, VkFormat depthFormat, VkPhysicalDeviceMemoryProperties const & physicalDeviceMemoryProperties, VkSurfaceCapabilitiesKHR const & surfaceCapabilities)
+void recreateSwapchain(VkSurfaceFormatKHR surfaceFormat,
+                       VkFormat depthFormat,
+                       VkDeviceSize nonCoherentAtomSize,
+                       VkPhysicalDeviceMemoryProperties const & physicalDeviceMemoryProperties,
+                       VkSurfaceCapabilitiesKHR const & surfaceCapabilities)
 {
   //////////////////////////////////////////////////////////////////////
   // swapchain and images
@@ -286,7 +277,8 @@ void recreateSwapchain(VkSurfaceFormatKHR surfaceFormat, VkFormat depthFormat, V
     vkDestroyImageView(device, depthImageView, nullptr);
   }
 
-  createDepth(physicalDeviceMemoryProperties,
+  createDepth(nonCoherentAtomSize,
+              physicalDeviceMemoryProperties,
               imageExtent.width,
               imageExtent.height,
               depthFormat,
@@ -495,13 +487,14 @@ int main()
   ASSERT(depthFormat != VK_FORMAT_UNDEFINED, "no depth format with VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT");
   printf("depthFormat: %s\n", string_VkFormat(depthFormat));
 
-  recreateSwapchain(surfaceFormat, depthFormat, physicalDeviceMemoryProperties, surfaceCapabilities);
+  recreateSwapchain(surfaceFormat, depthFormat, physicalDeviceProperties.limits.nonCoherentAtomSize, physicalDeviceMemoryProperties, surfaceCapabilities);
 
   //////////////////////////////////////////////////////////////////////
   // shadow
   //////////////////////////////////////////////////////////////////////
 
-  createDepth(physicalDeviceMemoryProperties,
+  createDepth(physicalDeviceProperties.limits.nonCoherentAtomSize,
+              physicalDeviceMemoryProperties,
               1024,
               1024,
               depthFormat,
@@ -549,15 +542,16 @@ int main()
     vkGetBufferMemoryRequirements(device, vertexIndexBuffer, &memoryRequirements);
     VkMemoryPropertyFlags memoryPropertyFlags{ VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT };
     VkMemoryAllocateFlags memoryAllocateFlags{};
-
+    VkDeviceSize stride;
     allocateFromMemoryRequirements(device,
+                                   physicalDeviceProperties.limits.nonCoherentAtomSize,
                                    physicalDeviceMemoryProperties,
                                    memoryRequirements,
                                    memoryPropertyFlags,
                                    memoryAllocateFlags,
                                    1,
-                                   &vertexIndexBufferMemory);
-
+                                   &vertexIndexBufferMemory,
+                                   &stride);
     VK_CHECK(vkBindBufferMemory(device, vertexIndexBuffer, vertexIndexBufferMemory, 0));
 
     void * vertexIndexMappedData;
@@ -597,13 +591,15 @@ int main()
 
     VkMemoryPropertyFlags memoryPropertyFlags{ VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT };
     VkMemoryAllocateFlags memoryAllocateFlags{ };
-    shaderDataDevice.stride = allocateFromMemoryRequirements(device,
-                                                             physicalDeviceMemoryProperties,
-                                                             memoryRequirements,
-                                                             memoryPropertyFlags,
-                                                             memoryAllocateFlags,
-                                                             maxFramesInFlight,
-                                                             &shaderDataDevice.memory);
+    allocateFromMemoryRequirements(device,
+                                   physicalDeviceProperties.limits.nonCoherentAtomSize,
+                                   physicalDeviceMemoryProperties,
+                                   memoryRequirements,
+                                   memoryPropertyFlags,
+                                   memoryAllocateFlags,
+                                   maxFramesInFlight,
+                                   &shaderDataDevice.memory,
+                                   &shaderDataDevice.stride);
 
     VkDeviceSize offset{ 0 };
     VkDeviceSize size{ VK_WHOLE_SIZE };
@@ -652,188 +648,8 @@ int main()
   VK_CHECK(vkAllocateCommandBuffers(device, &commandBufferAllocateCreateInfo, commandBuffers));
 
   //////////////////////////////////////////////////////////////////////
-  // texture
-  //////////////////////////////////////////////////////////////////////
-
-  uint32_t checkerSize;
-  void const * checkerStart = file::open("checker.dds", &checkerSize);
-  void * checkerData;
-  uint32_t * mipOffsets;
-  DDS_FILE const * ddsFile = dds_validate(checkerStart, checkerSize, &mipOffsets, &checkerData);
-  uint32_t checkerDataSize = checkerSize - (sizeof (DDS_FILE));
-
-  VkFormat textureFormat{ VK_FORMAT_B8G8R8A8_SRGB };
-
-  VkImageCreateInfo textureImageCreateInfo{
-    .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
-    .imageType = VK_IMAGE_TYPE_2D,
-    .format = textureFormat,
-    .extent = {
-      .width = ddsFile->header.dwWidth,
-      .height = ddsFile->header.dwHeight,
-      .depth = 1
-    },
-    .mipLevels = ddsFile->header.dwMipMapCount,
-    .arrayLayers = 1,
-    .samples = VK_SAMPLE_COUNT_1_BIT,
-    .tiling = VK_IMAGE_TILING_OPTIMAL,
-    .usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-    .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED
-  };
-  VK_CHECK(vkCreateImage(device, &textureImageCreateInfo, nullptr, &textureImage));
-
-  VkMemoryRequirements textureImageMemoryRequirements;
-  vkGetImageMemoryRequirements(device, textureImage, &textureImageMemoryRequirements);
-  VkMemoryPropertyFlags textureImageMemoryPropertyFlags{
-    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
-  };
-  VkMemoryAllocateFlags textureImageMemoryAllocateFlags{ };
-  allocateFromMemoryRequirements(device,
-                                 physicalDeviceMemoryProperties,
-                                 textureImageMemoryRequirements,
-                                 textureImageMemoryPropertyFlags,
-                                 textureImageMemoryAllocateFlags,
-                                 1,
-                                 &textureImageMemory);
-  VK_CHECK(vkBindImageMemory(device, textureImage, textureImageMemory, 0));
-
-  VkImageViewCreateInfo textureViewCreateInfo{
-    .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-    .image = textureImage,
-    .viewType = VK_IMAGE_VIEW_TYPE_2D,
-    .format = textureFormat,
-    .subresourceRange{
-      .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-      .levelCount = ddsFile->header.dwMipMapCount,
-      .layerCount = 1
-    }
-  };
-  VK_CHECK(vkCreateImageView(device, &textureViewCreateInfo, nullptr, &textureImageView));
-
-  // texture transfer: source buffer
-
-  VkBuffer textureSourceBuffer{};
-  VkBufferCreateInfo textureSourceBufferCreateInfo{
-    .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-    .size = checkerDataSize,
-    .usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT
-  };
-  VK_CHECK(vkCreateBuffer(device, &textureSourceBufferCreateInfo, nullptr, &textureSourceBuffer));
-  VkMemoryRequirements textureSourceBufferMemoryRequirements;
-  vkGetBufferMemoryRequirements(device, textureSourceBuffer, &textureSourceBufferMemoryRequirements);
-  VkMemoryPropertyFlags textureSourceBufferMemoryPropertyFlags{
-    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
-  };
-  VkMemoryAllocateFlags textureSourceBufferMemoryAllocateFlags{ };
-  VkDeviceMemory textureSourceBufferMemory;
-  allocateFromMemoryRequirements(device,
-                                 physicalDeviceMemoryProperties,
-                                 textureSourceBufferMemoryRequirements,
-                                 textureSourceBufferMemoryPropertyFlags,
-                                 textureSourceBufferMemoryAllocateFlags,
-                                 1,
-                                 &textureSourceBufferMemory);
-  VK_CHECK(vkBindBufferMemory(device, textureSourceBuffer, textureSourceBufferMemory, 0));
-
-  void * textureSourceMappedData;
-  VK_CHECK(vkMapMemory(device, textureSourceBufferMemory, 0, textureSourceBufferCreateInfo.size, 0, &textureSourceMappedData));
-  memcpy((void *)(((ptrdiff_t)textureSourceMappedData) + 0), checkerData, checkerDataSize);
-  vkUnmapMemory(device, textureSourceBufferMemory);
-
-  VkFenceCreateInfo textureFenceCreateInfo{
-    .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO
-  };
-  VkFence textureFence{};
-  VK_CHECK(vkCreateFence(device, &textureFenceCreateInfo, nullptr, &textureFence));
-
-  // texture transfer: command buffer
-
-  VkCommandBuffer textureCommandBuffer{};
-  VkCommandBufferAllocateInfo textureCommandBufferAllocateInfo{
-    .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-    .commandPool = commandPool,
-    .commandBufferCount = 1
-  };
-  VK_CHECK(vkAllocateCommandBuffers(device, &textureCommandBufferAllocateInfo, &textureCommandBuffer));
-
-  VkCommandBufferBeginInfo textureCommandBufferBeginInfo{
-    .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
-    .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT
-  };
-  VK_CHECK(vkBeginCommandBuffer(textureCommandBuffer, &textureCommandBufferBeginInfo));
-  VkImageMemoryBarrier2 barrierTextureImage{
-    .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
-    .srcStageMask = VK_PIPELINE_STAGE_2_NONE,
-    .srcAccessMask = VK_ACCESS_2_NONE,
-    .dstStageMask = VK_PIPELINE_STAGE_2_TRANSFER_BIT,
-    .dstAccessMask = VK_ACCESS_2_TRANSFER_WRITE_BIT,
-    .oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-    .newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-    .image = textureImage,
-    .subresourceRange = {
-      .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-      .levelCount = ddsFile->header.dwMipMapCount,
-      .layerCount = 1
-    }
-  };
-  VkDependencyInfo barrierTextureImageDependencyInfo{
-    .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
-    .imageMemoryBarrierCount = 1,
-    .pImageMemoryBarriers = &barrierTextureImage
-  };
-  vkCmdPipelineBarrier2(textureCommandBuffer, &barrierTextureImageDependencyInfo);
-  VkBufferImageCopy * copyRegions = NewM<VkBufferImageCopy>(ddsFile->header.dwMipMapCount);
-  for (uint32_t level = 0; level < ddsFile->header.dwMipMapCount; level++) {
-    copyRegions[level] = {
-      .bufferOffset = mipOffsets[level],
-      .imageSubresource{
-        .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-        .mipLevel = level,
-        .layerCount = 1
-      },
-      .imageExtent{
-        .width = max(1u, ddsFile->header.dwWidth >> level),
-        .height = max(1u, ddsFile->header.dwHeight >> level),
-        .depth = 1
-      },
-    };
-  }
-  vkCmdCopyBufferToImage(textureCommandBuffer, textureSourceBuffer, textureImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, ddsFile->header.dwMipMapCount, copyRegions);
-  free(mipOffsets);
-  free(copyRegions);
-
-  VkImageMemoryBarrier2 barrierTextureRead{
-    .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
-    .srcStageMask = VK_PIPELINE_STAGE_TRANSFER_BIT,
-    .srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
-    .dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-    .dstAccessMask = VK_ACCESS_SHADER_READ_BIT,
-    .oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-    .newLayout = VK_IMAGE_LAYOUT_READ_ONLY_OPTIMAL,
-    .image = textureImage,
-    .subresourceRange = { .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, .levelCount = ddsFile->header.dwMipMapCount, .layerCount = 1 }
-  };
-  VkDependencyInfo barrierTextureReadDependencyInfo{
-    .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
-    .imageMemoryBarrierCount = 1,
-    .pImageMemoryBarriers = &barrierTextureRead
-  };
-  vkCmdPipelineBarrier2(textureCommandBuffer, &barrierTextureReadDependencyInfo);
-
-  VK_CHECK(vkEndCommandBuffer(textureCommandBuffer));
-
-  VkSubmitInfo textureSubmitInfo{
-    .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
-    .commandBufferCount = 1,
-    .pCommandBuffers = &textureCommandBuffer
-  };
-  VK_CHECK(vkQueueSubmit(queue, 1, &textureSubmitInfo, textureFence));
-  VK_CHECK(vkWaitForFences(device, 1, &textureFence, VK_TRUE, UINT64_MAX));
-  vkDestroyFence(device, textureFence, nullptr);
-  vkDestroyBuffer(device, textureSourceBuffer, nullptr);
-  vkFreeMemory(device, textureSourceBufferMemory, nullptr);
-
   // texture sampler
+  //////////////////////////////////////////////////////////////////////
 
   VkSamplerCreateInfo samplerCreateInfo0{
     .sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
@@ -1237,6 +1053,8 @@ int main()
 
   collada_state.vulkan.initial_state(instance,
                                      device,
+                                     queue,
+                                     commandPool,
                                      physicalDeviceProperties,
                                      physicalDeviceMemoryProperties,
                                      surfaceFormat.format,
@@ -1627,7 +1445,7 @@ int main()
         surfaceCapabilities.currentExtent.width = windowSize.x;
         surfaceCapabilities.currentExtent.height = windowSize.y;
       }
-      recreateSwapchain(surfaceFormat, depthFormat, physicalDeviceMemoryProperties, surfaceCapabilities);
+      recreateSwapchain(surfaceFormat, depthFormat, physicalDeviceProperties.limits.nonCoherentAtomSize, physicalDeviceMemoryProperties, surfaceCapabilities);
     }
   }
 

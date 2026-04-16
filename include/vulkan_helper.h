@@ -33,15 +33,17 @@ inline static constexpr void alignMappedMemoryRanges(uint32_t nonCoherentAtomSiz
 }
 
 VkDeviceSize allocateFromMemoryRequirements(VkDevice device,
+                                            VkDeviceSize nonCoherentAtomSize,
                                             VkPhysicalDeviceMemoryProperties const & physicalDeviceMemoryProperties,
                                             VkMemoryRequirements const & memoryRequirements,
                                             VkMemoryPropertyFlags memoryPropertyFlags,
                                             VkMemoryAllocateFlags memoryAllocateFlags,
                                             uint32_t count,
-                                            VkDeviceMemory * memory);
+                                            VkDeviceMemory * memory,
+                                            VkDeviceSize * stride);
 
 VkDeviceSize allocateFromMemoryRequirements2(VkDevice device,
-                                             VkPhysicalDeviceProperties const & physicalDeviceProperties,
+                                             VkDeviceSize nonCoherentAtomSize,
                                              VkPhysicalDeviceMemoryProperties const & physicalDeviceMemoryProperties,
                                              VkMemoryPropertyFlags memoryPropertyFlags,
                                              VkMemoryAllocateFlags memoryAllocateFlags,
@@ -49,3 +51,14 @@ VkDeviceSize allocateFromMemoryRequirements2(VkDevice device,
                                              VkMemoryRequirements const * memoryRequirements,
                                              VkDeviceMemory * memory,
                                              VkDeviceSize * offsets);
+
+void createImageFromFilenameDDS(VkDevice device,
+                                VkQueue queue,
+                                VkCommandBuffer commandBuffer,
+                                VkFence fence,
+                                VkDeviceSize nonCoherentAtomSize,
+                                VkPhysicalDeviceMemoryProperties const & physicalDeviceMemoryProperties,
+                                char const * const filename,
+                                VkImage * outImage,
+                                VkDeviceMemory * outMemory,
+                                VkImageView * outImageView);

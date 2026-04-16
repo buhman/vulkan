@@ -30,9 +30,17 @@ namespace collada::scene {
   };
 
   struct vulkan {
+    static constexpr uint32_t maxFrames = 2;
+    static constexpr uint32_t perFrameDescriptorCount = 2;
+    static constexpr uint32_t constantDescriptorCount = 1;
+    static constexpr uint32_t uniformBufferDescriptorCount = maxFrames * perFrameDescriptorCount + constantDescriptorCount;
+    static constexpr uint32_t descriptorCount = uniformBufferDescriptorCount + 2;
+
     // externally initialized, opaque handle
     VkInstance instance;
     VkDevice device;
+    VkQueue queue;
+    VkCommandPool commandPool;
     // externally initialized, structures
     VkPhysicalDeviceProperties physicalDeviceProperties;
     VkPhysicalDeviceMemoryProperties physicalDeviceMemoryProperties;
@@ -56,15 +64,17 @@ namespace collada::scene {
     } vertexIndex;
 
     VkDescriptorPool descriptorPool{ VK_NULL_HANDLE };
-    static constexpr uint32_t maxFrames = 2;
-    static constexpr uint32_t perFrameDescriptorCount = 2;
-    static constexpr uint32_t constantDescriptorCount = 1;
-    static constexpr uint32_t uniformBufferDescriptorCount = maxFrames * perFrameDescriptorCount + constantDescriptorCount;
-    static constexpr uint32_t descriptorCount = uniformBufferDescriptorCount + 2;
 
     VkDescriptorSetLayout descriptorSetLayouts[2]; // unrelated to maxFrames, unrelated to descriptorCount
     VkDescriptorSet descriptorSets0[maxFrames];
     VkDescriptorSet descriptorSet1;
+
+    struct Image {
+      VkImage image;
+      VkDeviceMemory memory;
+      VkImageView imageView;
+    };
+    Image * images;
 
     struct {
       Scene scene; // global(?)
@@ -106,6 +116,8 @@ namespace collada::scene {
 
     void initial_state(VkInstance instance,
                        VkDevice device,
+                       VkQueue queue,
+                       VkCommandPool commandPool,
                        VkPhysicalDeviceProperties const & physicalDeviceProperties,
                        VkPhysicalDeviceMemoryProperties const & physicalDeviceMemoryProperties,
                        VkFormat colorFormat,
@@ -134,6 +146,7 @@ namespace collada::scene {
     void create_descriptor_sets();
     void write_descriptor_sets(collada::types::descriptor const * const descriptor);
     void load_material_constants(collada::types::descriptor const * const descriptor);
+    void load_images(collada::types::descriptor const * const descriptor);
 
     //////////////////////////////////////////////////////////////////////
     // called by state::draw
