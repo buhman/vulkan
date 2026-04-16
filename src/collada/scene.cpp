@@ -14,10 +14,10 @@ namespace collada::scene {
     vulkan.load_vertex_index_buffer(descriptor->position_normal_texture_buffer,
                                     descriptor->index_buffer);
     vulkan.create_uniform_buffers(descriptor);
-    vulkan.create_descriptor_sets();
-    vulkan.write_descriptor_sets(descriptor);
+    vulkan.create_descriptor_sets(descriptor);
     vulkan.load_material_constants(descriptor);
     vulkan.load_images(descriptor);
+    vulkan.write_descriptor_sets(descriptor);
     vulkan.create_pipelines(descriptor);
 
     node_state.allocate_node_instances(descriptor->nodes, descriptor->nodes_count);

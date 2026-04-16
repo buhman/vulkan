@@ -24,6 +24,16 @@ namespace collada::scene {
     XMFLOAT4 diffuse;
     XMFLOAT4 specular;
   };
+  struct MaterialImage {
+    int emission;
+    int ambient;
+    int diffuse;
+    int specular;
+  };
+  struct MaterialColorImage {
+    MaterialColor color;
+    MaterialImage image;
+  };
   struct PushConstant {
     int nodeIndex;
     int materialIndex;
@@ -34,7 +44,8 @@ namespace collada::scene {
     static constexpr uint32_t perFrameDescriptorCount = 2;
     static constexpr uint32_t constantDescriptorCount = 1;
     static constexpr uint32_t uniformBufferDescriptorCount = maxFrames * perFrameDescriptorCount + constantDescriptorCount;
-    static constexpr uint32_t descriptorCount = uniformBufferDescriptorCount + 2;
+    // +3: linear sampler, shadow sampled image, scene sampled image (array)
+    static constexpr uint32_t bindingCount = uniformBufferDescriptorCount + 3;
 
     // externally initialized, opaque handle
     VkInstance instance;
@@ -79,7 +90,7 @@ namespace collada::scene {
     struct {
       Scene scene; // global(?)
       Node * nodes; // per-scene
-      MaterialColor * materialColors; // per-scene
+      MaterialColorImage * materialColorImages; // per-scene
     } shaderData;
     struct {
       VkDeviceMemory memory;
@@ -97,10 +108,10 @@ namespace collada::scene {
         void * nodesMapped;
       } frame[maxFrames];
       struct { // must match constantDescriptorCount
-        VkBuffer materialColorsBuffer;
-        VkDeviceAddress materialColorsOffset;
-        VkDeviceAddress materialColorsSize;
-        void * materialColorsMapped;
+        VkBuffer materialColorImagesBuffer;
+        VkDeviceAddress materialColorImagesOffset;
+        VkDeviceAddress materialColorImagesSize;
+        void * materialColorImagesMapped;
       } constant;
     } shaderDataDevice;
 
@@ -143,7 +154,7 @@ namespace collada::scene {
     void create_pipelines(collada::types::descriptor const * const descriptor);
 
     void create_uniform_buffers(collada::types::descriptor const * const descriptor);
-    void create_descriptor_sets();
+    void create_descriptor_sets(collada::types::descriptor const * const descriptor);
     void write_descriptor_sets(collada::types::descriptor const * const descriptor);
     void load_material_constants(collada::types::descriptor const * const descriptor);
     void load_images(collada::types::descriptor const * const descriptor);

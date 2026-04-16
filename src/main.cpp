@@ -39,11 +39,6 @@ VkImageView shadowDepthImageView{ VK_NULL_HANDLE };
 VkImageView shadowDepthImageViewDepth{ VK_NULL_HANDLE };
 VkDeviceMemory shadowDepthMemory{ VK_NULL_HANDLE };
 
-VkBuffer vertexIndexBuffer{ VK_NULL_HANDLE };
-VkDeviceMemory vertexIndexBufferMemory{ VK_NULL_HANDLE };
-VkDeviceSize vertexBufferSize{ 0 };
-VkDeviceSize indexBufferSize{ 0 };
-
 VkFence fences[maxFramesInFlight];
 VkSemaphore presentSemaphores[maxFramesInFlight];
 VkSemaphore * renderSemaphores{ nullptr };
@@ -51,29 +46,11 @@ VkSemaphore * renderSemaphores{ nullptr };
 VkCommandPool commandPool{ VK_NULL_HANDLE };
 VkCommandBuffer commandBuffers[maxFramesInFlight];
 
-enum {
-  MAIN_PIPELINE = 0,
-  OUTLINE_PIPELINE = 1,
-};
-
-VkPipeline pipelines[2]{ VK_NULL_HANDLE, VK_NULL_HANDLE };
-VkPipelineLayout pipelineLayout{ VK_NULL_HANDLE };
-
-VkImage textureImage{ VK_NULL_HANDLE };
-VkImageView textureImageView{ VK_NULL_HANDLE };
-VkDeviceMemory textureImageMemory{ VK_NULL_HANDLE };
 VkSampler textureSamplers[3]{ VK_NULL_HANDLE, VK_NULL_HANDLE, VK_NULL_HANDLE };
 
 VkDescriptorPool descriptorPool{ VK_NULL_HANDLE };
-VkDescriptorSetLayout uniformBufferDescriptorSetLayout{ VK_NULL_HANDLE };
-VkDescriptorSet uniformBufferDescriptorSets[maxFramesInFlight];
-VkDescriptorSetLayout textureDescriptorSetLayout{ VK_NULL_HANDLE };
-VkDescriptorSet textureDescriptorSet{ VK_NULL_HANDLE };
 
 XMINT2 windowSize{};
-
-ShaderData shaderData{};
-ShaderDataDevice shaderDataDevice{};
 
 void print_memoryPropertyFlags(VkMemoryPropertyFlags propertyFlags)
 {
@@ -518,102 +495,6 @@ int main()
   VK_CHECK(vkCreateImageView(device, &imageViewCreateInfo, nullptr, &shadowDepthImageViewDepth));
 
   //////////////////////////////////////////////////////////////////////
-  // mesh
-  //////////////////////////////////////////////////////////////////////
-
-  {
-    uint32_t vertexSize;
-    void const * vertexStart = file::open("checker.vtx", &vertexSize);
-    uint32_t indexSize;
-    void const * indexStart = file::open("checker.idx", &indexSize);
-    vertexBufferSize = vertexSize;
-    indexBufferSize = indexSize;
-
-    VkDeviceSize bufferSize{ vertexSize + indexSize };
-    VkBufferCreateInfo vertexIndexBufferCreateInfo{
-      .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-      .size = bufferSize,
-      .usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-      .sharingMode = VK_SHARING_MODE_EXCLUSIVE
-    };
-    VK_CHECK(vkCreateBuffer(device, &vertexIndexBufferCreateInfo, nullptr, &vertexIndexBuffer));
-
-    VkMemoryRequirements memoryRequirements;
-    vkGetBufferMemoryRequirements(device, vertexIndexBuffer, &memoryRequirements);
-    VkMemoryPropertyFlags memoryPropertyFlags{ VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT };
-    VkMemoryAllocateFlags memoryAllocateFlags{};
-    VkDeviceSize stride;
-    allocateFromMemoryRequirements(device,
-                                   physicalDeviceProperties.limits.nonCoherentAtomSize,
-                                   physicalDeviceMemoryProperties,
-                                   memoryRequirements,
-                                   memoryPropertyFlags,
-                                   memoryAllocateFlags,
-                                   1,
-                                   &vertexIndexBufferMemory,
-                                   &stride);
-    VK_CHECK(vkBindBufferMemory(device, vertexIndexBuffer, vertexIndexBufferMemory, 0));
-
-    void * vertexIndexMappedData;
-    VK_CHECK(vkMapMemory(device, vertexIndexBufferMemory, 0, VK_WHOLE_SIZE, 0, &vertexIndexMappedData));
-    memcpy((void *)(((ptrdiff_t)vertexIndexMappedData) + 0), vertexStart, vertexSize);
-    memcpy((void *)(((ptrdiff_t)vertexIndexMappedData) + vertexSize), indexStart, indexSize);
-
-    VkMappedMemoryRange mappedMemoryRange{
-      .sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE,
-      .memory = vertexIndexBufferMemory,
-      .offset = 0,
-      .size = VK_WHOLE_SIZE,
-    };
-    vkFlushMappedMemoryRanges(device, 1, &mappedMemoryRange);
-
-    vkUnmapMemory(device, vertexIndexBufferMemory);
-  }
-
-  //////////////////////////////////////////////////////////////////////
-  // shader buffers
-  //////////////////////////////////////////////////////////////////////
-
-  {
-    for (uint32_t i = 0; i < maxFramesInFlight; i++) {
-      VkBufferCreateInfo bufferCreateInfo{
-        .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-        .size = (sizeof (ShaderData)),
-        .usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-        .sharingMode = VK_SHARING_MODE_EXCLUSIVE
-      };
-
-      VK_CHECK(vkCreateBuffer(device, &bufferCreateInfo, nullptr, &shaderDataDevice.frame[i].buffer));
-    }
-
-    VkMemoryRequirements memoryRequirements;
-    vkGetBufferMemoryRequirements(device, shaderDataDevice.frame[0].buffer, &memoryRequirements);
-
-    VkMemoryPropertyFlags memoryPropertyFlags{ VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT };
-    VkMemoryAllocateFlags memoryAllocateFlags{ };
-    allocateFromMemoryRequirements(device,
-                                   physicalDeviceProperties.limits.nonCoherentAtomSize,
-                                   physicalDeviceMemoryProperties,
-                                   memoryRequirements,
-                                   memoryPropertyFlags,
-                                   memoryAllocateFlags,
-                                   maxFramesInFlight,
-                                   &shaderDataDevice.memory,
-                                   &shaderDataDevice.stride);
-
-    VkDeviceSize offset{ 0 };
-    VkDeviceSize size{ VK_WHOLE_SIZE };
-    VkMemoryMapFlags flags{ 0 };
-    VK_CHECK(vkMapMemory(device, shaderDataDevice.memory, offset, size, flags, &shaderDataDevice.mappedData));
-
-    for (uint32_t i = 0; i < maxFramesInFlight; i++) {
-      VkDeviceSize offset{ shaderDataDevice.stride * i };
-
-      VK_CHECK(vkBindBufferMemory(device, shaderDataDevice.frame[i].buffer, shaderDataDevice.memory, offset));
-    }
-  }
-
-  //////////////////////////////////////////////////////////////////////
   // synchronization objects
   //////////////////////////////////////////////////////////////////////
 
@@ -685,365 +566,6 @@ int main()
     .maxLod = VK_LOD_CLAMP_NONE, // (float)ddsFile->header.dwMipMapCount,
   };
   VK_CHECK(vkCreateSampler(device, &samplerCreateInfo2, nullptr, &textureSamplers[2]));
-
-  //////////////////////////////////////////////////////////////////////
-  // descriptors
-  //////////////////////////////////////////////////////////////////////
-
-  //
-  // pool
-  //
-
-  VkDescriptorPoolSize descriptorPoolSizes[3]{
-    {
-      .type = VK_DESCRIPTOR_TYPE_SAMPLER,
-      .descriptorCount = 3,
-    },
-    {
-      .type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
-      .descriptorCount = 1,
-    },
-    {
-      .type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-      .descriptorCount = maxFramesInFlight,
-    }
-  };
-  VkDescriptorPoolCreateInfo descriptorPoolCreateInfo{
-    .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
-    .maxSets = 3,
-    .poolSizeCount = 3,
-    .pPoolSizes = descriptorPoolSizes
-  };
-  VK_CHECK(vkCreateDescriptorPool(device, &descriptorPoolCreateInfo, nullptr, &descriptorPool));
-
-  //
-  // uniform buffer descriptor set layout/allocation
-  //
-
-  VkDescriptorSetLayoutBinding uniformBufferDescriptorSetLayoutBinding{
-    .binding = 0,
-    .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-    .descriptorCount = 1,
-    .stageFlags = VK_SHADER_STAGE_VERTEX_BIT
-  };
-
-  VkDescriptorSetLayoutCreateInfo uniformBufferDescriptorSetLayoutCreateInfo{
-    .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-    .bindingCount = 1,
-    .pBindings = &uniformBufferDescriptorSetLayoutBinding
-  };
-  VK_CHECK(vkCreateDescriptorSetLayout(device, &uniformBufferDescriptorSetLayoutCreateInfo, nullptr, &uniformBufferDescriptorSetLayout));
-
-  VkDescriptorSetLayout uniformBufferDescriptorSetLayouts[maxFramesInFlight];
-  for (uint32_t i = 0; i < maxFramesInFlight; i++) {
-    uniformBufferDescriptorSetLayouts[i] = uniformBufferDescriptorSetLayout;
-  };
-
-  VkDescriptorSetAllocateInfo uniformBufferDescriptorSetAllocateInfo{
-    .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
-    .descriptorPool = descriptorPool,
-    .descriptorSetCount = maxFramesInFlight,
-    .pSetLayouts = uniformBufferDescriptorSetLayouts
-  };
-  VK_CHECK(vkAllocateDescriptorSets(device, &uniformBufferDescriptorSetAllocateInfo, uniformBufferDescriptorSets));
-
-  //
-  // texture descriptor set layout/allocation
-  //
-
-  VkDescriptorSetLayoutBinding textureDescriptorSetLayoutBindings[2]{
-    {
-      .binding = 0,
-      .descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER,
-      .descriptorCount = 3,
-      .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT
-    },
-    {
-      .binding = 1,
-      .descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
-      .descriptorCount = 1,
-      .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT
-    }
-  };
-
-  VkDescriptorSetLayoutCreateInfo textureDescriptorSetLayoutCreateInfo{
-    .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-    .bindingCount = 2,
-    .pBindings = textureDescriptorSetLayoutBindings
-  };
-  VK_CHECK(vkCreateDescriptorSetLayout(device, &textureDescriptorSetLayoutCreateInfo, nullptr, &textureDescriptorSetLayout));
-
-  VkDescriptorSetAllocateInfo textureDescriptorSetAllocateInfo{
-    .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
-    .descriptorPool = descriptorPool,
-    .descriptorSetCount = 1,
-    .pSetLayouts = &textureDescriptorSetLayout
-  };
-  VK_CHECK(vkAllocateDescriptorSets(device, &textureDescriptorSetAllocateInfo, &textureDescriptorSet));
-
-  //////////////////////////////////////////////////////////////////////
-  // descriptor set writes
-  //////////////////////////////////////////////////////////////////////
-
-  constexpr int writeDescriptorSetsCount = 2 + maxFramesInFlight;
-  VkWriteDescriptorSet writeDescriptorSets[writeDescriptorSetsCount];
-
-  VkDescriptorImageInfo textureSamplerDescriptorImageInfos[3] = {
-    {
-      .sampler = textureSamplers[0],
-    },
-    {
-      .sampler = textureSamplers[1],
-    },
-    {
-      .sampler = textureSamplers[2],
-    },
-  };
-  writeDescriptorSets[0] = {
-    .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-    .dstSet = textureDescriptorSet,
-    .dstBinding = 0,
-    .descriptorCount = 3,
-    .descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER,
-    .pImageInfo = textureSamplerDescriptorImageInfos
-  };
-  VkDescriptorImageInfo textureImageDescriptorImageInfo = {
-    .imageView = textureImageView,
-    .imageLayout = VK_IMAGE_LAYOUT_READ_ONLY_OPTIMAL
-  };
-  writeDescriptorSets[1] = {
-    .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-    .dstSet = textureDescriptorSet,
-    .dstBinding = 1,
-    .descriptorCount = 1,
-    .descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
-    .pImageInfo = &textureImageDescriptorImageInfo
-  };
-
-  for (uint32_t i = 0; i < maxFramesInFlight; i++) {
-    VkDescriptorBufferInfo descriptorBufferInfo {
-      .buffer = shaderDataDevice.frame[i].buffer,
-      .offset = 0,
-      .range = VK_WHOLE_SIZE,
-    };
-
-    writeDescriptorSets[2 + i] = {
-      .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-      .dstSet = uniformBufferDescriptorSets[i],
-      .dstBinding = 0,
-      .descriptorCount = 1,
-      .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-      .pBufferInfo = &descriptorBufferInfo
-    };
-  }
-
-  // update all three descriptor sets
-  vkUpdateDescriptorSets(device, writeDescriptorSetsCount, writeDescriptorSets, 0, nullptr);
-
-  //////////////////////////////////////////////////////////////////////
-  // shaders
-  //////////////////////////////////////////////////////////////////////
-
-  uint32_t triangleSize;
-  void const * triangleStart = file::open("shader/triangle.spv", &triangleSize);
-
-  VkShaderModuleCreateInfo shaderModuleCreateInfo{
-    .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
-    .codeSize = triangleSize,
-    .pCode = (uint32_t *)triangleStart
-  };
-  VkShaderModule shaderModule{};
-  VK_CHECK(vkCreateShaderModule(device, &shaderModuleCreateInfo, nullptr, &shaderModule));
-
-  //////////////////////////////////////////////////////////////////////
-  // pipeline
-  //////////////////////////////////////////////////////////////////////
-
-  VkDescriptorSetLayout descriptorSetLayouts[2] = {
-    uniformBufferDescriptorSetLayout,
-    textureDescriptorSetLayout,
-  };
-
-  VkPushConstantRange pushConstantRange{
-    .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
-    .size = (sizeof (int32_t))
-  };
-
-  VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{
-    .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-    .setLayoutCount = 2,
-    .pSetLayouts = descriptorSetLayouts,
-    .pushConstantRangeCount = 1,
-    .pPushConstantRanges = &pushConstantRange
-  };
-  VK_CHECK(vkCreatePipelineLayout(device, &pipelineLayoutCreateInfo, nullptr, &pipelineLayout));
-
-  VkVertexInputBindingDescription vertexBindingDescriptions[1]{
-    {
-      .binding = 0,
-      .stride = ((3 + 3 + 2) * (sizeof (float))),
-      .inputRate = VK_VERTEX_INPUT_RATE_VERTEX
-    }
-  };
-  VkVertexInputAttributeDescription vertexAttributeDescriptions[3]{
-    { .location = 0, .binding = 0, .format = VK_FORMAT_R32G32B32_SFLOAT, .offset = 3 * 4 * 0 },
-    { .location = 1, .binding = 0, .format = VK_FORMAT_R32G32B32_SFLOAT, .offset = 3 * 4 * 1 },
-    { .location = 2, .binding = 0, .format = VK_FORMAT_R32G32_SFLOAT, .offset = 3 * 4 * 2 },
-  };
-  VkPipelineVertexInputStateCreateInfo vertexInputState{
-    .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
-    .vertexBindingDescriptionCount = 1,
-    .pVertexBindingDescriptions = vertexBindingDescriptions,
-    .vertexAttributeDescriptionCount = 3,
-    .pVertexAttributeDescriptions = vertexAttributeDescriptions,
-  };
-
-  VkPipelineInputAssemblyStateCreateInfo inputAssemblyState{
-    .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
-    .topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST
-  };
-
-  VkPipelineShaderStageCreateInfo shaderStages[2]{
-    {
-      .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-      .stage = VK_SHADER_STAGE_VERTEX_BIT,
-      .module = shaderModule,
-      .pName = "VSMain"
-    },
-    {
-      .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-      .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
-      .module = shaderModule,
-      .pName = "PSMain"
-    }
-  };
-
-  VkPipelineShaderStageCreateInfo outlineShaderStages[2]{
-    {
-      .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-      .stage = VK_SHADER_STAGE_VERTEX_BIT,
-      .module = shaderModule,
-      .pName = "VSOutlineMain"
-    },
-    {
-      .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-      .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
-      .module = shaderModule,
-      .pName = "PSOutlineMain"
-    }
-  };
-
-  VkPipelineViewportStateCreateInfo viewportState{
-    .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
-    .viewportCount = 1,
-    .scissorCount = 1
-  };
-
-  constexpr uint32_t dynamicStateCount = 2;
-  VkDynamicState dynamicStates[dynamicStateCount]{
-    VK_DYNAMIC_STATE_VIEWPORT,
-    VK_DYNAMIC_STATE_SCISSOR,
-  };
-  VkPipelineDynamicStateCreateInfo dynamicState{
-    .sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
-    .dynamicStateCount = dynamicStateCount,
-    .pDynamicStates = dynamicStates
-  };
-
-  VkPipelineDepthStencilStateCreateInfo depthStencilState{
-    .sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
-    .depthTestEnable = VK_TRUE,
-    .depthWriteEnable = VK_TRUE,
-    .depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL,
-    .stencilTestEnable = VK_TRUE,
-    .front = {
-      .failOp = VK_STENCIL_OP_REPLACE,
-      .passOp = VK_STENCIL_OP_REPLACE,
-      .depthFailOp = VK_STENCIL_OP_REPLACE,
-      .compareOp = VK_COMPARE_OP_ALWAYS,
-      .compareMask = 0x01,
-      .writeMask = 0x01,
-      .reference = 1,
-    },
-  };
-
-  VkPipelineDepthStencilStateCreateInfo outlineDepthStencilState{
-    .sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
-    .depthTestEnable = VK_TRUE,
-    .depthWriteEnable = VK_TRUE,
-    .depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL,
-    .stencilTestEnable = VK_TRUE,
-    .front = {
-      .failOp = VK_STENCIL_OP_KEEP,
-      .passOp = VK_STENCIL_OP_REPLACE,
-      .depthFailOp = VK_STENCIL_OP_KEEP,
-      .compareOp = VK_COMPARE_OP_NOT_EQUAL,
-      .compareMask = 0x01,
-      .writeMask = 0x00,
-      .reference = 1,
-    },
-  };
-
-  VkPipelineRenderingCreateInfo renderingCreateInfo{
-    .sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
-    .colorAttachmentCount = 1,
-    .pColorAttachmentFormats = &surfaceFormat.format,
-    .depthAttachmentFormat = depthFormat,
-    .stencilAttachmentFormat = depthFormat
-  };
-
-  VkPipelineColorBlendAttachmentState blendAttachment{
-    .colorWriteMask = 0xF
-  };
-  VkPipelineColorBlendStateCreateInfo colorBlendState{
-    .sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
-    .attachmentCount = 1,
-    .pAttachments = &blendAttachment
-  };
-  VkPipelineRasterizationStateCreateInfo rasterizationState{
-    .sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
-    .cullMode = VK_CULL_MODE_BACK_BIT,
-    .frontFace = VK_FRONT_FACE_CLOCKWISE,
-    .lineWidth = 1.0f
-  };
-  VkPipelineMultisampleStateCreateInfo multisampleState{
-    .sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
-    .rasterizationSamples = VK_SAMPLE_COUNT_1_BIT
-  };
-
-  VkGraphicsPipelineCreateInfo pipelineCreateInfos[2]{
-    {
-      .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
-      .pNext = &renderingCreateInfo,
-      .stageCount = 2,
-      .pStages = shaderStages,
-      .pVertexInputState = &vertexInputState,
-      .pInputAssemblyState = &inputAssemblyState,
-      .pViewportState = &viewportState,
-      .pRasterizationState = &rasterizationState,
-      .pMultisampleState = &multisampleState,
-      .pDepthStencilState = &depthStencilState,
-      .pColorBlendState = &colorBlendState,
-      .pDynamicState = &dynamicState,
-      .layout = pipelineLayout
-    },
-    {
-      .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
-      .pNext = &renderingCreateInfo,
-      .stageCount = 2,
-      .pStages = outlineShaderStages,
-      .pVertexInputState = &vertexInputState,
-      .pInputAssemblyState = &inputAssemblyState,
-      .pViewportState = &viewportState,
-      .pRasterizationState = &rasterizationState,
-      .pMultisampleState = &multisampleState,
-      .pDepthStencilState = &outlineDepthStencilState,
-      .pColorBlendState = &colorBlendState,
-      .pDynamicState = &dynamicState,
-      .layout = pipelineLayout
-    }
-  };
-  VK_CHECK(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 2, pipelineCreateInfos, nullptr, pipelines));
 
   //////////////////////////////////////////////////////////////////////
   // initialize collada
@@ -1457,11 +979,7 @@ int main()
   for (uint32_t i = 0; i < maxFramesInFlight; i++) {
     vkDestroyFence(device, fences[i], nullptr);
     vkDestroySemaphore(device, presentSemaphores[i], nullptr);
-
-    vkDestroyBuffer(device, shaderDataDevice.frame[i].buffer, nullptr);
   }
-  vkUnmapMemory(device, shaderDataDevice.memory);
-  vkFreeMemory(device, shaderDataDevice.memory, nullptr);
 
   for (uint32_t i = 0; i < swapchainImageCount; i++) {
     vkDestroySemaphore(device, renderSemaphores[i], nullptr);
@@ -1477,26 +995,14 @@ int main()
   vkDestroyImageView(device, shadowDepthImageView, nullptr);
   vkDestroyImageView(device, shadowDepthImageViewDepth, nullptr);
 
-  vkDestroyBuffer(device, vertexIndexBuffer, nullptr);
-  vkFreeMemory(device, vertexIndexBufferMemory, nullptr);
-
-  vkDestroyImageView(device, textureImageView, nullptr);
   vkDestroySampler(device, textureSamplers[0], nullptr);
   vkDestroySampler(device, textureSamplers[1], nullptr);
   vkDestroySampler(device, textureSamplers[2], nullptr);
-  vkDestroyImage(device, textureImage, nullptr);
-  vkFreeMemory(device, textureImageMemory, nullptr);
 
-  vkDestroyDescriptorSetLayout(device, uniformBufferDescriptorSetLayout, nullptr);
-  vkDestroyDescriptorSetLayout(device, textureDescriptorSetLayout, nullptr);
   vkDestroyDescriptorPool(device, descriptorPool, nullptr);
-  vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
-  vkDestroyPipeline(device, pipelines[0], nullptr);
-  vkDestroyPipeline(device, pipelines[1], nullptr);
   vkDestroySwapchainKHR(device, swapchain, nullptr);
   vkDestroySurfaceKHR(instance, surface, nullptr);
   vkDestroyCommandPool(device, commandPool, nullptr);
-  vkDestroyShaderModule(device, shaderModule, nullptr);
 
   SDL_DestroyWindow(window);
   SDL_QuitSubSystem(SDL_INIT_VIDEO);

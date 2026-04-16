@@ -1,8 +1,4 @@
-shader/triangle.spv
 shader/collada.spv
 data/scenes/shadow_test/shadow_test.vtx
 data/scenes/shadow_test/shadow_test.idx
 data/scenes/shadow_test/images/0_leaf_white.dds
-checker.idx
-checker.vtx
-sprite.data

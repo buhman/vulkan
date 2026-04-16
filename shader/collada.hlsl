@@ -35,12 +35,24 @@ struct Scene
   float4 LightPosition; // view space
 };
 
-struct MaterialColor
-{
+struct MaterialImage {
+  int Emission;
+  int Ambient;
+  int Diffuse;
+  int Specular;
+};
+
+struct MaterialColor {
   float4 Emission;
   float4 Ambient;
   float4 Diffuse;
   float4 Specular;
+};
+
+struct MaterialColorImage
+{
+  MaterialColor Color;
+  MaterialImage Image;
 };
 
 // set 0: per-frame
@@ -48,9 +60,10 @@ struct MaterialColor
 [[vk::binding(1, 0)]] StructuredBuffer<Node> Nodes;
 
 // set 1: constant
-[[vk::binding(0, 1)]] StructuredBuffer<MaterialColor> MaterialColors;
+[[vk::binding(0, 1)]] StructuredBuffer<MaterialColorImage> MaterialColorImages;
 [[vk::binding(1, 1)]] SamplerState LinearSampler;
 [[vk::binding(2, 1)]] Texture2D ShadowTexture;
+[[vk::binding(3, 1)]] Texture2D SceneTexture[];
 
 struct PushConstant {
   int NodeIndex;
@@ -116,10 +129,25 @@ float ShadowPCF(float3 position, float bias)
 [shader("pixel")]
 float4 PSMain(VSOutput input) : SV_TARGET
 {
-  //float3 color = texture.Sample(samplers[0], input.Texture).bgr;
-  float4 diffuseColor = MaterialColors[constants.MaterialIndex].Diffuse;
-  float4 specularColor = MaterialColors[constants.MaterialIndex].Specular;
-  float4 emissionColor = MaterialColors[constants.MaterialIndex].Emission;
+  MaterialColorImage MCI = MaterialColorImages[constants.MaterialIndex];
+  float4 diffuseColor;
+  float4 specularColor;
+  float4 emissionColor;
+  if (MCI.Image.Diffuse >= 0) {
+    diffuseColor = SceneTexture[MCI.Image.Diffuse].Sample(LinearSampler, input.Texture).bgra;
+  } else {
+    diffuseColor = MCI.Color.Diffuse;
+  }
+  if (MCI.Image.Specular >= 0) {
+    specularColor = SceneTexture[MCI.Image.Specular].Sample(LinearSampler, input.Texture).bgra;
+  } else {
+    specularColor = MCI.Color.Specular;
+  }
+  if (MCI.Image.Emission >= 0) {
+    emissionColor = SceneTexture[MCI.Image.Emission].Sample(LinearSampler, input.Texture).bgra;
+  } else {
+    emissionColor = MCI.Color.Emission;
+  }
 
   float3 N = normalize(input.Normal);
   float3 L = normalize(input.LightDirection);
