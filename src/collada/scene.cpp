@@ -12,6 +12,7 @@ namespace collada::scene {
     this->descriptor = descriptor;
 
     vulkan.load_vertex_index_buffer(descriptor->position_normal_texture_buffer,
+                                    descriptor->joint_weight_buffer,
                                     descriptor->index_buffer);
     vulkan.create_uniform_buffers(descriptor);
     vulkan.create_descriptor_sets(descriptor);
@@ -29,13 +30,13 @@ namespace collada::scene {
       types::node const & node = *descriptor->nodes[i];
       instance_types::node const & node_instance = node_state.node_instances[i];
 
-      if (node.instance_geometries_count <= 0)
+      if (node.type != types::node_type::NODE)
         continue;
 
       vulkan.draw_node(i,
                        node,
-                       node_instance);
-
+                       node_instance,
+                       node_state.node_instances);
     }
   }
 
@@ -63,7 +64,7 @@ namespace collada::scene {
 
   void state::update(float t)
   {
-    t = animate::loop(t, 3.3f);
+    t = animate::loop(t, 1.0f);
 
     for (int i = 0; i < descriptor->nodes_count; i++) {
       animate::animate_node(node_state.node_instances[i], t);

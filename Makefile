@@ -49,7 +49,8 @@ OBJS = \
 	src/collada/animate.o
 
 SCENES = \
-	data/scenes/shadow_test/shadow_test.o
+	data/scenes/shadow_test/shadow_test.o \
+	data/scenes/eidelwind/eidelwind.o
 
 ifeq ($(UNAME),Darwin)
 LIBS = \

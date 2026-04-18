@@ -5,6 +5,15 @@ struct VSInput
   float3 Texture : TEXCOORD0;
 };
 
+struct VSSkinnedInput
+{
+  float3 Position : POSITION0;
+  float3 Normal : NORMAL0;
+  float3 Texture : TEXCOORD0;
+  int4 BlendIndices : BLENDINDICES0;
+  float4 BlendWeight : BLENDWEIGHT0;
+};
+
 struct VSOutput
 {
   float4 Position : SV_POSITION;
@@ -24,6 +33,11 @@ struct VSShadowOutput
 struct Node
 {
   column_major float4x4 World;
+};
+
+struct Joint
+{
+  column_major float4x4 Transform;
 };
 
 struct Scene
@@ -58,6 +72,7 @@ struct MaterialColorImage
 // set 0: per-frame
 [[vk::binding(0, 0)]] ConstantBuffer<Scene> Scene;
 [[vk::binding(1, 0)]] StructuredBuffer<Node> Nodes;
+[[vk::binding(2, 0)]] StructuredBuffer<Joint> Joints;
 
 // set 1: constant
 [[vk::binding(0, 1)]] StructuredBuffer<MaterialColorImage> MaterialColorImages;
@@ -72,10 +87,9 @@ struct PushConstant {
 
 [[vk::push_constant]] PushConstant constants;
 
-float4 getView(float4x4 view, float3 position)
+float4 getView(float4x4 view, float4 position)
 {
-  float4x4 world = Nodes[constants.NodeIndex].World;
-  return mul(view, mul(world, float4(position.xyz, 1.0)));
+  return mul(view, position);
 }
 
 float4 getProjection(float4x4 projection, float4 viewPosition)
@@ -83,17 +97,40 @@ float4 getProjection(float4x4 projection, float4 viewPosition)
   return mul(projection, viewPosition) * float4(-1, -1, 1, 1);
 }
 
-[shader("vertex")]
-VSOutput VSMain(VSInput input)
+float2 yf(float2 v)
 {
-  float4 viewPosition = getView(Scene.View, input.Position);
-  float4 shadowPosition = getProjection(Scene.ShadowProjection, getView(Scene.ShadowView, input.Position));
+  return float2(v.x, 1.0 - v.y);
+}
+
+float4x4 getWorld(VSSkinnedInput input)
+{
+  float4x4 world
+    = input.BlendWeight.x * Joints[input.BlendIndices.x].Transform
+    + input.BlendWeight.y * Joints[input.BlendIndices.y].Transform
+    + input.BlendWeight.z * Joints[input.BlendIndices.z].Transform
+    + input.BlendWeight.w * Joints[input.BlendIndices.w].Transform
+    ;
+  //float4x4 world = Nodes[constants.NodeIndex].World;
+
+  return world;
+}
+
+[shader("vertex")]
+VSOutput VSMain(VSSkinnedInput input)
+{
+  float4x4 world = getWorld(input);
+
+  float4 worldPosition = mul(world, float4(input.Position, 1.0));
+  float4 viewPosition = getView(Scene.View, worldPosition);
+  float4 shadowPosition = getProjection(Scene.ShadowProjection, getView(Scene.ShadowView, worldPosition));
 
   VSOutput output = (VSOutput)0;
+  //output.Position = getProjection(Scene.ShadowProjection, viewPosition);
   output.Position = getProjection(Scene.Projection, viewPosition);
+
   output.ShadowPosition = shadowPosition * float4(0.5, 0.5, 1.0, 1.0) + float4(0.5, 0.5, 0.0, 0.0);
   output.Normal = mul((float3x3)Scene.View, mul((float3x3)Nodes[constants.NodeIndex].World, input.Normal));
-  output.Texture = input.Texture.xy * 1.0;
+  output.Texture = yf(input.Texture.xy);
 
   output.LightDirection = (Scene.LightPosition - viewPosition).xyz;
   output.ViewDirection = -viewPosition.xyz;
@@ -135,17 +172,17 @@ float4 PSMain(VSOutput input) : SV_TARGET
   float4 specularColor;
   float4 emissionColor;
   if (MCI.Image.Diffuse >= 0) {
-    diffuseColor = SceneTexture[MCI.Image.Diffuse].Sample(LinearSampler, input.Texture).bgra;
+    diffuseColor = SceneTexture[MCI.Image.Diffuse].Sample(LinearSampler, input.Texture).rgba;
   } else {
     diffuseColor = MCI.Color.Diffuse;
   }
   if (MCI.Image.Specular >= 0) {
-    specularColor = SceneTexture[MCI.Image.Specular].Sample(LinearSampler, input.Texture).bgra;
+    specularColor = SceneTexture[MCI.Image.Specular].Sample(LinearSampler, input.Texture).rgba;
   } else {
     specularColor = MCI.Color.Specular;
   }
   if (MCI.Image.Emission >= 0) {
-    emissionColor = SceneTexture[MCI.Image.Emission].Sample(LinearSampler, input.Texture).bgra;
+    emissionColor = SceneTexture[MCI.Image.Emission].Sample(LinearSampler, input.Texture).rgba;
   } else {
     emissionColor = MCI.Color.Emission;
   }
@@ -195,7 +232,7 @@ struct GSGeometryOutput
 [maxvertexcount(6)]
 void GSGeometryMain(triangle VSGeometryOutput input[3], inout LineStream<GSGeometryOutput> outputStream)
 {
-  float normalLength = 2.0;
+  float normalLength = 0.1;
 
   for (int i = 0; i < 3; i++) {
     float3 position = input[i].Position.xyz;
@@ -203,11 +240,11 @@ void GSGeometryMain(triangle VSGeometryOutput input[3], inout LineStream<GSGeome
     float3 positionNormal = position + normal * normalLength;
 
     GSGeometryOutput output = (GSGeometryOutput)0;
-    output.Position = getProjection(Scene.Projection, getView(Scene.View, position));
+    output.Position = getProjection(Scene.Projection, getView(Scene.View, float4(position, 1.0)));
     output.Color = float3(1, 0, 0);
     outputStream.Append(output);
 
-    output.Position = getProjection(Scene.Projection, getView(Scene.View, positionNormal));
+    output.Position = getProjection(Scene.Projection, getView(Scene.View, float4(positionNormal, 1.0)));
     output.Color = float3(0, 1, 0);
     outputStream.Append(output);
 
@@ -222,9 +259,12 @@ float4 PSGeometryMain(GSGeometryOutput input) : SV_TARGET
 }
 
 [shader("vertex")]
-VSShadowOutput VSShadowMain(VSInput input)
+VSShadowOutput VSShadowMain(VSSkinnedInput input)
 {
-  float4 viewPosition = getView(Scene.ShadowView, input.Position);
+  float4x4 world = getWorld(input);
+
+  float4 worldPosition = mul(world, float4(input.Position, 1.0));
+  float4 viewPosition = getView(Scene.ShadowView, worldPosition);
 
   VSShadowOutput output = (VSShadowOutput)0;
   output.Position = getProjection(Scene.ShadowProjection, viewPosition);

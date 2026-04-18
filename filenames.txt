@@ -2,3 +2,8 @@ shader/collada.spv
 data/scenes/shadow_test/shadow_test.vtx
 data/scenes/shadow_test/shadow_test.idx
 data/scenes/shadow_test/images/0_leaf_white.dds
+
+data/scenes/eidelwind/eidelwind.vtx
+data/scenes/eidelwind/eidelwind.vjw
+data/scenes/eidelwind/eidelwind.idx
+data/scenes/eidelwind/images/0_EidelWindTextureTest.dds

@@ -18,6 +18,9 @@ namespace collada::scene {
   struct Node {
     XMFLOAT4X4 world;
   };
+  struct Joint {
+    XMFLOAT4X4 transform;
+  };
   struct MaterialColor {
     XMFLOAT4 emission;
     XMFLOAT4 ambient;
@@ -41,12 +44,13 @@ namespace collada::scene {
 
   struct vulkan {
     static constexpr uint32_t maxFrames = 2;
-    static constexpr uint32_t perFrameDescriptorCount = 2;
+    static constexpr uint32_t perFrameDescriptorCount = 3;
     static constexpr uint32_t constantDescriptorCount = 1;
     static constexpr uint32_t uniformBufferDescriptorCount = maxFrames * perFrameDescriptorCount + constantDescriptorCount;
     // +3: linear sampler, shadow sampled image, scene sampled image (array)
     static constexpr uint32_t bindingCount = uniformBufferDescriptorCount + 3;
     static constexpr int shaderVariantCount = 3;
+    static constexpr uint32_t maxJointsCount = 128;
 
     // externally initialized, opaque handle
     VkInstance instance;
@@ -70,6 +74,7 @@ namespace collada::scene {
     VkShaderModule shaderModule;
     VkPipeline * pipelines; // per-scene, one per descriptor->inputs_list_count
     struct {
+      VkDeviceSize jointWeightOffset;
       VkDeviceSize indexOffset;
       VkBuffer buffer;
       VkDeviceMemory memory;
@@ -107,6 +112,11 @@ namespace collada::scene {
         VkDeviceAddress nodesOffset;
         VkDeviceAddress nodesSize;
         void * nodesMapped;
+
+        VkBuffer jointsBuffer;
+        VkDeviceAddress jointsOffset;
+        VkDeviceAddress jointsSize;
+        void * jointsMapped;
       } frame[maxFrames];
       struct { // must match constantDescriptorCount
         VkBuffer materialColorImagesBuffer;
@@ -151,6 +161,7 @@ namespace collada::scene {
     //////////////////////////////////////////////////////////////////////
 
     void load_vertex_index_buffer(char const * vertex_filename,
+                                  char const * vertex_joint_weight_filename,
                                   char const * index_filename);
     void create_pipelines(collada::types::descriptor const * const descriptor);
 
@@ -171,9 +182,18 @@ namespace collada::scene {
     void draw_instance_geometries(types::instance_geometry const * const instance_geometries,
                                   int const instance_geometries_count);
 
+    void draw_skin(types::skin const & skin,
+                   types::instance_material const * const instance_materials,
+                   int const instance_materials_count);
+
+    void draw_instance_controllers(types::instance_controller const * const instance_controllers,
+                                   int const instance_controllers_count,
+                                   instance_types::node const * const node_instances);
+
     void draw_node(int32_t node_index,
                    types::node const & node,
-                   instance_types::node const & node_instance);
+                   instance_types::node const & node_instance,
+                   instance_types::node const * const node_instances);
 
     //////////////////////////////////////////////////////////////////////
     // called by state::update

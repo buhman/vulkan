@@ -19,6 +19,7 @@
 #include "collada/scene/vulkan.h"
 
 #include "scenes/shadow_test/shadow_test.h"
+#include "scenes/eidelwind/eidelwind.h"
 
 VkInstance instance{ VK_NULL_HANDLE };
 VkDevice device{ VK_NULL_HANDLE };
@@ -591,7 +592,7 @@ int main()
                                      textureSamplers[0],
                                      shadowDepthImageViewDepth);
 
-  collada::types::descriptor const * collada_scene_descriptor = &shadow_test::descriptor;
+  collada::types::descriptor const * collada_scene_descriptor = &eidelwind::descriptor;
   collada_state.load_scene(collada_scene_descriptor);
 
   //////////////////////////////////////////////////////////////////////
@@ -608,9 +609,10 @@ int main()
 
   int cameraIndex = collada_state.find_node_index_by_name("Camera001");
   int cameraTargetIndex = collada_state.find_node_index_by_name("Camera001.Target");
-  int lightIndex = collada_state.find_node_index_by_name("DirectLight");
-  int lightTargetIndex = collada_state.find_node_index_by_name("DirectLight.Target");
-  int lightMaterialIndex = collada_state.find_material_index_by_name("LightMaterial");
+  int lightIndex = collada_state.find_node_index_by_name("Camera001");
+  int lightTargetIndex = collada_state.find_node_index_by_name("Torso");
+  //int lightMaterialIndex = collada_state.find_material_index_by_name("LightMaterial");
+  int lightMaterialIndex = -1;
 
   while (quit == false) {
     SDL_Event event;
@@ -647,7 +649,7 @@ int main()
     //////////////////////////////////////////////////////////////////////
 
     double time = getTime(start_time);
-    collada_state.update(time / 8.0f);
+    collada_state.update(time / 1.5f);
 
     //////////////////////////////////////////////////////////////////////
     // fence
@@ -670,11 +672,36 @@ int main()
     VK_CHECK(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
 
     //////////////////////////////////////////////////////////////////////
+    // transfer
+    //////////////////////////////////////////////////////////////////////
+
+    {
+      collada_state.vulkan.change_frame(commandBuffer, frameIndex);
+
+      XMMATRIX projection = currentProjection();
+      XMMATRIX view = currentView(collada_state.node_state.node_instances[cameraIndex],
+                                  collada_state.node_state.node_instances[cameraTargetIndex]);
+      XMMATRIX shadowProjection = XMMatrixOrthographicLH(300, 300, 0.1, 500);
+      XMMATRIX shadowView = currentView(collada_state.node_state.node_instances[lightIndex],
+                                        collada_state.node_state.node_instances[lightTargetIndex]);
+
+      collada::instance_types::node const & lightNode = collada_state.node_state.node_instances[lightIndex];
+      XMVECTOR lightPositionWorld = XMVector3Transform(XMVectorZero(), lightNode.world);
+
+      collada_state.vulkan.transfer_transforms(projection,
+                                               view,
+                                               shadowProjection,
+                                               shadowView,
+                                               lightPositionWorld,
+                                               collada_state.descriptor->nodes_count,
+                                               collada_state.node_state.node_instances);
+    }
+
+    //////////////////////////////////////////////////////////////////////
     // shadow render
     //////////////////////////////////////////////////////////////////////
 
     // barrier
-
     VkImageMemoryBarrier2 shadowBarriers[1]{
       VkImageMemoryBarrier2{
         .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
@@ -738,30 +765,6 @@ int main()
       }
     };
     vkCmdSetScissor(commandBuffer, 0, 1, &shadowScissor);
-
-    // transfer
-
-    {
-      collada_state.vulkan.change_frame(commandBuffer, frameIndex);
-
-      XMMATRIX projection = currentProjection();
-      XMMATRIX view = currentView(collada_state.node_state.node_instances[cameraIndex],
-                                  collada_state.node_state.node_instances[cameraTargetIndex]);
-      XMMATRIX shadowProjection = XMMatrixOrthographicLH(300, 300, 0.1, 500);
-      XMMATRIX shadowView = currentView(collada_state.node_state.node_instances[lightIndex],
-                                        collada_state.node_state.node_instances[lightTargetIndex]);
-
-      collada::instance_types::node const & lightNode = collada_state.node_state.node_instances[lightIndex];
-      XMVECTOR lightPositionWorld = XMVector3Transform(XMVectorZero(), lightNode.world);
-
-      collada_state.vulkan.transfer_transforms(projection,
-                                               view,
-                                               shadowProjection,
-                                               shadowView,
-                                               lightPositionWorld,
-                                               collada_state.descriptor->nodes_count,
-                                               collada_state.node_state.node_instances);
-    }
 
     // draw
 
@@ -889,8 +892,8 @@ int main()
     collada_state.vulkan.excludeMaterialIndex = -1;
     collada_state.vulkan.pipelineIndex = 1; // non-shadow pipeline
     collada_state.draw();
-    collada_state.vulkan.pipelineIndex = 2; // geometry shader pipeline
-    collada_state.draw();
+    //collada_state.vulkan.pipelineIndex = 2; // geometry shader pipeline
+    //collada_state.draw();
 
     vkCmdEndRendering(commandBuffer);
 

@@ -79,23 +79,44 @@ inline static void vulkan_vertex_input_states(collada::types::descriptor const *
 {
   for (int i = 0; i < descriptor->inputs_list_count; i++) {
     collada::types::inputs const & inputs = descriptor->inputs_list[i];
-    VkVertexInputAttributeDescription * vertexAttributeDescriptions = NewM<VkVertexInputAttributeDescription>(inputs.elements_count);
+    VkVertexInputAttributeDescription * vertexAttributeDescriptions = NewM<VkVertexInputAttributeDescription>(inputs.elements_count + collada::inputs::skin_inputs.elements_count);
     uint32_t stride = vulkan_load_layout(inputs,
                                          0, // binding
                                          0, // start_offset
                                          vertexAttributeDescriptions);
 
-    vertexBindingDescriptions[i] = {
+    uint32_t vertexJointWeightStride = vulkan_load_layout(collada::inputs::skin_inputs,
+                                                          1, // binding
+                                                          0, // start_offset
+                                                          &vertexAttributeDescriptions[inputs.elements_count]);
+
+    vertexBindingDescriptions[i * 2 + 0] = {
       .binding = 0,
       .stride = stride,
       .inputRate = VK_VERTEX_INPUT_RATE_VERTEX
     };
 
-    vertexInputStates[i] = {
+    vertexBindingDescriptions[i * 2 + 1] = {
+      .binding = 1,
+      .stride = vertexJointWeightStride,
+      .inputRate = VK_VERTEX_INPUT_RATE_VERTEX
+    };
+
+    // non-skinned
+    vertexInputStates[i * 2 + 0] = {
       .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
       .vertexBindingDescriptionCount = 1,
-      .pVertexBindingDescriptions = &vertexBindingDescriptions[i],
+      .pVertexBindingDescriptions = &vertexBindingDescriptions[i * 2 + 0],
       .vertexAttributeDescriptionCount = (uint32_t)inputs.elements_count,
+      .pVertexAttributeDescriptions = vertexAttributeDescriptions,
+    };
+
+    // skinned
+    vertexInputStates[i * 2 + 1] = {
+      .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
+      .vertexBindingDescriptionCount = 2,
+      .pVertexBindingDescriptions = &vertexBindingDescriptions[i * 2 + 0],
+      .vertexAttributeDescriptionCount = (uint32_t)(inputs.elements_count + collada::inputs::skin_inputs.elements_count),
       .pVertexAttributeDescriptions = vertexAttributeDescriptions,
     };
   }
@@ -136,18 +157,22 @@ namespace collada::scene {
   //////////////////////////////////////////////////////////////////////
 
   void vulkan::load_vertex_index_buffer(char const * vertex_filename,
+                                        char const * vertex_joint_weight_filename,
                                         char const * index_filename)
   {
     uint32_t vertexSize;
     void const * vertexStart = file::open(vertex_filename, &vertexSize);
+    uint32_t vertexJointWeightSize;
+    void const * vertexJointWeightStart = file::open(vertex_joint_weight_filename, &vertexJointWeightSize);
     uint32_t indexSize;
     void const * indexStart = file::open(index_filename, &indexSize);
 
-    vertexIndex.indexOffset = vertexSize; // + vertexJWStart;
+    vertexIndex.jointWeightOffset = vertexSize;
+    vertexIndex.indexOffset = vertexSize + vertexJointWeightSize;
 
     // create buffer
 
-    VkDeviceSize bufferSize{ vertexSize + indexSize };
+    VkDeviceSize bufferSize{ vertexSize + vertexJointWeightSize + indexSize };
     VkBufferCreateInfo vertexIndexBufferCreateInfo{
       .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
       .size = bufferSize,
@@ -180,7 +205,8 @@ namespace collada::scene {
     void * vertexIndexMappedData;
     VK_CHECK(vkMapMemory(device, vertexIndex.memory, 0, VK_WHOLE_SIZE, 0, &vertexIndexMappedData));
     memcpy((void *)(((ptrdiff_t)vertexIndexMappedData) + 0), vertexStart, vertexSize);
-    memcpy((void *)(((ptrdiff_t)vertexIndexMappedData) + vertexSize), indexStart, indexSize);
+    memcpy((void *)(((ptrdiff_t)vertexIndexMappedData) + vertexSize), vertexJointWeightStart, vertexJointWeightSize);
+    memcpy((void *)(((ptrdiff_t)vertexIndexMappedData) + vertexSize + vertexJointWeightSize), indexStart, indexSize);
 
     VkMappedMemoryRange mappedMemoryRange{
       .sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE,
@@ -229,6 +255,16 @@ namespace collada::scene {
       };
       VK_CHECK(vkCreateBuffer(device, &nodesBufferCreateInfo, nullptr, &shaderDataDevice.frame[i].nodesBuffer));
       vkGetBufferMemoryRequirements(device, shaderDataDevice.frame[i].nodesBuffer, &memoryRequirements[memoryRequirementsIndex++]);
+
+      // joints buffer
+      VkBufferCreateInfo jointsBufferCreateInfo{
+        .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+        .size = (sizeof (Joint)) * maxJointsCount,
+        .usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+        .sharingMode = VK_SHARING_MODE_EXCLUSIVE
+      };
+      VK_CHECK(vkCreateBuffer(device, &jointsBufferCreateInfo, nullptr, &shaderDataDevice.frame[i].jointsBuffer));
+      vkGetBufferMemoryRequirements(device, shaderDataDevice.frame[i].jointsBuffer, &memoryRequirements[memoryRequirementsIndex++]);
     };
 
     // material color buffer
@@ -272,6 +308,11 @@ namespace collada::scene {
       shaderDataDevice.frame[i].nodesSize = memoryRequirements[offsetsIndex++].size;
       shaderDataDevice.frame[i].nodesMapped = (void *)(((size_t)shaderDataDevice.mappedData) + shaderDataDevice.frame[i].nodesOffset);
       VK_CHECK(vkBindBufferMemory(device, shaderDataDevice.frame[i].nodesBuffer, shaderDataDevice.memory, shaderDataDevice.frame[i].nodesOffset));
+
+      shaderDataDevice.frame[i].jointsOffset = offsets[offsetsIndex];
+      shaderDataDevice.frame[i].jointsSize = memoryRequirements[offsetsIndex++].size;
+      shaderDataDevice.frame[i].jointsMapped = (void *)(((size_t)shaderDataDevice.mappedData) + shaderDataDevice.frame[i].jointsOffset);
+      VK_CHECK(vkBindBufferMemory(device, shaderDataDevice.frame[i].jointsBuffer, shaderDataDevice.memory, shaderDataDevice.frame[i].jointsOffset));
     }
     shaderDataDevice.constant.materialColorImagesOffset = offsets[offsetsIndex];
     shaderDataDevice.constant.materialColorImagesSize = memoryRequirements[offsetsIndex++].size;
@@ -294,11 +335,11 @@ namespace collada::scene {
     VkDescriptorPoolSize descriptorPoolSizes[descriptorPoolSizesCount]{
       {
         .type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-        .descriptorCount = maxFrames,
+        .descriptorCount = (maxFrames * 1),
       },
       {
         .type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-        .descriptorCount = maxFrames + 1, // +1 for materialColorImages
+        .descriptorCount = (maxFrames * 2) + 1, // +1 for materialColorImages
       },
       {
         .type = VK_DESCRIPTOR_TYPE_SAMPLER,
@@ -321,7 +362,7 @@ namespace collada::scene {
     // uniform buffer descriptor set layout/allocation (set 0, per-frame)
     //
     {
-      constexpr int bindingCount = 2;
+      constexpr int bindingCount = 3;
       VkDescriptorSetLayoutBinding descriptorSetLayoutBindings[bindingCount]{
         {
           .binding = 0,
@@ -334,6 +375,12 @@ namespace collada::scene {
           .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
           .descriptorCount = 1,
           .stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_GEOMETRY_BIT
+        },
+        {
+          .binding = 2,
+          .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+          .descriptorCount = 1,
+          .stageFlags = VK_SHADER_STAGE_VERTEX_BIT
         }
       };
 
@@ -418,6 +465,7 @@ namespace collada::scene {
 
     VkDescriptorBufferInfo sceneDescriptorBufferInfos[maxFrames];
     VkDescriptorBufferInfo nodesDescriptorBufferInfos[maxFrames];
+    VkDescriptorBufferInfo jointsDescriptorBufferInfos[maxFrames];
 
     for (uint32_t i = 0; i < maxFrames; i++) {
       sceneDescriptorBufferInfos[i] = {
@@ -445,6 +493,19 @@ namespace collada::scene {
         .descriptorCount = 1,
         .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
         .pBufferInfo = &nodesDescriptorBufferInfos[i]
+      };
+      jointsDescriptorBufferInfos[i] = {
+        .buffer = shaderDataDevice.frame[i].jointsBuffer,
+        .offset = 0,
+        .range = shaderDataDevice.frame[i].jointsSize,
+      };
+      writeDescriptorSets[writeIndex++] = {
+        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+        .dstSet = descriptorSets0[i],
+        .dstBinding = 2,
+        .descriptorCount = 1,
+        .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+        .pBufferInfo = &jointsDescriptorBufferInfos[i]
       };
     }
 
@@ -758,6 +819,15 @@ namespace collada::scene {
         .writeMask = 0x01,
         .reference = 1,
       },
+      .back = {
+        .failOp = VK_STENCIL_OP_REPLACE,
+        .passOp = VK_STENCIL_OP_REPLACE,
+        .depthFailOp = VK_STENCIL_OP_REPLACE,
+        .compareOp = VK_COMPARE_OP_ALWAYS,
+        .compareMask = 0x01,
+        .writeMask = 0x01,
+        .reference = 1,
+      },
     };
 
     VkPipelineRenderingCreateInfo renderingCreateInfo{
@@ -786,8 +856,8 @@ namespace collada::scene {
     };
     VkPipelineRasterizationStateCreateInfo rasterizationState{
       .sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
-      .cullMode = VK_CULL_MODE_BACK_BIT,
-      //.cullMode = VK_CULL_MODE_NONE,
+      //.cullMode = VK_CULL_MODE_BACK_BIT,
+      .cullMode = VK_CULL_MODE_NONE,
       .frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
       .lineWidth = 1.0f
     };
@@ -803,8 +873,8 @@ namespace collada::scene {
       .rasterizationSamples = VK_SAMPLE_COUNT_1_BIT
     };
 
-    VkPipelineVertexInputStateCreateInfo * vertexInputStates = NewM<VkPipelineVertexInputStateCreateInfo>(descriptor->inputs_list_count);
-    VkVertexInputBindingDescription * vertexBindingDescriptions = NewM<VkVertexInputBindingDescription>(descriptor->inputs_list_count);
+    VkPipelineVertexInputStateCreateInfo * vertexInputStates = NewM<VkPipelineVertexInputStateCreateInfo>(descriptor->inputs_list_count * 2);
+    VkVertexInputBindingDescription * vertexBindingDescriptions = NewM<VkVertexInputBindingDescription>(descriptor->inputs_list_count * 2);
     vulkan_vertex_input_states(descriptor,
                                vertexInputStates,
                                vertexBindingDescriptions);
@@ -819,7 +889,7 @@ namespace collada::scene {
         .pNext = &shadowRenderingCreateInfo,
         .stageCount = 2,
         .pStages = shadowShaderStages,
-        .pVertexInputState = &vertexInputStates[i],
+        .pVertexInputState = &vertexInputStates[i * 2 + 1],
         .pInputAssemblyState = &inputAssemblyState,
         .pViewportState = &viewportState,
         .pRasterizationState = &shadowRasterizationState,
@@ -836,7 +906,7 @@ namespace collada::scene {
         .pNext = &renderingCreateInfo,
         .stageCount = 2,
         .pStages = shaderStages,
-        .pVertexInputState = &vertexInputStates[i],
+        .pVertexInputState = &vertexInputStates[i * 2 + 1],
         .pInputAssemblyState = &inputAssemblyState,
         .pViewportState = &viewportState,
         .pRasterizationState = &rasterizationState,
@@ -853,7 +923,7 @@ namespace collada::scene {
         .pNext = &renderingCreateInfo,
         .stageCount = 3,
         .pStages = geometryShaderStages,
-        .pVertexInputState = &vertexInputStates[i],
+        .pVertexInputState = &vertexInputStates[i * 2 + 1],
         .pInputAssemblyState = &inputAssemblyState,
         .pViewportState = &viewportState,
         .pRasterizationState = &rasterizationState,
@@ -872,7 +942,7 @@ namespace collada::scene {
 
     free(vertexBindingDescriptions);
     for (int i = 0; i < descriptor->inputs_list_count; i++) {
-      free((void *)vertexInputStates[i].pVertexAttributeDescriptions);
+      free((void *)vertexInputStates[i * 2 + 0].pVertexAttributeDescriptions); // [i * 2 + 1] uses same pointer
     }
     free(vertexInputStates);
   }
@@ -885,6 +955,7 @@ namespace collada::scene {
                              types::instance_material const * const instance_materials,
                              int const instance_materials_count)
   {
+    assert(false);
     types::mesh const& mesh = geometry.mesh;
 
     vkCmdBindIndexBuffer(commandBuffer, vertexIndex.buffer, vertexIndex.indexOffset + mesh.index_buffer_offset, VK_INDEX_TYPE_UINT32);
@@ -918,6 +989,99 @@ namespace collada::scene {
       draw_geometry(*instance_geometry.geometry,
                     instance_geometry.instance_materials,
                     instance_geometry.instance_materials_count);
+    }
+  }
+
+  void vulkan::draw_skin(types::skin const & skin,
+                         types::instance_material const * const instance_materials,
+                         int const instance_materials_count)
+  {
+    types::mesh const& mesh = skin.geometry->mesh;
+
+    vkCmdBindIndexBuffer(commandBuffer, vertexIndex.buffer, vertexIndex.indexOffset + mesh.index_buffer_offset, VK_INDEX_TYPE_UINT32);
+
+    for (int j = 0; j < instance_materials_count; j++) {
+      types::instance_material const& instance_material = instance_materials[j];
+      int materialIndex = instance_material.material_index;
+      if (materialIndex == excludeMaterialIndex) {
+        continue;
+      }
+      types::triangles const& triangles = mesh.triangles[instance_material.element_index];
+
+      VkShaderStageFlags stageFlags{ VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_GEOMETRY_BIT };
+      constexpr uint32_t offset{ (offsetof (PushConstant, materialIndex)) };
+      vkCmdPushConstants(commandBuffer, pipelineLayout, stageFlags, offset, (sizeof (uint32_t)), &materialIndex);
+
+      VkBuffer buffers[2] = {
+        vertexIndex.buffer,
+        vertexIndex.buffer,
+      };
+      VkDeviceSize offsets[2] = {
+        (VkDeviceSize)mesh.vertex_buffer_offset,
+        vertexIndex.jointWeightOffset + (VkDeviceSize)skin.vertex_buffer_offset,
+      };
+      vkCmdBindVertexBuffers(commandBuffer, 0, 2, buffers, offsets);
+      vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelines[triangles.inputs_index * shaderVariantCount + pipelineIndex]);
+
+      uint32_t indexCount = triangles.count * 3;
+      vkCmdDrawIndexed(commandBuffer, indexCount, 1, triangles.index_offset, 0, 0);
+    }
+  }
+
+  void vulkan::draw_instance_controllers(types::instance_controller const * const instance_controllers,
+                                         int const instance_controllers_count,
+                                         instance_types::node const * const node_instances)
+  {
+    static Joint joints[maxJointsCount];
+
+    for (int i = 0; i < instance_controllers_count; i++) {
+      types::instance_controller const &instance_controller = instance_controllers[i];
+      types::skin const &skin = instance_controller.controller->skin;
+
+      XMMATRIX bsm = XMLoadFloat4x4((XMFLOAT4X4*)&skin.bind_shape_matrix);
+
+      assert((uint32_t)instance_controller.joint_count <= maxJointsCount);
+      for (int joint_index = 0; joint_index < instance_controller.joint_count; joint_index++) {
+        XMMATRIX ibm = XMLoadFloat4x4((XMFLOAT4X4*)&skin.inverse_bind_matrices[joint_index]);
+        int node_index = instance_controller.joint_node_indices[joint_index];
+        instance_types::node const & node_instance = node_instances[node_index];
+
+        XMStoreFloat4x4(&joints[joint_index].transform,
+                        XMMatrixTranspose(bsm) * XMMatrixTranspose(ibm) * node_instance.world);
+
+      }
+
+      // copy
+      memcpy(shaderDataDevice.frame[frameIndex].jointsMapped, &joints[0], (sizeof (Joint)) * instance_controller.joint_count);
+
+      // flush
+
+      VkMappedMemoryRange mappedMemoryRanges[1]{
+        {
+          .sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE,
+          .memory = shaderDataDevice.memory,
+          .offset = shaderDataDevice.frame[frameIndex].jointsOffset,
+          .size = shaderDataDevice.frame[frameIndex].jointsSize,
+        },
+      };
+
+      alignMappedMemoryRanges(physicalDeviceProperties.limits.nonCoherentAtomSize,
+                              shaderDataDevice.memorySize,
+                              1,
+                              mappedMemoryRanges);
+      vkFlushMappedMemoryRanges(device, 1, mappedMemoryRanges);
+
+      /*
+      int joints_size = (sizeof (XMFLOAT4X4)) * instance_controller.joint_count;
+      glBindBuffer(GL_UNIFORM_BUFFER, joint_uniform_buffer);
+      glBufferData(GL_UNIFORM_BUFFER, joints_size, (void *)&joints[0], GL_DYNAMIC_DRAW);
+      glBindBuffer(GL_UNIFORM_BUFFER, 0);
+      glBindBufferRange(GL_UNIFORM_BUFFER, layout.binding.joint, joint_uniform_buffer, 0, joints_size);
+      */
+
+      draw_skin(skin,
+                instance_controller.instance_materials,
+                instance_controller.instance_materials_count);
     }
   }
 
@@ -970,13 +1134,15 @@ namespace collada::scene {
 
   void vulkan::draw_node(int32_t node_index,
                          types::node const & node,
-                         instance_types::node const & node_instance)
+                         instance_types::node const & node_instance,
+                         instance_types::node const * const node_instances)
   {
     VkShaderStageFlags stageFlags{ VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_GEOMETRY_BIT };
     constexpr uint32_t offset{ (offsetof (PushConstant, nodeIndex)) };
     vkCmdPushConstants(commandBuffer, pipelineLayout, stageFlags, offset, (sizeof (uint32_t)), &node_index);
 
     draw_instance_geometries(node.instance_geometries, node.instance_geometries_count);
+    draw_instance_controllers(node.instance_controllers, node.instance_controllers_count, node_instances);
   }
 
   void vulkan::change_frame(VkCommandBuffer commandBuffer, uint32_t frameIndex)
@@ -1012,6 +1178,7 @@ namespace collada::scene {
     for (uint32_t i = 0; i < maxFrames; i++) {
       vkDestroyBuffer(device, shaderDataDevice.frame[i].sceneBuffer, nullptr);
       vkDestroyBuffer(device, shaderDataDevice.frame[i].nodesBuffer, nullptr);
+      vkDestroyBuffer(device, shaderDataDevice.frame[i].jointsBuffer, nullptr);
     }
     vkDestroyBuffer(device, shaderDataDevice.constant.materialColorImagesBuffer, nullptr);
     vkFreeMemory(device, shaderDataDevice.memory, nullptr);
