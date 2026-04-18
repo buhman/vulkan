@@ -62,7 +62,7 @@ struct MaterialColorImage
 // set 1: constant
 [[vk::binding(0, 1)]] StructuredBuffer<MaterialColorImage> MaterialColorImages;
 [[vk::binding(1, 1)]] SamplerState LinearSampler;
-[[vk::binding(2, 1)]] Texture2D ShadowTexture;
+[[vk::binding(2, 1)]] Texture2DArray ShadowTexture;
 [[vk::binding(3, 1)]] Texture2D SceneTexture[];
 
 struct PushConstant {
@@ -103,7 +103,7 @@ VSOutput VSMain(VSInput input)
 
 float Shadow(float3 position, float bias)
 {
-  float sampledDepth = ShadowTexture.Sample(LinearSampler, position.xy).x;
+  float sampledDepth = ShadowTexture.Sample(LinearSampler, float3(position.xy, 0)).x;
   float shadow = (position.z - bias) > sampledDepth ? 0.1 : 1.0;
   return shadow;
 }
@@ -111,7 +111,8 @@ float Shadow(float3 position, float bias)
 float ShadowPCF(float3 position, float bias)
 {
   float2 dimensions;
-  ShadowTexture.GetDimensions(dimensions.x, dimensions.y);
+  float elements;
+  ShadowTexture.GetDimensions(dimensions.x, dimensions.y, elements);
   float2 texelSize = 1.0 / dimensions;
 
   float shadow = 0.0;

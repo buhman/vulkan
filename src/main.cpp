@@ -34,6 +34,7 @@ VkImage depthImage{ VK_NULL_HANDLE };
 VkImageView depthImageView{ VK_NULL_HANDLE };
 VkDeviceMemory depthMemory{ VK_NULL_HANDLE };
 
+uint32_t shadowArrayLayers{ 6 };
 VkImage shadowDepthImage{ VK_NULL_HANDLE };
 VkImageView shadowDepthImageView{ VK_NULL_HANDLE };
 VkImageView shadowDepthImageViewDepth{ VK_NULL_HANDLE };
@@ -102,6 +103,7 @@ void createDepth(VkDeviceSize nonCoherentAtomSize,
                  uint32_t height,
                  VkFormat format,
                  VkImageUsageFlags usage,
+                 uint32_t arrayLayers,
                  VkImage * image,
                  VkDeviceMemory * memory,
                  VkImageView * imageView)
@@ -116,7 +118,7 @@ void createDepth(VkDeviceSize nonCoherentAtomSize,
       .depth = 1,
     },
     .mipLevels = 1,
-    .arrayLayers = 1,
+    .arrayLayers = arrayLayers,
     .samples = VK_SAMPLE_COUNT_1_BIT,
     .tiling = VK_IMAGE_TILING_OPTIMAL,
     .usage = usage,
@@ -140,31 +142,19 @@ void createDepth(VkDeviceSize nonCoherentAtomSize,
                                  &stride);
   VK_CHECK(vkBindImageMemory(device, *image, *memory, 0));
 
+  VkImageViewType viewType{ (arrayLayers == 1) ? VK_IMAGE_VIEW_TYPE_2D : VK_IMAGE_VIEW_TYPE_2D_ARRAY };
   VkImageViewCreateInfo imageViewCreateInfo{
     .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
     .image = *image,
-    .viewType = VK_IMAGE_VIEW_TYPE_2D,
+    .viewType = viewType,
     .format = format,
     .subresourceRange{
       .aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT,
       .levelCount = 1,
-      .layerCount = 1
+      .layerCount = arrayLayers
     }
   };
   VK_CHECK(vkCreateImageView(device, &imageViewCreateInfo, nullptr, imageView));
-}
-
-void createCubeDepth(VkDeviceSize nonCoherentAtomSize,
-                     VkPhysicalDeviceMemoryProperties const & physicalDeviceMemoryProperties,
-                     uint32_t width,
-                     uint32_t height,
-                     VkFormat format,
-                     VkImageUsageFlags usage,
-                     VkImage * image,
-                     VkDeviceMemory * memory,
-                     VkImageView * imageView)
-{
-
 }
 
 void recreateSwapchain(VkSurfaceFormatKHR surfaceFormat,
@@ -267,12 +257,14 @@ void recreateSwapchain(VkSurfaceFormatKHR surfaceFormat,
     vkDestroyImageView(device, depthImageView, nullptr);
   }
 
+  uint32_t arrayLayers{ 1 };
   createDepth(nonCoherentAtomSize,
               physicalDeviceMemoryProperties,
               imageExtent.width,
               imageExtent.height,
               depthFormat,
               VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+              arrayLayers,
               &depthImage,
               &depthMemory,
               &depthImageView);
@@ -490,6 +482,7 @@ int main()
               1024,
               depthFormat,
               VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+              shadowArrayLayers,
               &shadowDepthImage,
               &shadowDepthMemory,
               &shadowDepthImageView);
@@ -498,12 +491,12 @@ int main()
   VkImageViewCreateInfo imageViewCreateInfo{
     .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
     .image = shadowDepthImage,
-    .viewType = VK_IMAGE_VIEW_TYPE_2D,
+    .viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY,
     .format = depthFormat,
     .subresourceRange{
       .aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT,
       .levelCount = 1,
-      .layerCount = 1
+      .layerCount = shadowArrayLayers
     }
   };
   VK_CHECK(vkCreateImageView(device, &imageViewCreateInfo, nullptr, &shadowDepthImageViewDepth));
@@ -695,7 +688,7 @@ int main()
         .subresourceRange{
           .aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT,
           .levelCount = 1,
-          .layerCount = 1
+          .layerCount = shadowArrayLayers
         }
       }
     };
@@ -720,7 +713,7 @@ int main()
     VkRenderingInfo shadowRenderingInfo{
       .sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
       .renderArea{ .extent{ .width = 1024, .height = 1024 } },
-      .layerCount = 1,
+      .layerCount = 6,
       .colorAttachmentCount = 0,
       .pDepthAttachment = &shadowDepthRenderingAttachmentInfo,
       .pStencilAttachment = &shadowDepthRenderingAttachmentInfo,
@@ -794,7 +787,7 @@ int main()
           .subresourceRange{
             .aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT,
             .levelCount = 1,
-            .layerCount = 1
+            .layerCount = shadowArrayLayers
           }
         }
       };
