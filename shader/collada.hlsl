@@ -125,11 +125,12 @@ VSOutput VSMain(VSSkinnedInput input)
   float4 shadowPosition = getProjection(Scene.ShadowProjection, getView(Scene.ShadowView, worldPosition));
 
   VSOutput output = (VSOutput)0;
-  //output.Position = getProjection(Scene.ShadowProjection, viewPosition);
+  //output.Position = shadowPosition;
   output.Position = getProjection(Scene.Projection, viewPosition);
 
   output.ShadowPosition = shadowPosition * float4(0.5, 0.5, 1.0, 1.0) + float4(0.5, 0.5, 0.0, 0.0);
-  output.Normal = mul((float3x3)Scene.View, mul((float3x3)Nodes[constants.NodeIndex].World, input.Normal));
+  //output.Normal = mul((float3x3)Scene.View, mul((float3x3)Nodes[constants.NodeIndex].World, input.Normal));
+  output.Normal = mul((float3x3)Scene.View, mul((float3x3)world, input.Normal));
   output.Texture = yf(input.Texture.xy);
 
   output.LightDirection = (Scene.LightPosition - viewPosition).xyz;
@@ -200,7 +201,7 @@ float4 PSMain(VSOutput input) : SV_TARGET
   float3 diffuseSpecular = diffuse * diffuseColor.xyz + specular * specularColor.xyz;
 
   float3 shadowPosition = input.ShadowPosition.xyz / input.ShadowPosition.w;
-  float shadowBias = max(0.01 * (1.0 - dot(N, L)), 0.002);
+  float shadowBias = max(0.001 * (1.0 - dot(N, L)), 0.0002);
 
   //float shadowIntensity = Shadow(shadowPosition, shadowBias);
   float shadowIntensity = ShadowPCF(shadowPosition, shadowBias);

@@ -28,5 +28,6 @@ namespace collada::instance_types {
     // mutable state
     transform * transforms;
     XMMATRIX world;
+    bool externalTransform;
   };
 }

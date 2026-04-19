@@ -51,6 +51,7 @@ namespace collada::node_state {
   {
     node_instance.node = node;
     node_instance.transforms = NewM<instance_types::transform>(node->transforms_count);
+    node_instance.externalTransform = false;
 
     initialize_node_transforms(node_instance);
   }
@@ -109,6 +110,10 @@ namespace collada::node_state {
 
   void state::update_node_world_transform(instance_types::node & node_instance)
   {
+    if (node_instance.externalTransform) {
+      return;
+    }
+
     XMMATRIX world;
 
     if (node_instance.node->parent_index >= 0)

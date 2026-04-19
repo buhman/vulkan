@@ -1,6 +1,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
 
 #include "collada/scene.h"
 #include "collada/animate.h"
@@ -75,5 +76,43 @@ namespace collada::scene {
   void state::unload_scene()
   {
     node_state.deallocate_node_instances(descriptor->nodes_count);
+  }
+
+  void state::mouse_motion(int eyeIndex, int targetIndex, float xrel, float yrel, int mode)
+  {
+    assert(descriptor->nodes[eyeIndex]);
+    instance_types::node & eye = node_state.node_instances[eyeIndex];
+    instance_types::node & target = node_state.node_instances[targetIndex];
+
+    eye.externalTransform = true;
+    //target.externalTransform = true;
+
+    XMVECTOR eyePosition = XMVector3Transform(XMVectorZero(), eye.world);
+    XMVECTOR targetPosition = XMVector3Transform(XMVectorZero(), target.world);
+
+    XMVECTOR viewDirection = eyePosition - targetPosition;
+    XMVECTOR viewNormal = XMVector3Normalize(viewDirection);
+    XMVECTOR length = XMVector3Length(viewDirection);
+
+    XMVECTOR up = XMVectorSet(0, 0, 1, 0);
+    XMVECTOR crossNormal = XMVector3Normalize(XMVector3Cross(viewNormal, up));
+
+
+    XMVECTOR newPosition;
+    if (mode == 0) {
+      XMMATRIX rz = XMMatrixRotationZ(xrel * 0.02);
+      XMMATRIX mrn = XMMatrixRotationAxis(crossNormal, yrel * 0.02);
+      XMVECTOR newNormal = XMVector3TransformNormal(viewNormal, rz * mrn);
+      newPosition = targetPosition + newNormal * length;
+    } else {
+      float scale = (xrel + yrel) * 0.02;
+      newPosition = targetPosition + viewNormal * length * (1.0f - scale);
+    }
+
+    eye.world = XMMatrixTranslationFromVector(newPosition);
+
+    //printf("[%f %f %f]  ", XMVectorGetX(viewDirection), XMVectorGetY(viewDirection), XMVectorGetZ(viewDirection));
+    //printf("[%f %f %f]  ", XMVectorGetX(eyePosition), XMVectorGetY(eyePosition), XMVectorGetZ(eyePosition));
+    //printf("[%f %f %f]\n", XMVectorGetX(targetPosition), XMVectorGetY(targetPosition), XMVectorGetZ(targetPosition));
   }
 }

@@ -608,11 +608,13 @@ int main()
   SDL_GetCurrentTime(&start_time);
 
   int cameraIndex = collada_state.find_node_index_by_name("Camera001");
-  int cameraTargetIndex = collada_state.find_node_index_by_name("Camera001.Target");
+  int cameraTargetIndex = collada_state.find_node_index_by_name("EidelwindRigPelvis");
   int lightIndex = collada_state.find_node_index_by_name("Camera001");
-  int lightTargetIndex = collada_state.find_node_index_by_name("Torso");
+  int lightTargetIndex = collada_state.find_node_index_by_name("EidelwindRigPelvis");
   //int lightMaterialIndex = collada_state.find_material_index_by_name("LightMaterial");
   int lightMaterialIndex = -1;
+
+  collada_state.update(0);
 
   while (quit == false) {
     SDL_Event event;
@@ -637,6 +639,14 @@ int main()
           default:
             break;
           }
+        }
+      }
+      if (event.type == SDL_EVENT_MOUSE_MOTION) {
+        if (event.motion.state & SDL_BUTTON_LMASK) {
+          collada_state.mouse_motion(cameraIndex, cameraTargetIndex, event.motion.xrel, event.motion.yrel, 0);
+        }
+        if (event.motion.state & SDL_BUTTON_RMASK) {
+          collada_state.mouse_motion(cameraIndex, cameraTargetIndex, event.motion.xrel, event.motion.yrel, 1);
         }
       }
       if (event.type == SDL_EVENT_WINDOW_RESIZED) {
@@ -681,7 +691,7 @@ int main()
       XMMATRIX projection = currentProjection();
       XMMATRIX view = currentView(collada_state.node_state.node_instances[cameraIndex],
                                   collada_state.node_state.node_instances[cameraTargetIndex]);
-      XMMATRIX shadowProjection = XMMatrixOrthographicLH(300, 300, 0.1, 500);
+      XMMATRIX shadowProjection = XMMatrixOrthographicLH(150, 150, -1000, 1000);
       XMMATRIX shadowView = currentView(collada_state.node_state.node_instances[lightIndex],
                                         collada_state.node_state.node_instances[lightTargetIndex]);
 

@@ -14,6 +14,14 @@ camera const camera_camera001_camera = {
   .aspect_ratio = 0.0f,
 };
 
+camera const camera_camera002_camera = {
+  .xfov = 22.14429f,
+  .yfov = 0.0f,
+  .znear = 1.0f,
+  .zfar = 1000.0f,
+  .aspect_ratio = 0.0f,
+};
+
 light const light_environmentambientlight = {
   .type = light_type::AMBIENT,
   .color = {0.0f, 0.0f, 0.0f},
@@ -7753,7 +7761,7 @@ geometry const geometry_geom_torso = {
     .triangles_count = 2,
 
     .vertex_buffer_offset = 35712,
-    .vertex_buffer_size = 111888,
+    .vertex_buffer_size = 108792,
 
     .index_buffer_offset = 8928,
     .index_buffer_size = 48600,
@@ -8208,7 +8216,7 @@ controller const controller_geom_torso_skin1 = {
     .inverse_bind_matrices = inverse_bind_matrices_geom_torso_skin1,
 
     .vertex_buffer_offset = 0,
-    .vertex_buffer_size = 99456,
+    .vertex_buffer_size = 96704,
   }
 };
 
@@ -12451,7 +12459,7 @@ node const node_node_camera001_target = {
 transform const transforms_node_omni001[] = {
   {
     .type = transform_type::TRANSLATE,
-    .translate = {-31.4336f, -117.9301f, 123.8172f},
+    .translate = {-20.38351f, -44.62419f, 39.48177f},
   },
 };
 
@@ -12490,6 +12498,94 @@ node const node_node_omni001 = {
   .instance_lights_count = 1,
 
   .channels = node_channels_node_omni001,
+  .channels_count = 0,
+};
+
+transform const transforms_node_camera002[] = {
+  {
+    .type = transform_type::MATRIX,
+    .matrix = {0.9652951f, -0.2230207f, -0.1358941f, -11.32668f, -0.2611617f, -0.8243198f, -0.5022863f, -50.42014f, -1.62981e-09f, 0.5203449f, -0.8539562f, 18.52396f, 0.0f, 0.0f, 0.0f, 1.0f},
+  },
+};
+
+instance_geometry const instance_geometries_node_camera002[] = {
+};
+
+instance_controller const instance_controllers_node_camera002[] = {
+};
+
+instance_light const instance_lights_node_camera002[] = {
+};
+
+channel const * const node_channels_node_camera002[] = {
+};
+
+node const node_node_camera002 = {
+  .name = "Camera002",
+
+  .parent_index = -1,
+
+  .type = node_type::NODE,
+
+  .transforms = transforms_node_camera002,
+  .transforms_count = 1,
+
+  .instance_geometries = instance_geometries_node_camera002,
+  .instance_geometries_count = 0,
+
+  .instance_controllers = instance_controllers_node_camera002,
+  .instance_controllers_count = 0,
+
+  .instance_lights = instance_lights_node_camera002,
+  .instance_lights_count = 0,
+
+  .channels = node_channels_node_camera002,
+  .channels_count = 0,
+};
+
+transform const transforms_node_camera002_target[] = {
+  {
+    .type = transform_type::TRANSLATE,
+    .translate = {-10.85921f, -48.69228f, 21.46156f},
+  },
+  {
+    .type = transform_type::ROTATE,
+    .rotate = {0.990609f, -0.1316388f, -0.03694672f, -211.0752f},
+  },
+};
+
+instance_geometry const instance_geometries_node_camera002_target[] = {
+};
+
+instance_controller const instance_controllers_node_camera002_target[] = {
+};
+
+instance_light const instance_lights_node_camera002_target[] = {
+};
+
+channel const * const node_channels_node_camera002_target[] = {
+};
+
+node const node_node_camera002_target = {
+  .name = "Camera002.Target",
+
+  .parent_index = -1,
+
+  .type = node_type::NODE,
+
+  .transforms = transforms_node_camera002_target,
+  .transforms_count = 2,
+
+  .instance_geometries = instance_geometries_node_camera002_target,
+  .instance_geometries_count = 0,
+
+  .instance_controllers = instance_controllers_node_camera002_target,
+  .instance_controllers_count = 0,
+
+  .instance_lights = instance_lights_node_camera002_target,
+  .instance_lights_count = 0,
+
+  .channels = node_channels_node_camera002_target,
   .channels_count = 0,
 };
 
@@ -12566,6 +12662,8 @@ node const * const nodes[] = {
   &node_node_camera001, // 69
   &node_node_camera001_target, // 70
   &node_node_omni001, // 71
+  &node_node_camera002, // 72
+  &node_node_camera002_target, // 73
 };
 
 inputs const inputs_list[] = {

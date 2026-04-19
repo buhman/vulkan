@@ -22,5 +22,7 @@ namespace collada::scene {
     void update(float t);
 
     void unload_scene();
+
+    void mouse_motion(int eyeIndex, int targetIndex, float xrel, float yrel, int mode);
   };
 }
