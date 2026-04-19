@@ -379,7 +379,8 @@ void createImageFromFilenameTGA(VkDevice device,
                                 VkImageView * outImageView)
 {
   uint32_t imageSize;
-  void const * imageStart = file::open(filename, &imageSize);
+  //void const * imageStart = file::open(filename, &imageSize);
+  void * imageStart = file::openRelative(filename, &imageSize);
   void * imageData;
   uint32_t imageDataSize;
   tga::header const * tga = tga::validate(imageStart, imageSize, &imageData, &imageDataSize);
@@ -415,5 +416,5 @@ void createImageFromFilenameTGA(VkDevice device,
                   levelCount,
                   &levelOffset);
 
-  // imageData is not malloc'ed, it is a pointer to file:: data, which is also not malloc'ed
+  free(imageStart);
 }

@@ -19,6 +19,7 @@ namespace tga {
     size_t imageOffset = (sizeof (header)) + tga->idLength;
     *outData = (void *)(((size_t)data) + imageOffset);
     *outSize = tga->image.width * tga->image.width * bytesPerPixel;
+    assert(*outSize <= (size - imageOffset));
 
     return tga;
   }

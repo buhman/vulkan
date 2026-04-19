@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <assert.h>
+#include <sys/stat.h>
 
 #include "volk/volk.h"
 #include "vulkan/vk_enum_string_helper.h"
@@ -79,7 +80,7 @@ inline static void vulkan_vertex_input_states(collada::types::descriptor const *
                                               VkVertexInputBindingDescription * vertexBindingDescriptions)
 {
   for (int i = 0; i < descriptor->inputs_list_count; i++) {
-    collada::types::inputs const & inputs = descriptor->inputs_list[i];
+    collada::types::inputs const & inputs = descriptor->inputs_list[1];
     VkVertexInputAttributeDescription * vertexAttributeDescriptions = NewM<VkVertexInputAttributeDescription>(inputs.elements_count + collada::inputs::skin_inputs.elements_count);
     uint32_t stride = vulkan_load_layout(inputs,
                                          0, // binding
@@ -651,6 +652,66 @@ namespace collada::scene {
   // material textures
   //////////////////////////////////////////////////////////////////////
 
+  void vulkan::load_image_inner(VkCommandBuffer commandBuffer, VkFence fence, int i, char const * filename)
+  {
+    size_t length = strlen(filename);
+    if (dds::isDDSExtension(filename, length)) {
+      createImageFromFilenameDDS(device,
+                                 queue,
+                                 commandBuffer,
+                                 fence,
+                                 physicalDeviceProperties.limits.nonCoherentAtomSize,
+                                 physicalDeviceMemoryProperties,
+                                 filename,
+                                 &images[i].image,
+                                 &images[i].memory,
+                                 &images[i].imageView);
+    } else if (tga::isTGAExtension(filename, length)) {
+      createImageFromFilenameTGA(device,
+                                 queue,
+                                 commandBuffer,
+                                 fence,
+                                 physicalDeviceProperties.limits.nonCoherentAtomSize,
+                                 physicalDeviceMemoryProperties,
+                                 filename,
+                                 &images[i].image,
+                                 &images[i].memory,
+                                 &images[i].imageView);
+    } else {
+      fprintf(stderr, "filename: %s\n", filename);
+      ASSERT(false, "invalid image filename extension");
+    }
+  }
+
+  void vulkan::load_image(int i, char const * filename)
+  {
+    VkCommandBuffer commandBuffer{};
+    VkCommandBufferAllocateInfo commandBufferAllocateInfo{
+      .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+      .commandPool = commandPool,
+      .commandBufferCount = 1
+    };
+    VK_CHECK(vkAllocateCommandBuffers(device, &commandBufferAllocateInfo, &commandBuffer));
+
+    VkFenceCreateInfo fenceCreateInfo{
+      .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO
+    };
+    VkFence fence{};
+    VK_CHECK(vkCreateFence(device, &fenceCreateInfo, nullptr, &fence));
+
+    // load
+
+    load_image_inner(commandBuffer, fence, i, filename);
+
+    // cleanup
+
+    vkDestroyFence(device, fence, nullptr);
+    vkFreeCommandBuffers(device,
+                         commandPool,
+                         1,
+                         &commandBuffer);
+  }
+
   void vulkan::load_images(collada::types::descriptor const * const descriptor)
   {
     VkCommandBuffer commandBuffer{};
@@ -672,33 +733,7 @@ namespace collada::scene {
 
     for (int i = 0; i < descriptor->images_count; i++) {
       char const * filename = descriptor->images[i]->uri;
-      size_t length = strlen(filename);
-      if (dds::isDDSExtension(filename, length)) {
-        createImageFromFilenameDDS(device,
-                                   queue,
-                                   commandBuffer,
-                                   fence,
-                                   physicalDeviceProperties.limits.nonCoherentAtomSize,
-                                   physicalDeviceMemoryProperties,
-                                   filename,
-                                   &images[i].image,
-                                   &images[i].memory,
-                                   &images[i].imageView);
-      } else if (tga::isTGAExtension(filename, length)) {
-        createImageFromFilenameTGA(device,
-                                   queue,
-                                   commandBuffer,
-                                   fence,
-                                   physicalDeviceProperties.limits.nonCoherentAtomSize,
-                                   physicalDeviceMemoryProperties,
-                                   filename,
-                                   &images[i].image,
-                                   &images[i].memory,
-                                   &images[i].imageView);
-      } else {
-        fprintf(stderr, "filename: %s\n", filename);
-        ASSERT(false, "invalid image filename extension");
-      }
+      load_image_inner(commandBuffer, fence, i, filename);
     }
 
     // cleanup
@@ -1179,12 +1214,17 @@ namespace collada::scene {
                             0, nullptr);
   }
 
+  void vulkan::destroy_image(int i)
+  {
+    vkDestroyImage(device, images[i].image, nullptr);
+    vkDestroyImageView(device, images[i].imageView, nullptr);
+    vkFreeMemory(device, images[i].memory, nullptr);
+  }
+
   void vulkan::destroy_all(collada::types::descriptor const * const descriptor)
   {
     for (int i = 0; i < descriptor->images_count; i++) {
-      vkDestroyImage(device, images[i].image, nullptr);
-      vkDestroyImageView(device, images[i].imageView, nullptr);
-      vkFreeMemory(device, images[i].memory, nullptr);
+      destroy_image(i);
     }
     free(images);
 

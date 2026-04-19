@@ -21,6 +21,7 @@ namespace collada::scene {
     vulkan.load_images(descriptor);
     vulkan.write_descriptor_sets(descriptor);
     vulkan.create_pipelines(descriptor);
+    reload.load_images(descriptor);
 
     node_state.allocate_node_instances(descriptor->nodes, descriptor->nodes_count);
   }
@@ -71,11 +72,14 @@ namespace collada::scene {
       animate::animate_node(node_state.node_instances[i], t);
       node_state.update_node_world_transform(node_state.node_instances[i]);
     }
+
+    reload.stat_images(descriptor, vulkan);
   }
 
   void state::unload_scene()
   {
     node_state.deallocate_node_instances(descriptor->nodes_count);
+    reload.destroy_images(descriptor);
   }
 
   void state::mouse_motion(int eyeIndex, int targetIndex, float xrel, float yrel, int mode)

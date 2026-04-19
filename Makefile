@@ -45,6 +45,7 @@ OBJS = \
 	src/tga/tga.o \
 	src/vulkan_helper.o \
 	src/collada/scene/vulkan.o \
+	src/collada/scene/reload.o \
 	src/collada/scene.o \
 	src/collada/node_state.o \
 	src/collada/animate.o

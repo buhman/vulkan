@@ -148,6 +148,7 @@ namespace collada::scene {
                        VkImageView shadowDepthImageView);
 
     void change_frame(VkCommandBuffer commandBuffer, uint32_t frameIndex);
+    void destroy_image(int i);
     void destroy_all(collada::types::descriptor const * const descriptor);
 
     //////////////////////////////////////////////////////////////////////
@@ -169,6 +170,8 @@ namespace collada::scene {
     void create_descriptor_sets(collada::types::descriptor const * const descriptor);
     void write_descriptor_sets(collada::types::descriptor const * const descriptor);
     void load_material_constants(collada::types::descriptor const * const descriptor);
+    void load_image_inner(VkCommandBuffer commandBuffer, VkFence fence, int i, char const * filename);
+    void load_image(int i, char const * filename);
     void load_images(collada::types::descriptor const * const descriptor);
 
     //////////////////////////////////////////////////////////////////////

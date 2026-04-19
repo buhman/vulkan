@@ -5,6 +5,7 @@
 #include "collada/node_state.h"
 
 #include "collada/scene/vulkan.h"
+#include "collada/scene/reload.h"
 
 namespace collada::scene {
   struct state {
@@ -12,6 +13,7 @@ namespace collada::scene {
     node_state::state node_state;
 
     collada::scene::vulkan vulkan;
+    collada::scene::reload reload;
 
     void load_scene(types::descriptor const * const descriptor);
     void draw();
