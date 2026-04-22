@@ -10,4 +10,18 @@ struct DDS_FILE {
 
 namespace dds {
   DDS_FILE const * validate(void const * data, uint32_t size, uint32_t ** out_offsets, void ** out_data, uint32_t * out_size);
+
+  static inline bool isDDSExtension(const char * filename, size_t length)
+  {
+    char a = filename[length - 4];
+    char b = filename[length - 3];
+    char c = filename[length - 2];
+    char d = filename[length - 1];
+
+    return
+      (a == '.') &&
+      (b == 'd' || b == 'D') &&
+      (c == 'd' || c == 'D') &&
+      (d == 's' || d == 'S');
+  }
 }

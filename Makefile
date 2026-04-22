@@ -25,7 +25,7 @@ CFLAGS += -I./data
 CFLAGS += -I../SDL3-dist/include
 CFLAGS += -fpic
 
-#FLAGS += -fstack-protector -fstack-protector-all -fno-omit-frame-pointer -fsanitize=address
+FLAGS += -fstack-protector -fstack-protector-all -fno-omit-frame-pointer -fsanitize=address
 
 LDFLAGS += -lm
 ifeq ($(UNAME),Linux)
@@ -42,6 +42,7 @@ OBJS = \
 	src/file.o \
 	src/pack.o \
 	src/dds/validate.o \
+	src/tga/tga.o \
 	src/vulkan_helper.o \
 	src/collada/scene/vulkan.o \
 	src/collada/scene.o \

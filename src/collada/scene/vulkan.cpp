@@ -13,6 +13,7 @@
 #include "vulkan_helper.h"
 #include "dds/validate.h"
 #include "dds/vulkan.h"
+#include "tga/tga.h"
 
 #include "check.h"
 #include "new.h"
@@ -670,16 +671,34 @@ namespace collada::scene {
     images = NewM<Image>(descriptor->images_count);
 
     for (int i = 0; i < descriptor->images_count; i++) {
-      createImageFromFilenameDDS(device,
-                                 queue,
-                                 commandBuffer,
-                                 fence,
-                                 physicalDeviceProperties.limits.nonCoherentAtomSize,
-                                 physicalDeviceMemoryProperties,
-                                 descriptor->images[i]->uri,
-                                 &images[i].image,
-                                 &images[i].memory,
-                                 &images[i].imageView);
+      char const * filename = descriptor->images[i]->uri;
+      size_t length = strlen(filename);
+      if (dds::isDDSExtension(filename, length)) {
+        createImageFromFilenameDDS(device,
+                                   queue,
+                                   commandBuffer,
+                                   fence,
+                                   physicalDeviceProperties.limits.nonCoherentAtomSize,
+                                   physicalDeviceMemoryProperties,
+                                   filename,
+                                   &images[i].image,
+                                   &images[i].memory,
+                                   &images[i].imageView);
+      } else if (tga::isTGAExtension(filename, length)) {
+        createImageFromFilenameTGA(device,
+                                   queue,
+                                   commandBuffer,
+                                   fence,
+                                   physicalDeviceProperties.limits.nonCoherentAtomSize,
+                                   physicalDeviceMemoryProperties,
+                                   filename,
+                                   &images[i].image,
+                                   &images[i].memory,
+                                   &images[i].imageView);
+      } else {
+        fprintf(stderr, "filename: %s\n", filename);
+        ASSERT(false, "invalid image filename extension");
+      }
     }
 
     // cleanup

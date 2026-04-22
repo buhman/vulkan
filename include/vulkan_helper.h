@@ -62,3 +62,14 @@ void createImageFromFilenameDDS(VkDevice device,
                                 VkImage * outImage,
                                 VkDeviceMemory * outMemory,
                                 VkImageView * outImageView);
+
+void createImageFromFilenameTGA(VkDevice device,
+                                VkQueue queue,
+                                VkCommandBuffer commandBuffer,
+                                VkFence fence,
+                                VkDeviceSize nonCoherentAtomSize,
+                                VkPhysicalDeviceMemoryProperties const & physicalDeviceMemoryProperties,
+                                char const * const filename,
+                                VkImage * outImage,
+                                VkDeviceMemory * outMemory,
+                                VkImageView * outImageView);

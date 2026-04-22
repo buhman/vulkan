@@ -13,6 +13,7 @@
 
 #include "dds/validate.h"
 #include "dds/vulkan.h"
+#include "tga/tga.h"
 
 #include "vulkan_helper.h"
 
@@ -115,85 +116,25 @@ VkDeviceSize allocateFromMemoryRequirements2(VkDevice device,
   return memoryAllocateInfo.allocationSize;
 }
 
-void createImageFromFilenameDDS(VkDevice device,
-                                VkQueue queue,
-                                VkCommandBuffer commandBuffer,
-                                VkFence fence,
-                                VkDeviceSize nonCoherentAtomSize,
-                                VkPhysicalDeviceMemoryProperties const & physicalDeviceMemoryProperties,
-                                char const * const filename,
-                                VkImage * outImage,
-                                VkDeviceMemory * outMemory,
-                                VkImageView * outImageView)
+// ddsFile->header.dwWidth
+// ddsFile->header.dwHeight
+// ddsFile->header.dwMipMapCount
+// uint32_t * mipOffsets;
+
+void textureTransfer(VkDevice device,
+                     VkQueue queue,
+                     VkCommandBuffer commandBuffer,
+                     VkFence fence,
+                     VkDeviceSize nonCoherentAtomSize,
+                     VkPhysicalDeviceMemoryProperties const & physicalDeviceMemoryProperties,
+                     uint32_t imageDataSize,
+                     void * imageData,
+                     VkImage image,
+                     uint32_t width,
+                     uint32_t height,
+                     uint32_t levelCount,
+                     uint32_t * levelOffsets)
 {
-  uint32_t imageSize;
-  void const * imageStart = file::open(filename, &imageSize);
-  void * imageData;
-  uint32_t * mipOffsets;
-  uint32_t imageDataSize;
-  DDS_FILE const * ddsFile = dds::validate(imageStart, imageSize, &mipOffsets, &imageData, &imageDataSize);
-
-  VkFormat format = dds::dxgi_to_vulkan(ddsFile->header10.dxgiFormat);
-
-  // image
-
-  VkImage image;
-  VkImageCreateInfo imageCreateInfo{
-    .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
-    .imageType = VK_IMAGE_TYPE_2D,
-    .format = format,
-    .extent = {
-      .width = ddsFile->header.dwWidth,
-      .height = ddsFile->header.dwHeight,
-      .depth = 1
-    },
-    .mipLevels = ddsFile->header.dwMipMapCount,
-    .arrayLayers = 1,
-    .samples = VK_SAMPLE_COUNT_1_BIT,
-    .tiling = VK_IMAGE_TILING_OPTIMAL,
-    .usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-    .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED
-  };
-  VK_CHECK(vkCreateImage(device, &imageCreateInfo, nullptr, &image));
-  *outImage = image;
-
-  // image view
-
-  VkDeviceMemory imageMemory;
-  VkMemoryRequirements imageMemoryRequirements;
-  vkGetImageMemoryRequirements(device, image, &imageMemoryRequirements);
-  VkMemoryPropertyFlags imageMemoryPropertyFlags{ VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT };
-  VkMemoryAllocateFlags imageMemoryAllocateFlags{ };
-  VkDeviceSize stride;
-  allocateFromMemoryRequirements(device,
-                                 nonCoherentAtomSize,
-                                 physicalDeviceMemoryProperties,
-                                 imageMemoryRequirements,
-                                 imageMemoryPropertyFlags,
-                                 imageMemoryAllocateFlags,
-                                 1,
-                                 &imageMemory,
-                                 &stride);
-  *outMemory = imageMemory;
-  VK_CHECK(vkBindImageMemory(device, image, imageMemory, 0));
-
-  VkImageView imageView;
-  VkImageViewCreateInfo textureViewCreateInfo{
-    .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-    .image = image,
-    .viewType = VK_IMAGE_VIEW_TYPE_2D,
-    .format = format,
-    .subresourceRange{
-      .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-      .levelCount = ddsFile->header.dwMipMapCount,
-      .layerCount = 1
-    }
-  };
-  VK_CHECK(vkCreateImageView(device, &textureViewCreateInfo, nullptr, &imageView));
-  *outImageView = imageView;
-
-  // texture transfer: source buffer
-
   VkBuffer sourceBuffer{};
   VkBufferCreateInfo sourceBufferCreateInfo{
     .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
@@ -243,7 +184,7 @@ void createImageFromFilenameDDS(VkDevice device,
     .image = image,
     .subresourceRange = {
       .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-      .levelCount = ddsFile->header.dwMipMapCount,
+      .levelCount = levelCount,
       .layerCount = 1
     }
   };
@@ -253,24 +194,23 @@ void createImageFromFilenameDDS(VkDevice device,
     .pImageMemoryBarriers = &imageBarrier
   };
   vkCmdPipelineBarrier2(commandBuffer, &imageDependencyInfo);
-  VkBufferImageCopy * copyRegions = NewM<VkBufferImageCopy>(ddsFile->header.dwMipMapCount);
-  for (uint32_t level = 0; level < ddsFile->header.dwMipMapCount; level++) {
+  VkBufferImageCopy * copyRegions = NewM<VkBufferImageCopy>(levelCount);
+  for (uint32_t level = 0; level < levelCount; level++) {
     copyRegions[level] = {
-      .bufferOffset = mipOffsets[level],
+      .bufferOffset = levelOffsets[level],
       .imageSubresource{
         .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
         .mipLevel = level,
         .layerCount = 1
       },
       .imageExtent{
-        .width = max(1u, ddsFile->header.dwWidth >> level),
-        .height = max(1u, ddsFile->header.dwHeight >> level),
+        .width = max(1u, width >> level),
+        .height = max(1u, height >> level),
         .depth = 1
       },
     };
   }
-  vkCmdCopyBufferToImage(commandBuffer, sourceBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, ddsFile->header.dwMipMapCount, copyRegions);
-  free(mipOffsets);
+  vkCmdCopyBufferToImage(commandBuffer, sourceBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, levelCount, copyRegions);
   free(copyRegions);
 
   VkImageMemoryBarrier2 readBarrier{
@@ -282,7 +222,7 @@ void createImageFromFilenameDDS(VkDevice device,
     .oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
     .newLayout = VK_IMAGE_LAYOUT_READ_ONLY_OPTIMAL,
     .image = image,
-    .subresourceRange = { .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, .levelCount = ddsFile->header.dwMipMapCount, .layerCount = 1 }
+    .subresourceRange = { .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, .levelCount = levelCount, .layerCount = 1 }
   };
   VkDependencyInfo readDependencyInfo{
     .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
@@ -304,4 +244,176 @@ void createImageFromFilenameDDS(VkDevice device,
 
   vkDestroyBuffer(device, sourceBuffer, nullptr);
   vkFreeMemory(device, sourceBufferMemory, nullptr);
+}
+
+void createImage(VkDevice device,
+                 VkDeviceSize nonCoherentAtomSize,
+                 VkPhysicalDeviceMemoryProperties const & physicalDeviceMemoryProperties,
+                 VkFormat format,
+                 uint32_t width,
+                 uint32_t height,
+                 uint32_t levelCount,
+                 VkImage * outImage,
+                 VkDeviceMemory * outMemory,
+                 VkImageView * outImageView)
+{
+  // image
+
+  VkImage image;
+  VkImageCreateInfo imageCreateInfo{
+    .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+    .imageType = VK_IMAGE_TYPE_2D,
+    .format = format,
+    .extent = {
+      .width = width,
+      .height = height,
+      .depth = 1
+    },
+    .mipLevels = levelCount,
+    .arrayLayers = 1,
+    .samples = VK_SAMPLE_COUNT_1_BIT,
+    .tiling = VK_IMAGE_TILING_OPTIMAL,
+    .usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+    .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED
+  };
+  VK_CHECK(vkCreateImage(device, &imageCreateInfo, nullptr, &image));
+  *outImage = image;
+
+  // image view
+
+  VkDeviceMemory imageMemory;
+  VkMemoryRequirements imageMemoryRequirements;
+  vkGetImageMemoryRequirements(device, image, &imageMemoryRequirements);
+  VkMemoryPropertyFlags imageMemoryPropertyFlags{ VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT };
+  VkMemoryAllocateFlags imageMemoryAllocateFlags{ };
+  VkDeviceSize stride;
+  allocateFromMemoryRequirements(device,
+                                 nonCoherentAtomSize,
+                                 physicalDeviceMemoryProperties,
+                                 imageMemoryRequirements,
+                                 imageMemoryPropertyFlags,
+                                 imageMemoryAllocateFlags,
+                                 1,
+                                 &imageMemory,
+                                 &stride);
+  *outMemory = imageMemory;
+  VK_CHECK(vkBindImageMemory(device, image, imageMemory, 0));
+
+  VkImageView imageView;
+  VkImageViewCreateInfo textureViewCreateInfo{
+    .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+    .image = image,
+    .viewType = VK_IMAGE_VIEW_TYPE_2D,
+    .format = format,
+    .subresourceRange{
+      .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+      .levelCount = levelCount,
+      .layerCount = 1
+    }
+  };
+  VK_CHECK(vkCreateImageView(device, &textureViewCreateInfo, nullptr, &imageView));
+  *outImageView = imageView;
+}
+
+void createImageFromFilenameDDS(VkDevice device,
+                                VkQueue queue,
+                                VkCommandBuffer commandBuffer,
+                                VkFence fence,
+                                VkDeviceSize nonCoherentAtomSize,
+                                VkPhysicalDeviceMemoryProperties const & physicalDeviceMemoryProperties,
+                                char const * const filename,
+                                VkImage * outImage,
+                                VkDeviceMemory * outMemory,
+                                VkImageView * outImageView)
+{
+  uint32_t imageSize;
+  void const * imageStart = file::open(filename, &imageSize);
+  void * imageData;
+  uint32_t * levelOffsets;
+  uint32_t imageDataSize;
+  DDS_FILE const * ddsFile = dds::validate(imageStart, imageSize, &levelOffsets, &imageData, &imageDataSize);
+
+  VkFormat format = dds::dxgi_to_vulkan(ddsFile->header10.dxgiFormat);
+  uint32_t width = ddsFile->header.dwWidth;
+  uint32_t height = ddsFile->header.dwHeight;
+  uint32_t levelCount = ddsFile->header.dwMipMapCount;
+
+  createImage(device,
+              nonCoherentAtomSize,
+              physicalDeviceMemoryProperties,
+              format,
+              width,
+              height,
+              levelCount,
+              outImage,
+              outMemory,
+              outImageView);
+
+  textureTransfer(device,
+                  queue,
+                  commandBuffer,
+                  fence,
+                  nonCoherentAtomSize,
+                  physicalDeviceMemoryProperties,
+                  imageDataSize,
+                  imageData,
+                  *outImage,
+                  width,
+                  height,
+                  levelCount,
+                  levelOffsets);
+
+  free(levelOffsets);
+  // imageData is not malloc'ed, it is a pointer to file:: data, which is also not malloc'ed
+}
+
+void createImageFromFilenameTGA(VkDevice device,
+                                VkQueue queue,
+                                VkCommandBuffer commandBuffer,
+                                VkFence fence,
+                                VkDeviceSize nonCoherentAtomSize,
+                                VkPhysicalDeviceMemoryProperties const & physicalDeviceMemoryProperties,
+                                char const * const filename,
+                                VkImage * outImage,
+                                VkDeviceMemory * outMemory,
+                                VkImageView * outImageView)
+{
+  uint32_t imageSize;
+  void const * imageStart = file::open(filename, &imageSize);
+  void * imageData;
+  uint32_t imageDataSize;
+  tga::header const * tga = tga::validate(imageStart, imageSize, &imageData, &imageDataSize);
+
+  VkFormat format = VK_FORMAT_B8G8R8A8_UNORM;
+  uint32_t width = tga->image.width;
+  uint32_t height = tga->image.height;
+  uint32_t levelCount = 1;
+  uint32_t levelOffset = 0;
+
+  createImage(device,
+              nonCoherentAtomSize,
+              physicalDeviceMemoryProperties,
+              format,
+              width,
+              height,
+              levelCount,
+              outImage,
+              outMemory,
+              outImageView);
+
+  textureTransfer(device,
+                  queue,
+                  commandBuffer,
+                  fence,
+                  nonCoherentAtomSize,
+                  physicalDeviceMemoryProperties,
+                  imageDataSize,
+                  imageData,
+                  *outImage,
+                  width,
+                  height,
+                  levelCount,
+                  &levelOffset);
+
+  // imageData is not malloc'ed, it is a pointer to file:: data, which is also not malloc'ed
 }
