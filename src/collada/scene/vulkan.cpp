@@ -4,7 +4,12 @@
 #include <assert.h>
 #include <sys/stat.h>
 
+#ifdef __APPLE__
+#include "vulkan/vulkan.h"
+#else
 #include "volk/volk.h"
+#endif
+
 #include "vulkan/vk_enum_string_helper.h"
 
 #include "collada/inputs.h"
@@ -370,13 +375,13 @@ namespace collada::scene {
           .binding = 0,
           .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
           .descriptorCount = 1,
-          .stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_GEOMETRY_BIT
+          .stageFlags = VK_SHADER_STAGE_VERTEX_BIT// | VK_SHADER_STAGE_GEOMETRY_BIT
         },
         {
           .binding = 1,
           .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
           .descriptorCount = 1,
-          .stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_GEOMETRY_BIT
+          .stageFlags = VK_SHADER_STAGE_VERTEX_BIT// | VK_SHADER_STAGE_GEOMETRY_BIT
         },
         {
           .binding = 2,
@@ -770,7 +775,7 @@ namespace collada::scene {
   {
     VkPushConstantRange pushConstantRanges[1]{
       {
-        .stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_GEOMETRY_BIT,
+        .stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,// | VK_SHADER_STAGE_GEOMETRY_BIT,
         .offset = 0,
         .size = (sizeof (PushConstant))
       }
@@ -805,6 +810,7 @@ namespace collada::scene {
       }
     };
 
+    /*
     VkPipelineShaderStageCreateInfo geometryShaderStages[3]{
       {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
@@ -825,6 +831,7 @@ namespace collada::scene {
         .pName = "PSGeometryMain"
       }
     };
+    */
 
     VkPipelineShaderStageCreateInfo shadowShaderStages[2]{
       {
@@ -972,6 +979,7 @@ namespace collada::scene {
       };
 
       // geometry
+      /*
       pipelineCreateInfos[i * shaderVariantCount + 2] = {
         .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
         .pNext = &renderingCreateInfo,
@@ -987,6 +995,7 @@ namespace collada::scene {
         .pDynamicState = &dynamicState,
         .layout = pipelineLayout
       };
+      */
     };
 
     pipelines = NewM<VkPipeline>(pipelineCount);

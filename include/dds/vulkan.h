@@ -2,8 +2,13 @@
 
 #include <assert.h>
 
-#include "dds/dds.h"
+#ifdef __APPLE__
+#include "vulkan/vulkan.h"
+#else
 #include "volk/volk.h"
+#endif
+
+#include "dds/dds.h"
 
 namespace dds {
   inline constexpr VkFormat dxgi_to_vulkan(DXGI_FORMAT dxgiFormat)

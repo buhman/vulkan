@@ -1,6 +1,10 @@
 #pragma once
 
+#ifdef __APPLE__
+#include "vulkan/vulkan.h"
+#else
 #include "volk/volk.h"
+#endif
 
 #include "collada/types.h"
 #include "collada/instance_types.h"
@@ -49,7 +53,7 @@ namespace collada::scene {
     static constexpr uint32_t uniformBufferDescriptorCount = maxFrames * perFrameDescriptorCount + constantDescriptorCount;
     // +3: linear sampler, shadow sampled image, scene sampled image (array)
     static constexpr uint32_t bindingCount = uniformBufferDescriptorCount + 3;
-    static constexpr int shaderVariantCount = 3;
+    static constexpr int shaderVariantCount = 2;
     static constexpr uint32_t maxJointsCount = 128;
 
     // externally initialized, opaque handle

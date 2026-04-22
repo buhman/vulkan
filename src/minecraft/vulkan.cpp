@@ -1,7 +1,12 @@
 #include <stdio.h>
 #include <string.h>
 
+#ifdef __APPLE__
+#include "vulkan/vulkan.h"
+#else
 #include "volk/volk.h"
+#endif
+
 #include "vulkan/vk_enum_string_helper.h"
 
 #include "file.h"

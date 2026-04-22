@@ -6,6 +6,12 @@
 #include "new.h"
 #include "collada/scene/reload.h"
 
+#ifdef __APPLE__
+#define MTIME(s) ((s).st_mtimespec)
+#else
+#define MTIME(s) ((s).st_mtim)
+#endif
+
 namespace collada::scene {
   void reload::load_images(types::descriptor const * const descriptor)
   {
@@ -37,7 +43,7 @@ namespace collada::scene {
         if (ret != 0)
           break;
 
-        if (statbuf.st_mtim.tv_sec != imageStats[i].mtime.tv_sec || statbuf.st_mtim.tv_nsec != imageStats[i].mtime.tv_nsec) {
+        if (MTIME(statbuf).tv_sec != imageStats[i].mtime.tv_sec || MTIME(statbuf).tv_nsec != imageStats[i].mtime.tv_nsec) {
           if (statbuf.st_size != size) {
             size = statbuf.st_size;
             usleep(500);
@@ -48,8 +54,8 @@ namespace collada::scene {
           reload = true;
           vulkan.destroy_image(i);
           vulkan.load_image(i, imageStats[i].filenameTGA);
-          imageStats[i].mtime.tv_sec = statbuf.st_mtim.tv_sec;
-          imageStats[i].mtime.tv_nsec = statbuf.st_mtim.tv_nsec;
+          imageStats[i].mtime.tv_sec = MTIME(statbuf).tv_sec;
+          imageStats[i].mtime.tv_nsec = MTIME(statbuf).tv_nsec;
         }
         break;
       }

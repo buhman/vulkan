@@ -1,7 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifdef __APPLE__
+#include "vulkan/vulkan.h"
+#else
 #include "volk/volk.h"
+#endif
+
 #include "vulkan/vk_enum_string_helper.h"
 #include "SDL3/SDL.h"
 #include "SDL3/SDL_vulkan.h"
@@ -16,18 +21,11 @@
 #include "minmax.h"
 #include "view.h"
 
-#include "collada/scene.h"
-#include "collada/scene/vulkan.h"
-
-#include "minecraft/vulkan.h"
 #include "font/outline.h"
 #include "renpy/vulkan.h"
 #include "renpy/interpreter.h"
 #include "renpy/interact.h"
 #include "renpy/script.h"
-
-#include "scenes/shadow_test/shadow_test.h"
-#include "scenes/eidelwind/eidelwind.h"
 
 #include "audio.h"
 
@@ -89,6 +87,7 @@ XMMATRIX currentProjection()
   return projection * XMMatrixScaling(-1, -1, 1);
 }
 
+/*
 XMMATRIX currentView(collada::instance_types::node const & camera_node,
                      collada::instance_types::node const & camera_target_node)
 {
@@ -99,6 +98,7 @@ XMMATRIX currentView(collada::instance_types::node const & camera_node,
   XMMATRIX view = XMMatrixLookAtLH(eye, at, up);
   return view;
 }
+*/
 
 float theta = 0;
 
@@ -351,8 +351,8 @@ void gamepad_update(view & viewState)
     float delta_yaw = rightx * -0.035;
     float delta_pitch = righty * -0.035;
 
-    viewState.applyTransform(delta_forward, delta_strafe, delta_elevation,
-                             delta_yaw, delta_pitch);
+    //viewState.applyTransform(delta_forward, delta_strafe, delta_elevation,
+    //delta_yaw, delta_pitch);
   }
 }
 
@@ -363,7 +363,10 @@ int main()
   SDL_InitFlags init_flags = SDL_INIT_VIDEO | SDL_INIT_GAMEPAD | SDL_INIT_AUDIO;
   SDL_CHECK(SDL_Init(init_flags));
   SDL_CHECK(SDL_Vulkan_LoadLibrary(NULL));
+
+  #ifndef __APPLE__
   volkInitialize();
+  #endif
 
   VkApplicationInfo appInfo{
     .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
@@ -382,7 +385,9 @@ int main()
   };
   VK_CHECK(vkCreateInstance(&instanceCreateInfo, nullptr, &instance));
 
+  #ifndef __APPLE__
   volkLoadInstance(instance);
+  #endif
 
   //////////////////////////////////////////////////////////////////////
   // physical device and queue family index
@@ -484,7 +489,7 @@ int main()
     .dynamicRendering = true,
   };
   VkPhysicalDeviceFeatures enabledFeatures{
-    .geometryShader = true,
+    //.geometryShader = true,
     .samplerAnisotropy = true,
   };
   constexpr uint32_t enabledExtensionCount = 1;
@@ -1050,7 +1055,7 @@ int main()
       .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
       .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
       //.clearValue{ .color{ 0.0f, 0.0f, 0.2f, 1.0f } }
-      .clearValue{ .color{ 0.0f, 0.0f, 0.0f, 0.0f } }
+      .clearValue{ .color{ { 0.0f, 0.0f, 0.0f, 0.0f}  } }
     };
     VkRenderingAttachmentInfo depthRenderingAttachmentInfo{
       .sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,

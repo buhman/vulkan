@@ -1,7 +1,12 @@
 #pragma once
 
-#include "directxmath/directxmath.h"
+#ifdef __APPLE__
+#include "vulkan/vulkan.h"
+#else
 #include "volk/volk.h"
+#endif
+
+#include "directxmath/directxmath.h"
 
 #include "vulkan_helper.h"
 #include "minecraft/vulkan/per_world.h"

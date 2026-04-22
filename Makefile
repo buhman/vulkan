@@ -7,15 +7,19 @@ OBJARCH = elf64-x86-64
 
 UNAME := $(shell uname -s)
 
-OPT += -O3 	-march=x86-64-v3
+OPT += -Os
+OPT += -march=core-avx2
 
 DEBUG = -g
 
-CSTD = -std=gnu23
-CXXSTD = -std=gnu++23
+CSTD = -std=gnu17
+CXXSTD = -std=gnu++20
 CFLAGS += -Wall -Werror
 CFLAGS += -Wfatal-errors
-CFLAGS += -Wno-error=unused-variable -Wno-error=unused-but-set-variable
+CFLAGS += -Wno-error=unused-variable
+#CFLAGS += -Wno-error=unused-but-set-variable
+CFLAGS += -Wno-format-security
+CFLAGS += -Wno-format
 CFLAGS += -Wno-error=unused-function
 CFLAGS += -Wno-error=array-bounds
 CFLAGS += -Wno-unknown-pragmas
@@ -34,7 +38,7 @@ CFLAGS += -fdata-sections
 #FLAGS += -fstack-protector -fstack-protector-all -fno-omit-frame-pointer -fsanitize=address
 
 LDFLAGS += -lm
-LDFLAGS += -Wl,--gc-sections
+#LDFLAGS += -Wl,--gc-sections
 #-Wl,--print-gc-sections
 ifeq ($(UNAME),Linux)
 LDFLAGS += -Wl,-z noexecstack
@@ -42,6 +46,9 @@ endif
 ifeq ($(UNAME),Darwin)
 LDFLAGS += -framework Foundation -framework Cocoa -framework IOKit -framework AVFoundation -framework CoreVideo -framework CoreAudio -framework CoreMedia -framework CoreHaptics -framework AudioToolbox -framework GameController -framework ForceFeedback -framework Carbon -framework Metal -framework QuartzCore -framework UniformTypeIdentifiers
 LDFLAGS += -lstdc++
+#LDFLAGS += ../MoltenVK/MoltenVK/static/MoltenVK.xcframework/macos-arm64_x86_64/libMoltenVK.a
+LDFLAGS += -framework IOSurface
+LDFLAGS += ../MoltenVK-1.4.0/libMoltenVK.a-x86_64-master.o
 endif
 
 #	src/collada/scene/vulkan.o \
@@ -56,8 +63,6 @@ endif
 
 OBJS = \
 	src/main.o \
-	src/view.o \
-	src/volk/volk.o \
 	src/file.o \
 	src/pack.o \
 	src/dds/validate.o \
@@ -70,7 +75,6 @@ OBJS = \
 	src/renpy/interact.o \
 	src/audio.o
 
-ifeq ($(UNAME),Linux)
 ZLIB = ../zlib-1.3.2
 CFLAGS += -I$(ZLIB)
 OBJS += \
@@ -82,14 +86,18 @@ OBJS += \
 	$(ZLIB)/zutil.o \
 	$(ZLIB)/crc32.o \
 	$(ZLIB)/adler32.o
+
+ifneq ($(UNAME),Darwin)
+OBJS += src/volk/volk.o
 endif
 
 ifeq ($(UNAME),Darwin)
 LIBS = \
-	 ../SDL3-dist/lib/libSDL3.a
+	../SDL3-dist/lib/libSDL3.a \
+	../opus-dist/lib/libopus.a
 else
 LIBS = \
-	 ../SDL3-dist/lib64/libSDL3.a \
+	../SDL3-dist/lib64/libSDL3.a \
 	../opus-dist/lib/libopus.a
 endif
 
@@ -122,8 +130,8 @@ all: main
 main: $(OBJS) $(LIBS)
 	$(CC) $(ARCH) $(LDFLAGS) $(FLAGS) $(OPT) $(DEBUG) $^ -o $@
 
-%.spv: %.hlsl
-	../dxc/bin/dxc -spirv -T lib_6_3 -fspv-target-env=vulkan1.3 $< -Fo $@
+#%.spv: %.hlsl
+#	../dxc/bin/dxc -spirv -T lib_6_3 -fspv-target-env=vulkan1.3 $< -Fo $@
 
 tool/pack_file: tool/pack_file.cpp
 	make -C tool pack_file
