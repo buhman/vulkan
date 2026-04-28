@@ -25,7 +25,7 @@ CFLAGS += -I./data
 CFLAGS += -I../SDL3-dist/include
 CFLAGS += -fpic
 
-FLAGS += -fstack-protector -fstack-protector-all -fno-omit-frame-pointer -fsanitize=address
+#FLAGS += -fstack-protector -fstack-protector-all -fno-omit-frame-pointer -fsanitize=address
 
 LDFLAGS += -lm
 ifeq ($(UNAME),Linux)
@@ -48,7 +48,14 @@ OBJS = \
 	src/collada/scene/reload.o \
 	src/collada/scene.o \
 	src/collada/node_state.o \
-	src/collada/animate.o
+	src/collada/animate.o \
+	src/minecraft/world.o \
+	src/minecraft/entry_table.o \
+	src/minecraft/vulkan.o
+
+WORLDS = \
+	data/minecraft/midnightmeadow/inthash.o \
+	data/minecraft/grandlecturn/inthash.o
 
 SCENES = \
 	data/scenes/shadow_test/shadow_test.o \
@@ -73,7 +80,7 @@ all: main
 %.o: %.s
 	$(AS) $< -o $@
 
-main: $(OBJS) $(LIBS) $(SCENES)
+main: $(OBJS) $(LIBS) $(SCENES) $(WORLDS)
 	$(CC) $(ARCH) $(LDFLAGS) $(FLAGS) $(OPT) $(DEBUG) $^ -o $@
 
 %.spv: %.hlsl
