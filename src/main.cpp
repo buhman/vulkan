@@ -609,7 +609,9 @@ int main()
                                 physicalDeviceProperties,
                                 physicalDeviceMemoryProperties,
                                 surfaceFormat.format,
-                                depthFormat);
+                                depthFormat,
+                                textureSamplers[0],
+                                shadowDepthImageViewDepth);
   minecraft_state.init();
 
   //////////////////////////////////////////////////////////////////////

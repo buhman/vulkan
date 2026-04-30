@@ -19,7 +19,7 @@ namespace minecraft::vulkan {
     static constexpr uint32_t maxFrames = 2;
     static constexpr uint32_t perFrameDescriptorCount = 1;
     static constexpr uint32_t uniformBufferDescriptorCount = maxFrames * perFrameDescriptorCount;
-    static constexpr uint32_t bindingCount = uniformBufferDescriptorCount + 0;
+    static constexpr uint32_t bindingCount = uniformBufferDescriptorCount + 3;
 
     static constexpr int perVertexSize = (3 + 3 + 2) * 2;
     static constexpr int perInstanceSize = (3 + 1 + 3 + 1) * 2;
@@ -43,6 +43,9 @@ namespace minecraft::vulkan {
     VkFormat colorFormat;
     VkFormat depthFormat;
 
+    VkSampler linearSampler;
+    VkImageView shadowDepthImageView;
+
     //
     // method initialized
     //
@@ -54,8 +57,16 @@ namespace minecraft::vulkan {
 
     VkDescriptorPool descriptorPool{ VK_NULL_HANDLE };
 
-    VkDescriptorSetLayout descriptorSetLayouts[1]; // unrelated to maxFrames, unrelated to descriptorCount
+    VkDescriptorSetLayout descriptorSetLayouts[2]; // unrelated to maxFrames, unrelated to descriptorCount
     VkDescriptorSet descriptorSets0[maxFrames];
+    VkDescriptorSet descriptorSet1;
+
+    struct Image {
+      VkImage image;
+      VkDeviceMemory memory;
+      VkImageView imageView;
+    };
+    Image terrainImage;
 
     struct {
       VkDeviceMemory memory;
@@ -76,7 +87,9 @@ namespace minecraft::vulkan {
                        VkPhysicalDeviceProperties physicalDeviceProperties,
                        VkPhysicalDeviceMemoryProperties physicalDeviceMemoryProperties,
                        VkFormat colorFormat,
-                       VkFormat depthFormat);
+                       VkFormat depthFormat,
+                       VkSampler linearSampler,
+                       VkImageView shadowDepthImageView);
     void init();
     void load_vertex_index_buffer(char const * vertex_filename,
                                   char const * index_filename);
@@ -89,6 +102,8 @@ namespace minecraft::vulkan {
     void transfer_transforms(XMMATRIX const & projection,
                              XMMATRIX const & view,
                              uint32_t frameIndex);
+    void load_image(char const * filename,
+                    Image & image);
 
     void draw(VkCommandBuffer commandBuffer,
               uint32_t frameIndex);

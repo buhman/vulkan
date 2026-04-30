@@ -33,3 +33,5 @@ data/minecraft/midnightmeadow/region.0.-1.instance.cfg
 data/minecraft/midnightmeadow/region.-1.-1.instance.cfg
 data/minecraft/midnightmeadow/global.dump
 data/minecraft/midnightmeadow/global.lights.vtx
+
+data/minecraft/terrain2.dds

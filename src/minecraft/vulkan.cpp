@@ -29,7 +29,9 @@ namespace minecraft::vulkan {
                              VkPhysicalDeviceProperties physicalDeviceProperties,
                              VkPhysicalDeviceMemoryProperties physicalDeviceMemoryProperties,
                              VkFormat colorFormat,
-                             VkFormat depthFormat)
+                             VkFormat depthFormat,
+                             VkSampler linearSampler,
+                             VkImageView shadowDepthImageView)
   {
     this->instance = instance;
     this->device = device;
@@ -41,12 +43,16 @@ namespace minecraft::vulkan {
 
     this->colorFormat = colorFormat;
     this->depthFormat = depthFormat;
+
+    this->linearSampler = linearSampler;
+    this->shadowDepthImageView = shadowDepthImageView;
   }
 
   void vulkan::init()
   {
     load_vertex_index_buffer("data/minecraft/per_vertex.vtx", "data/minecraft/configuration.idx");
     load_shader();
+    load_image("data/minecraft/terrain2.dds", terrainImage);
     create_uniform_buffers();
     create_descriptor_sets();
     write_descriptor_sets();
@@ -142,7 +148,7 @@ namespace minecraft::vulkan {
   {
     VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{
       .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-      .setLayoutCount = 1,
+      .setLayoutCount = 2,
       .pSetLayouts = descriptorSetLayouts,
       //.pushConstantRangeCount = 0,
       //.pPushConstantRanges = nullptr
@@ -389,6 +395,49 @@ namespace minecraft::vulkan {
   }
 
   //////////////////////////////////////////////////////////////////////
+  // images
+  //////////////////////////////////////////////////////////////////////
+
+  void vulkan::load_image(char const * filename,
+                          Image & image)
+  {
+    VkCommandBuffer commandBuffer{};
+    VkCommandBufferAllocateInfo commandBufferAllocateInfo{
+      .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+      .commandPool = commandPool,
+      .commandBufferCount = 1
+    };
+    VK_CHECK(vkAllocateCommandBuffers(device, &commandBufferAllocateInfo, &commandBuffer));
+
+    VkFenceCreateInfo fenceCreateInfo{
+      .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO
+    };
+    VkFence fence{};
+    VK_CHECK(vkCreateFence(device, &fenceCreateInfo, nullptr, &fence));
+
+    // load
+
+    createImageFromFilenameDDS(device,
+                               queue,
+                               commandBuffer,
+                               fence,
+                               physicalDeviceProperties.limits.nonCoherentAtomSize,
+                               physicalDeviceMemoryProperties,
+                               filename,
+                               &image.image,
+                               &image.memory,
+                               &image.imageView);
+
+    // cleanup
+
+    vkDestroyFence(device, fence, nullptr);
+    vkFreeCommandBuffers(device,
+                         commandPool,
+                         1,
+                         &commandBuffer);
+  }
+
+  //////////////////////////////////////////////////////////////////////
   // descriptor sets
   //////////////////////////////////////////////////////////////////////
 
@@ -397,16 +446,24 @@ namespace minecraft::vulkan {
     //
     // pool
     //
-    constexpr int descriptorPoolSizesCount = 1;
+    constexpr int descriptorPoolSizesCount = 3;
     VkDescriptorPoolSize descriptorPoolSizes[descriptorPoolSizesCount]{
       {
         .type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
         .descriptorCount = (maxFrames * 1),
       },
+      { // linear sampler
+        .type = VK_DESCRIPTOR_TYPE_SAMPLER,
+        .descriptorCount = 1,
+      },
+      {
+        .type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+        .descriptorCount = 1 + 1, // +1 for shadow sampler
+      }
     };
     VkDescriptorPoolCreateInfo descriptorPoolCreateInfo{
       .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
-      .maxSets = maxFrames,
+      .maxSets = maxFrames + 1,
       .poolSizeCount = descriptorPoolSizesCount,
       .pPoolSizes = descriptorPoolSizes
     };
@@ -446,6 +503,48 @@ namespace minecraft::vulkan {
       };
       VK_CHECK(vkAllocateDescriptorSets(device, &descriptorSetAllocateInfo, descriptorSets0));
     }
+
+    //
+    // uniform buffer descriptor set layout/allocation (set 1, constant)
+    //
+    {
+      constexpr int bindingCount = 3;
+      VkDescriptorSetLayoutBinding descriptorSetLayoutBindings[bindingCount]{
+        {
+          .binding = 0,
+          .descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER,
+          .descriptorCount = 1,
+          .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT
+        },
+        { // shadow sampled image
+          .binding = 1,
+          .descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+          .descriptorCount = 1,
+          .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT
+        },
+        { // terrain sampled image
+          .binding = 2,
+          .descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+          .descriptorCount = 1,
+          .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT
+        }
+      };
+
+      VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo{
+        .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+        .bindingCount = bindingCount,
+        .pBindings = descriptorSetLayoutBindings
+      };
+      VK_CHECK(vkCreateDescriptorSetLayout(device, &descriptorSetLayoutCreateInfo, nullptr, &descriptorSetLayouts[1]));
+
+      VkDescriptorSetAllocateInfo descriptorSetAllocateInfo{
+        .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+        .descriptorPool = descriptorPool,
+        .descriptorSetCount = 1,
+        .pSetLayouts = &descriptorSetLayouts[1]
+      };
+      VK_CHECK(vkAllocateDescriptorSets(device, &descriptorSetAllocateInfo, &descriptorSet1));
+    }
   }
 
   //////////////////////////////////////////////////////////////////////
@@ -459,6 +558,7 @@ namespace minecraft::vulkan {
 
     VkDescriptorBufferInfo sceneDescriptorBufferInfos[maxFrames];
 
+    // set0 bindings
     for (uint32_t i = 0; i < maxFrames; i++) {
       sceneDescriptorBufferInfos[i] = {
         .buffer = shaderDataDevice.frame[i].sceneBuffer,
@@ -474,6 +574,43 @@ namespace minecraft::vulkan {
         .pBufferInfo = &sceneDescriptorBufferInfos[i]
       };
     }
+
+    // set1 bindings
+    VkDescriptorImageInfo samplerDescriptorImageInfo = {
+      .sampler = linearSampler,
+    };
+    writeDescriptorSets[writeIndex++] = {
+      .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+      .dstSet = descriptorSet1,
+      .dstBinding = 0,
+      .descriptorCount = 1,
+      .descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER,
+      .pImageInfo = &samplerDescriptorImageInfo
+    };
+    VkDescriptorImageInfo shadowDepthDescriptorImageInfo = {
+      .imageView = shadowDepthImageView,
+      .imageLayout = VK_IMAGE_LAYOUT_READ_ONLY_OPTIMAL
+    };
+    writeDescriptorSets[writeIndex++] = {
+      .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+      .dstSet = descriptorSet1,
+      .dstBinding = 1,
+      .descriptorCount = 1,
+      .descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+      .pImageInfo = &shadowDepthDescriptorImageInfo
+    };
+    VkDescriptorImageInfo terrainDescriptorImageInfo = {
+      .imageView = terrainImage.imageView,
+      .imageLayout = VK_IMAGE_LAYOUT_READ_ONLY_OPTIMAL
+    };
+    writeDescriptorSets[writeIndex++] = {
+      .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+      .dstSet = descriptorSet1,
+      .dstBinding = 2,
+      .descriptorCount = 1,
+      .descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+      .pImageInfo = &terrainDescriptorImageInfo
+    };
 
     assert(writeIndex == bindingCount);
     vkUpdateDescriptorSets(device, writeIndex, writeDescriptorSets, 0, nullptr);
@@ -529,11 +666,12 @@ namespace minecraft::vulkan {
   {
     VkDescriptorSet descriptorSets[2] = {
       descriptorSets0[frameIndex],
+      descriptorSet1,
     };
     vkCmdBindDescriptorSets(commandBuffer,
                             VK_PIPELINE_BIND_POINT_GRAPHICS,
                             pipelineLayout,
-                            0, 1, descriptorSets,
+                            0, 2, descriptorSets,
                             0, nullptr);
 
     vkCmdBindIndexBuffer(commandBuffer, vertexIndex.buffer, vertexIndex.indexOffset, VK_INDEX_TYPE_UINT16);
