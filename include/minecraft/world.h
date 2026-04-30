@@ -26,26 +26,12 @@ namespace minecraft::world {
   };
 
   // also update index_buffer_custom_offsets in include/minecraft_data.inc
-  const int custom_block_types = 7;
-  const int instance_cfg_length = 64 + custom_block_types;
+  constexpr int custom_block_types = 7;
+  constexpr int instance_cfg_length = 64 + custom_block_types;
 
   struct instance_cfg_entry {
     int count;
     int offset;
-  };
-
-  struct region {
-    unsigned int per_instance_vertex_buffer;
-    instance_cfg_entry instance_cfg[instance_cfg_length];
-  };
-
-  struct state {
-    world::descriptor const * descriptor;
-    world::region * region; // malloc region_count
-    entry_table::global_entry_t * entry_table;
-    unsigned int light_uniform_buffer;
-    int light_count;
-    int entry_table_length;
   };
 
   extern descriptor const descriptors[];

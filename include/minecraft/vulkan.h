@@ -2,7 +2,9 @@
 
 #include "volk/volk.h"
 
-namespace minecraft {
+#include "minecraft/vulkan/per_world.h"
+
+namespace minecraft::vulkan {
 
   struct vulkan {
     struct {
@@ -31,11 +33,14 @@ namespace minecraft {
     VkShaderModule shaderModule;
     VkPipeline pipeline;
 
+    per_world * worlds;
+
     void init();
     void load_vertex_index_buffer(char const * vertex_filename,
                                   char const * index_filename);
     void load_shader();
     void create_pipeline();
-    void draw();
+    void load_worlds();
+    void draw(VkCommandBuffer commandBuffer);
   };
 }

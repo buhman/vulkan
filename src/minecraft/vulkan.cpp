@@ -7,10 +7,18 @@
 #include "file.h"
 #include "check.h"
 #include "vulkan_helper.h"
+#include "new.h"
+#include "popcount.h"
 
 #include "minecraft/vulkan.h"
+#include "minecraft/data.inc"
 
-namespace minecraft {
+namespace minecraft::vulkan {
+
+  static inline int popcount(int x)
+  {
+    return __builtin_popcount(x);
+  }
 
   void vulkan::init()
   {
@@ -253,19 +261,19 @@ namespace minecraft {
         .format = VK_FORMAT_R16_SINT,
         .offset = 8,
       },
-      { // block id
+      { // data
         .location = 5,
         .binding = 1,
         .format = VK_FORMAT_R16_SINT,
         .offset = 10,
       },
-      { // block id
+      { // texture id
         .location = 6,
         .binding = 1,
         .format = VK_FORMAT_R16_SINT,
         .offset = 12,
       },
-      { // block id
+      { // special
         .location = 7,
         .binding = 1,
         .format = VK_FORMAT_R16_SINT,
@@ -303,11 +311,30 @@ namespace minecraft {
   }
 
   //////////////////////////////////////////////////////////////////////
+  // load worlds
+  //////////////////////////////////////////////////////////////////////
+
+  void vulkan::load_worlds()
+  {
+    worlds = NewM<per_world>(minecraft::world::descriptors_length);
+
+    for (int i = 0; i < minecraft::world::descriptors_length; i++) {
+      worlds[i].load(device, physicalDeviceProperties, physicalDeviceMemoryProperties, &minecraft::world::descriptors[i]);
+    }
+  }
+
+  //////////////////////////////////////////////////////////////////////
   // draw
   //////////////////////////////////////////////////////////////////////
 
-  void vulkan::draw()
+  void vulkan::draw(VkCommandBuffer commandBuffer)
   {
+    vkCmdBindIndexBuffer(commandBuffer, vertexIndex.buffer, vertexIndex.indexOffset, VK_INDEX_TYPE_UINT16);
 
+    for (int configuration = 1; configuration < 64; configuration++) {
+      int element_count = 6 * popcount(configuration);
+      int index_offset = 2 * index_buffer_configuration_offsets[configuration];
+      int instance_count = worlds[;
+    };
   }
 }
