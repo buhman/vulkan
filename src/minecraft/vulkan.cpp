@@ -47,6 +47,9 @@ namespace minecraft::vulkan {
   {
     load_vertex_index_buffer("data/minecraft/per_vertex.vtx", "data/minecraft/configuration.idx");
     load_shader();
+    create_uniform_buffers();
+    create_descriptor_sets();
+    write_descriptor_sets();
     create_pipeline();
     load_worlds();
   }
@@ -139,8 +142,8 @@ namespace minecraft::vulkan {
   {
     VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{
       .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-      //.setLayoutCount = 2,
-      //.pSetLayouts = descriptorSetLayouts,
+      .setLayoutCount = 1,
+      .pSetLayouts = descriptorSetLayouts,
       //.pushConstantRangeCount = 0,
       //.pPushConstantRanges = nullptr
     };
@@ -333,6 +336,150 @@ namespace minecraft::vulkan {
   }
 
   //////////////////////////////////////////////////////////////////////
+  // uniform buffers
+  //////////////////////////////////////////////////////////////////////
+
+  void vulkan::create_uniform_buffers()
+  {
+    VkMemoryRequirements memoryRequirements[uniformBufferDescriptorCount];
+    VkDeviceSize offsets[uniformBufferDescriptorCount];
+
+    uint32_t memoryRequirementsIndex = 0;
+    // per-frame
+    for (uint32_t i = 0; i < maxFrames; i++) {
+      VkBufferCreateInfo sceneBufferCreateInfo{
+        .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+        .size = (sizeof (Scene)),
+        .usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+        .sharingMode = VK_SHARING_MODE_EXCLUSIVE
+      };
+
+      VK_CHECK(vkCreateBuffer(device, &sceneBufferCreateInfo, nullptr, &shaderDataDevice.frame[i].sceneBuffer));
+      vkGetBufferMemoryRequirements(device, shaderDataDevice.frame[i].sceneBuffer, &memoryRequirements[memoryRequirementsIndex++]);
+    }
+
+    assert(memoryRequirementsIndex == uniformBufferDescriptorCount);
+
+    VkMemoryPropertyFlags memoryPropertyFlags{ VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT };
+    VkMemoryAllocateFlags memoryAllocateFlags{ };
+    shaderDataDevice.memorySize = allocateFromMemoryRequirements2(device,
+                                                                  physicalDeviceProperties.limits.nonCoherentAtomSize,
+                                                                  physicalDeviceMemoryProperties,
+                                                                  memoryPropertyFlags,
+                                                                  memoryAllocateFlags,
+                                                                  uniformBufferDescriptorCount,
+                                                                  memoryRequirements,
+                                                                  &shaderDataDevice.memory,
+                                                                  offsets);
+
+    VkDeviceSize offset{ 0 };
+    VkDeviceSize size{ VK_WHOLE_SIZE };
+    VkMemoryMapFlags flags{ 0 };
+    VK_CHECK(vkMapMemory(device, shaderDataDevice.memory, offset, size, flags, &shaderDataDevice.mappedData));
+
+    uint32_t offsetsIndex = 0;
+    // this must match the same order as memoryRequirements
+    for (uint32_t i = 0; i < maxFrames; i++) {
+      shaderDataDevice.frame[i].sceneOffset = offsets[offsetsIndex];
+      shaderDataDevice.frame[i].sceneSize = memoryRequirements[offsetsIndex++].size;
+      shaderDataDevice.frame[i].sceneMapped = (Scene *)(((size_t)shaderDataDevice.mappedData) + shaderDataDevice.frame[i].sceneOffset);
+      VK_CHECK(vkBindBufferMemory(device, shaderDataDevice.frame[i].sceneBuffer, shaderDataDevice.memory, shaderDataDevice.frame[i].sceneOffset));
+    }
+    assert(offsetsIndex == uniformBufferDescriptorCount);
+  }
+
+  //////////////////////////////////////////////////////////////////////
+  // descriptor sets
+  //////////////////////////////////////////////////////////////////////
+
+  void vulkan::create_descriptor_sets()
+  {
+    //
+    // pool
+    //
+    constexpr int descriptorPoolSizesCount = 1;
+    VkDescriptorPoolSize descriptorPoolSizes[descriptorPoolSizesCount]{
+      {
+        .type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+        .descriptorCount = (maxFrames * 1),
+      },
+    };
+    VkDescriptorPoolCreateInfo descriptorPoolCreateInfo{
+      .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+      .maxSets = maxFrames,
+      .poolSizeCount = descriptorPoolSizesCount,
+      .pPoolSizes = descriptorPoolSizes
+    };
+    VK_CHECK(vkCreateDescriptorPool(device, &descriptorPoolCreateInfo, nullptr, &descriptorPool));
+
+    //
+    // uniform buffer descriptor set layout/allocation (set 0, per-frame)
+    //
+    {
+      constexpr int bindingCount = 1;
+      VkDescriptorSetLayoutBinding descriptorSetLayoutBindings[bindingCount]{
+        {
+          .binding = 0,
+          .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+          .descriptorCount = 1,
+          .stageFlags = VK_SHADER_STAGE_VERTEX_BIT
+        }
+      };
+
+      VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo{
+        .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+        .bindingCount = bindingCount,
+        .pBindings = descriptorSetLayoutBindings
+      };
+      VK_CHECK(vkCreateDescriptorSetLayout(device, &descriptorSetLayoutCreateInfo, nullptr, &descriptorSetLayouts[0]));
+
+      VkDescriptorSetLayout setLayouts[maxFrames];
+      for (uint32_t i = 0; i < maxFrames; i++) {
+        setLayouts[i] = descriptorSetLayouts[0];
+      };
+
+      VkDescriptorSetAllocateInfo descriptorSetAllocateInfo{
+        .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+        .descriptorPool = descriptorPool,
+        .descriptorSetCount = maxFrames,
+        .pSetLayouts = setLayouts
+      };
+      VK_CHECK(vkAllocateDescriptorSets(device, &descriptorSetAllocateInfo, descriptorSets0));
+    }
+  }
+
+  //////////////////////////////////////////////////////////////////////
+  // descriptor set writes
+  //////////////////////////////////////////////////////////////////////
+
+  void vulkan::write_descriptor_sets()
+  {
+    VkWriteDescriptorSet writeDescriptorSets[bindingCount];
+    uint32_t writeIndex = 0;
+
+    VkDescriptorBufferInfo sceneDescriptorBufferInfos[maxFrames];
+
+    for (uint32_t i = 0; i < maxFrames; i++) {
+      sceneDescriptorBufferInfos[i] = {
+        .buffer = shaderDataDevice.frame[i].sceneBuffer,
+        .offset = 0,
+        .range = shaderDataDevice.frame[i].sceneSize,
+      };
+      writeDescriptorSets[writeIndex++] = {
+        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+        .dstSet = descriptorSets0[i],
+        .dstBinding = 0,
+        .descriptorCount = 1,
+        .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+        .pBufferInfo = &sceneDescriptorBufferInfos[i]
+      };
+    }
+
+    assert(writeIndex == bindingCount);
+    vkUpdateDescriptorSets(device, writeIndex, writeDescriptorSets, 0, nullptr);
+  }
+
+  //////////////////////////////////////////////////////////////////////
   // load worlds
   //////////////////////////////////////////////////////////////////////
 
@@ -346,11 +493,49 @@ namespace minecraft::vulkan {
   }
 
   //////////////////////////////////////////////////////////////////////
+  // scene data
+  //////////////////////////////////////////////////////////////////////
+
+  void vulkan::transfer_transforms(XMMATRIX const & projection,
+                                   XMMATRIX const & view,
+                                   uint32_t frameIndex)
+  {
+    XMStoreFloat4x4(&shaderDataDevice.frame[frameIndex].sceneMapped->projection, projection);
+    XMStoreFloat4x4(&shaderDataDevice.frame[frameIndex].sceneMapped->view, view);
+
+    // flush
+    constexpr int mappedMemoryRangesCount = 1;
+    VkMappedMemoryRange mappedMemoryRanges[mappedMemoryRangesCount]{
+      {
+        .sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE,
+        .memory = shaderDataDevice.memory,
+        .offset = shaderDataDevice.frame[frameIndex].sceneOffset,
+        .size = shaderDataDevice.frame[frameIndex].sceneSize,
+      }
+    };
+    alignMappedMemoryRanges(physicalDeviceProperties.limits.nonCoherentAtomSize,
+                            shaderDataDevice.memorySize,
+                            mappedMemoryRangesCount,
+                            mappedMemoryRanges);
+    vkFlushMappedMemoryRanges(device, mappedMemoryRangesCount, mappedMemoryRanges);
+  }
+
+  //////////////////////////////////////////////////////////////////////
   // draw
   //////////////////////////////////////////////////////////////////////
 
-  void vulkan::draw(VkCommandBuffer commandBuffer)
+  void vulkan::draw(VkCommandBuffer commandBuffer,
+                    uint32_t frameIndex)
   {
+    VkDescriptorSet descriptorSets[2] = {
+      descriptorSets0[frameIndex],
+    };
+    vkCmdBindDescriptorSets(commandBuffer,
+                            VK_PIPELINE_BIND_POINT_GRAPHICS,
+                            pipelineLayout,
+                            0, 1, descriptorSets,
+                            0, nullptr);
+
     vkCmdBindIndexBuffer(commandBuffer, vertexIndex.buffer, vertexIndex.indexOffset, VK_INDEX_TYPE_UINT16);
     VkBuffer vertexBuffers[2]{
       vertexIndex.buffer,

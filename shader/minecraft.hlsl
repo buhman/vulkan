@@ -16,11 +16,24 @@ struct VSOutput
   float4 Position : SV_POSITION;
 };
 
+struct Scene
+{
+  column_major float4x4 Projection;
+  column_major float4x4 View;
+  column_major float4x4 ShadowProjection;
+  column_major float4x4 ShadowView;
+  float4 LightPosition; // view space
+};
+
+// set 0: per-frame
+[[vk::binding(0, 0)]] ConstantBuffer<Scene> Scene;
+
 [shader("vertex")]
 VSOutput VSMain(VSInput input)
 {
   VSOutput output = (VSOutput)0;
-  output.Position = float4(input.Position.xyz + input.BlockPosition, 1.0);
+  float4 Position = float4(input.Position.xyz + input.BlockPosition, 1.0);
+  output.Position = mul(Scene.Projection, mul(Scene.View, Position));
   return output;
 }
 

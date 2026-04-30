@@ -722,6 +722,12 @@ int main()
                                                lightPositionWorld,
                                                collada_state.descriptor->nodes_count,
                                                collada_state.node_state.node_instances);
+
+      // minecraft
+
+      minecraft_state.transfer_transforms(projection,
+                                          view,
+                                          frameIndex);
     }
 
     //////////////////////////////////////////////////////////////////////
@@ -922,7 +928,7 @@ int main()
     //collada_state.vulkan.pipelineIndex = 2; // geometry shader pipeline
     //collada_state.draw();
 
-    minecraft_state.draw(commandBuffer);
+    minecraft_state.draw(commandBuffer, frameIndex);
 
     vkCmdEndRendering(commandBuffer);
 
