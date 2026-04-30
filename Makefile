@@ -51,7 +51,8 @@ OBJS = \
 	src/collada/animate.o \
 	src/minecraft/world.o \
 	src/minecraft/entry_table.o \
-	src/minecraft/vulkan.o
+	src/minecraft/vulkan.o \
+	src/minecraft/vulkan/per_world.o
 
 WORLDS = \
 	data/minecraft/midnightmeadow/inthash.o \

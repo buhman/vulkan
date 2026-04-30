@@ -18,6 +18,8 @@
 #include "collada/scene.h"
 #include "collada/scene/vulkan.h"
 
+#include "minecraft/vulkan.h"
+
 #include "scenes/shadow_test/shadow_test.h"
 #include "scenes/eidelwind/eidelwind.h"
 
@@ -596,6 +598,21 @@ int main()
   collada_state.load_scene(collada_scene_descriptor);
 
   //////////////////////////////////////////////////////////////////////
+  // initialize minecraft
+  //////////////////////////////////////////////////////////////////////
+
+  minecraft::vulkan::vulkan minecraft_state;
+  minecraft_state.initial_state(instance,
+                                device,
+                                queue,
+                                commandPool,
+                                physicalDeviceProperties,
+                                physicalDeviceMemoryProperties,
+                                surfaceFormat.format,
+                                depthFormat);
+  minecraft_state.init();
+
+  //////////////////////////////////////////////////////////////////////
   // loop
   //////////////////////////////////////////////////////////////////////
 
@@ -904,6 +921,8 @@ int main()
     collada_state.draw();
     //collada_state.vulkan.pipelineIndex = 2; // geometry shader pipeline
     //collada_state.draw();
+
+    minecraft_state.draw(commandBuffer);
 
     vkCmdEndRendering(commandBuffer);
 

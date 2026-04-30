@@ -10,8 +10,10 @@
 #include "new.h"
 #include "popcount.h"
 
-#include "minecraft/vulkan.h"
 #include "minecraft/data.inc"
+#include "minecraft/world.h"
+#include "minecraft/vulkan.h"
+#include "minecraft/vulkan/per_world.h"
 
 namespace minecraft::vulkan {
 
@@ -20,11 +22,33 @@ namespace minecraft::vulkan {
     return __builtin_popcount(x);
   }
 
+  void vulkan::initial_state(VkInstance instance,
+                             VkDevice device,
+                             VkQueue queue,
+                             VkCommandPool commandPool,
+                             VkPhysicalDeviceProperties physicalDeviceProperties,
+                             VkPhysicalDeviceMemoryProperties physicalDeviceMemoryProperties,
+                             VkFormat colorFormat,
+                             VkFormat depthFormat)
+  {
+    this->instance = instance;
+    this->device = device;
+    this->queue = queue;
+    this->commandPool = commandPool;
+
+    this->physicalDeviceProperties = physicalDeviceProperties;
+    this->physicalDeviceMemoryProperties = physicalDeviceMemoryProperties;
+
+    this->colorFormat = colorFormat;
+    this->depthFormat = depthFormat;
+  }
+
   void vulkan::init()
   {
     load_vertex_index_buffer("data/minecraft/per_vertex.vtx", "data/minecraft/configuration.idx");
     load_shader();
     create_pipeline();
+    load_worlds();
   }
 
   //////////////////////////////////////////////////////////////////////
@@ -213,8 +237,6 @@ namespace minecraft::vulkan {
       .rasterizationSamples = VK_SAMPLE_COUNT_1_BIT
     };
 
-    constexpr int perVertexSize = (3 + 3 + 2) * 2;
-    constexpr int perInstanceSize = (3 + 1 + 3 + 1) * 2;
     VkVertexInputBindingDescription vertexBindingDescriptions[2]{
       {
         .binding = 0,
@@ -330,11 +352,25 @@ namespace minecraft::vulkan {
   void vulkan::draw(VkCommandBuffer commandBuffer)
   {
     vkCmdBindIndexBuffer(commandBuffer, vertexIndex.buffer, vertexIndex.indexOffset, VK_INDEX_TYPE_UINT16);
+    VkBuffer vertexBuffers[2]{
+      vertexIndex.buffer,
+      worlds[0].regions[0].vertexBuffer,
+    };
+    VkDeviceSize vertexOffsets[2]{ 0, 0 };
+
+    vkCmdBindVertexBuffers(commandBuffer, 0, 2, vertexBuffers, vertexOffsets);
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
     for (int configuration = 1; configuration < 64; configuration++) {
-      int element_count = 6 * popcount(configuration);
-      int index_offset = 2 * index_buffer_configuration_offsets[configuration];
-      int instance_count = worlds[;
+      int index_count = 6 * popcount(configuration);
+      int first_index = index_buffer_configuration_offsets[configuration];
+      int instance_count = worlds[0].regions[0].instanceCFG[configuration].count;
+      int first_instance = worlds[0].regions[0].instanceCFG[configuration].offset / perInstanceSize;
+
+      if (instance_count == 0)
+        continue;
+
+      vkCmdDrawIndexed(commandBuffer, index_count, instance_count, first_index, 0, first_instance);
     };
   }
 }
