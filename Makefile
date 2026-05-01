@@ -38,6 +38,7 @@ endif
 
 OBJS = \
 	src/main.o \
+	src/view.o \
 	src/volk/volk.o \
 	src/file.o \
 	src/pack.o \

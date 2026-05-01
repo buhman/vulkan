@@ -14,6 +14,7 @@
 #include "vulkan_helper.h"
 #include "shader_data.h"
 #include "minmax.h"
+#include "view.h"
 
 #include "collada/scene.h"
 #include "collada/scene/vulkan.h"
@@ -285,9 +286,72 @@ inline static double getTime(int64_t start_time)
   return (double)(time / 1000) * 0.000001;
 }
 
+static int const max_gamepads = 16;
+static SDL_Gamepad * gamepads[max_gamepads];
+static int gamepad_count = 0;
+
+void add_gamepad(SDL_JoystickID instance_id)
+{
+  SDL_Gamepad * gamepad = SDL_OpenGamepad(instance_id);
+  char const * name = SDL_GetGamepadName(gamepad);
+  if (gamepad_count >= max_gamepads) {
+    printf("too many gamepads; ignoring gamepad %d %s\n", instance_id, name);
+    SDL_CloseGamepad(gamepad);
+  } else {
+    printf("add gamepad %d %s\n", instance_id, name);
+    gamepads[gamepad_count] = gamepad;
+    gamepad_count += 1;
+  }
+}
+
+void remove_gamepad(SDL_JoystickID instance_id)
+{
+  for (int i = 0; i < gamepad_count; i++) {
+    if (SDL_GetGamepadID(gamepads[i]) == instance_id) {
+      int tail = (gamepad_count - i) - 1;
+      SDL_CloseGamepad(gamepads[i]);
+      memcpy(&gamepads[i], &gamepads[i+1], tail * (sizeof (gamepads[0])));
+      gamepad_count -= 1;
+      return;
+    }
+  }
+  assert(!"remove_gamepad");
+}
+
+void gamepad_update(view & viewState)
+{
+  for (int i = 0; i < gamepad_count; i++) {
+    SDL_Gamepad * gamepad = gamepads[i];
+    int16_t i_leftx = SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_LEFTX);
+    int16_t i_lefty = SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_LEFTY);
+    int16_t i_rightx = SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_RIGHTX);
+    int16_t i_righty = SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_RIGHTY);
+    int16_t i_left_trigger = SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_LEFT_TRIGGER);
+    int16_t i_right_trigger = SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_RIGHT_TRIGGER);
+
+    constexpr float scale = 1.0f / 32767.0f;
+    float leftx = (float)i_leftx * scale;
+    float lefty = (float)i_lefty * scale;
+    float rightx = (float)i_rightx * scale;
+    float righty = (float)i_righty * scale;
+    float left_trigger = (float)i_left_trigger * scale;
+    float right_trigger = (float)i_right_trigger * scale;
+
+    constexpr float translate_rate = 0.5;
+    float delta_forward = -lefty * translate_rate;
+    float delta_strafe = leftx * translate_rate;
+    float delta_elevation = (left_trigger - right_trigger) * translate_rate;
+    float delta_yaw = rightx * -0.035;
+    float delta_pitch = righty * -0.035;
+
+    viewState.applyTransform(delta_forward, delta_strafe, delta_elevation,
+                             delta_yaw, delta_pitch);
+  }
+}
+
 int main()
 {
-  SDL_CHECK(SDL_Init(SDL_INIT_VIDEO));
+  SDL_CHECK(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD));
   SDL_CHECK(SDL_Vulkan_LoadLibrary(NULL));
   volkInitialize();
 
@@ -566,8 +630,8 @@ int main()
   VK_CHECK(vkCreateSampler(device, &samplerCreateInfo1, nullptr, &textureSamplers[1]));
   VkSamplerCreateInfo samplerCreateInfo2{
     .sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
-    .magFilter = VK_FILTER_LINEAR,
-    .minFilter = VK_FILTER_LINEAR,
+    .magFilter = VK_FILTER_NEAREST,
+    .minFilter = VK_FILTER_NEAREST,
     .mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR,
     .addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
     .addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
@@ -610,9 +674,34 @@ int main()
                                 physicalDeviceMemoryProperties,
                                 surfaceFormat.format,
                                 depthFormat,
-                                textureSamplers[0],
+                                textureSamplers[2],
                                 shadowDepthImageViewDepth);
   minecraft_state.init();
+
+  //////////////////////////////////////////////////////////////////////
+  // initialize view
+  //////////////////////////////////////////////////////////////////////
+
+  int cameraIndex = collada_state.find_node_index_by_name("Camera001");
+  int cameraTargetIndex = collada_state.find_node_index_by_name("EidelwindRigPelvis");
+  int lightIndex = collada_state.find_node_index_by_name("Camera001");
+  int lightTargetIndex = collada_state.find_node_index_by_name("EidelwindRigPelvis");
+  //int lightMaterialIndex = collada_state.find_material_index_by_name("LightMaterial");
+  int lightMaterialIndex = -1;
+
+  // view
+
+  XMVECTOR eye = XMVector3Transform(XMVectorZero(), collada_state.node_state.node_instances[cameraIndex].world);
+  XMVECTOR at = XMVector3Transform(XMVectorZero(), collada_state.node_state.node_instances[cameraTargetIndex].world);
+  XMVECTOR up = XMVectorSet(0, 0, 1, 0);
+
+  view viewState;
+  viewState.eye = eye;
+  //viewState.at = at;
+  viewState.up = up;
+  viewState.forward = XMVectorSetZ(XMVector3Normalize(at - eye), 0);
+  viewState.pitch = 0;
+  viewState.applyTransform(0, 0, 0, 0, 0);
 
   //////////////////////////////////////////////////////////////////////
   // loop
@@ -625,13 +714,6 @@ int main()
   int32_t samplerIndex{ 0 };
   int64_t start_time;
   SDL_GetCurrentTime(&start_time);
-
-  int cameraIndex = collada_state.find_node_index_by_name("Camera001");
-  int cameraTargetIndex = collada_state.find_node_index_by_name("EidelwindRigPelvis");
-  int lightIndex = collada_state.find_node_index_by_name("Camera001");
-  int lightTargetIndex = collada_state.find_node_index_by_name("EidelwindRigPelvis");
-  //int lightMaterialIndex = collada_state.find_material_index_by_name("LightMaterial");
-  int lightMaterialIndex = -1;
 
   collada_state.update(0);
 
@@ -671,7 +753,19 @@ int main()
       if (event.type == SDL_EVENT_WINDOW_RESIZED) {
         SDL_CHECK(SDL_GetWindowSize(window, &windowSize.x, &windowSize.y));
       }
+      if (event.type == SDL_EVENT_GAMEPAD_ADDED) {
+        add_gamepad(event.gdevice.which);
+      }
+      if (event.type == SDL_EVENT_GAMEPAD_REMOVED) {
+        remove_gamepad(event.gdevice.which);
+      }
     }
+
+    //////////////////////////////////////////////////////////////////////
+    // gamepad update
+    //////////////////////////////////////////////////////////////////////
+
+    gamepad_update(viewState);
 
     //////////////////////////////////////////////////////////////////////
     // collada update
@@ -708,8 +802,9 @@ int main()
       collada_state.vulkan.change_frame(commandBuffer, frameIndex);
 
       XMMATRIX projection = currentProjection();
-      XMMATRIX view = currentView(collada_state.node_state.node_instances[cameraIndex],
-                                  collada_state.node_state.node_instances[cameraTargetIndex]);
+      //XMMATRIX view = currentView(collada_state.node_state.node_instances[cameraIndex],
+      //collada_state.node_state.node_instances[cameraTargetIndex]);
+      XMMATRIX view = viewState.getView();
       XMMATRIX shadowProjection = XMMatrixOrthographicLH(150, 150, -1000, 1000);
       XMMATRIX shadowView = currentView(collada_state.node_state.node_instances[lightIndex],
                                         collada_state.node_state.node_instances[lightTargetIndex]);
