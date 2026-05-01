@@ -101,6 +101,7 @@ namespace minecraft::vulkan {
     void write_descriptor_sets();
     void transfer_transforms(XMMATRIX const & projection,
                              XMMATRIX const & view,
+                             XMVECTOR const & lightPosition,
                              uint32_t frameIndex);
     void load_image(char const * filename,
                     Image & image);

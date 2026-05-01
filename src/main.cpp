@@ -635,9 +635,9 @@ int main()
     .mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR,
     .addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
     .addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
-    .anisotropyEnable = VK_TRUE,
+    .anisotropyEnable = VK_FALSE,
     .maxAnisotropy = 16.0f,
-    .maxLod = VK_LOD_CLAMP_NONE, // (float)ddsFile->header.dwMipMapCount,
+    .maxLod = 3.0, // (float)ddsFile->header.dwMipMapCount,
   };
   VK_CHECK(vkCreateSampler(device, &samplerCreateInfo2, nullptr, &textureSamplers[2]));
 
@@ -824,6 +824,7 @@ int main()
 
       minecraft_state.transfer_transforms(projection,
                                           view,
+                                          lightPositionWorld,
                                           frameIndex);
     }
 

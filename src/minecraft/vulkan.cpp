@@ -635,10 +635,13 @@ namespace minecraft::vulkan {
 
   void vulkan::transfer_transforms(XMMATRIX const & projection,
                                    XMMATRIX const & view,
+                                   XMVECTOR const & lightPosition,
                                    uint32_t frameIndex)
   {
-    XMStoreFloat4x4(&shaderDataDevice.frame[frameIndex].sceneMapped->projection, projection);
-    XMStoreFloat4x4(&shaderDataDevice.frame[frameIndex].sceneMapped->view, view);
+    Scene * scene = shaderDataDevice.frame[frameIndex].sceneMapped;
+    XMStoreFloat4x4(&scene->projection, projection);
+    XMStoreFloat4x4(&scene->view, view);
+    XMStoreFloat4(&scene->lightPosition, lightPosition);
 
     // flush
     constexpr int mappedMemoryRangesCount = 1;
@@ -675,25 +678,26 @@ namespace minecraft::vulkan {
                             0, nullptr);
 
     vkCmdBindIndexBuffer(commandBuffer, vertexIndex.buffer, vertexIndex.indexOffset, VK_INDEX_TYPE_UINT16);
-    VkBuffer vertexBuffers[2]{
-      vertexIndex.buffer,
-      worlds[0].regions[0].vertexBuffer,
-    };
-    VkDeviceSize vertexOffsets[2]{ 0, 0 };
-
-    vkCmdBindVertexBuffers(commandBuffer, 0, 2, vertexBuffers, vertexOffsets);
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
-    for (int configuration = 1; configuration < 64; configuration++) {
-      int index_count = 6 * popcount(configuration);
-      int first_index = index_buffer_configuration_offsets[configuration];
-      int instance_count = worlds[0].regions[0].instanceCFG[configuration].count;
-      int first_instance = worlds[0].regions[0].instanceCFG[configuration].offset / perInstanceSize;
+    VkDeviceSize vertexOffset{ 0 };
+    vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexIndex.buffer, &vertexOffset);
 
-      if (instance_count == 0)
-        continue;
+    minecraft::vulkan::per_world const & world = worlds[0];
 
-      vkCmdDrawIndexed(commandBuffer, index_count, instance_count, first_index, 0, first_instance);
-    };
+    for (int region = 0; region < world.descriptor->region_count; region++) {
+      vkCmdBindVertexBuffers(commandBuffer, 1, 1, &world.regions[region].vertexBuffer, &vertexOffset);
+      for (int configuration = 1; configuration < 64; configuration++) {
+        int index_count = 6 * popcount(configuration);
+        int first_index = index_buffer_configuration_offsets[configuration];
+        int instance_count = world.regions[region].instanceCFG[configuration].count;
+        int first_instance = world.regions[region].instanceCFG[configuration].offset / perInstanceSize;
+
+        if (instance_count == 0)
+          continue;
+
+        vkCmdDrawIndexed(commandBuffer, index_count, instance_count, first_index, 0, first_instance);
+      };
+    }
   }
 }
