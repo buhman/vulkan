@@ -94,7 +94,7 @@ float4 getView(float4x4 view, float4 position)
 
 float4 getProjection(float4x4 projection, float4 viewPosition)
 {
-  return mul(projection, viewPosition) * float4(-1, -1, 1, 1);
+  return mul(projection, viewPosition);
 }
 
 float2 yf(float2 v)

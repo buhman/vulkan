@@ -79,7 +79,7 @@ XMMATRIX currentProjection()
   float near_z = 0.1;
   float far_z = 1000.0;
   XMMATRIX projection = XMMatrixPerspectiveFovLH(fov_angle_y, aspect_ratio, near_z, far_z);
-  return projection;
+  return projection * XMMatrixScaling(-1, -1, 1);
 }
 
 XMMATRIX currentView(collada::instance_types::node const & camera_node,

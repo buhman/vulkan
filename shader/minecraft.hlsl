@@ -44,7 +44,7 @@ VSOutput VSMain(VSInput input)
 {
   VSOutput output = (VSOutput)0;
   float4 Position = float4(input.Position.xyz + input.BlockPosition, 1.0);
-  output.Position = mul(Scene.Projection, mul(Scene.View, Position.xzyw)) * float4(-1, -1, 1, 1);
+  output.Position = mul(Scene.Projection, mul(Scene.View, Position.xzyw));
 
   float2 textureOffset = float2(input.TextureID % 8, input.TextureID / 8) * 16;
   output.Texture = float4(yf(input.Texture.xy, 16), textureOffset);
