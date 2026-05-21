@@ -72,54 +72,11 @@ namespace minecraft::vulkan {
     uint32_t indexSize;
     void const * indexStart = file::open(index_filename, &indexSize);
 
-    vertexIndex.indexOffset = vertexSize;
-
-    // create buffer
-
-    VkDeviceSize bufferSize{ vertexSize + indexSize };
-    VkBufferCreateInfo vertexIndexBufferCreateInfo{
-      .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-      .size = bufferSize,
-      .usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-      .sharingMode = VK_SHARING_MODE_EXCLUSIVE
-    };
-    VK_CHECK(vkCreateBuffer(device, &vertexIndexBufferCreateInfo, nullptr, &vertexIndex.buffer));
-
-    // allocate memory
-
-    VkMemoryRequirements memoryRequirements;
-    vkGetBufferMemoryRequirements(device, vertexIndex.buffer, &memoryRequirements);
-    VkMemoryPropertyFlags memoryPropertyFlags{ VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT };
-    VkMemoryAllocateFlags memoryAllocateFlags{};
-    VkDeviceSize stride;
-    allocateFromMemoryRequirements(device,
-                                   physicalDeviceProperties.limits.nonCoherentAtomSize,
-                                   physicalDeviceMemoryProperties,
-                                   memoryRequirements,
-                                   memoryPropertyFlags,
-                                   memoryAllocateFlags,
-                                   1,
-                                   &vertexIndex.memory,
-                                   &stride);
-
-    VK_CHECK(vkBindBufferMemory(device, vertexIndex.buffer, vertexIndex.memory, 0));
-
-    // copy data
-
-    void * vertexIndexMappedData;
-    VK_CHECK(vkMapMemory(device, vertexIndex.memory, 0, VK_WHOLE_SIZE, 0, &vertexIndexMappedData));
-    memcpy((void *)(((ptrdiff_t)vertexIndexMappedData) + 0), vertexStart, vertexSize);
-    memcpy((void *)(((ptrdiff_t)vertexIndexMappedData) + vertexSize), indexStart, indexSize);
-
-    VkMappedMemoryRange mappedMemoryRange{
-      .sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE,
-      .memory = vertexIndex.memory,
-      .offset = 0,
-      .size = VK_WHOLE_SIZE,
-    };
-    vkFlushMappedMemoryRanges(device, 1, &mappedMemoryRange);
-
-    vkUnmapMemory(device, vertexIndex.memory);
+    vertexIndex = createVertexIndexBuffer(device,
+                                          physicalDeviceProperties,
+                                          physicalDeviceMemoryProperties,
+                                          vertexStart, vertexSize,
+                                          indexStart, indexSize);
   }
 
   //////////////////////////////////////////////////////////////////////

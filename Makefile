@@ -53,7 +53,8 @@ OBJS = \
 	src/minecraft/world.o \
 	src/minecraft/entry_table.o \
 	src/minecraft/vulkan.o \
-	src/minecraft/vulkan/per_world.o
+	src/minecraft/vulkan/per_world.o \
+	src/font/outline.o
 
 WORLDS = \
 	data/minecraft/midnightmeadow/inthash.o \

@@ -73,3 +73,42 @@ void createImageFromFilenameTGA(VkDevice device,
                                 VkImage * outImage,
                                 VkDeviceMemory * outMemory,
                                 VkImageView * outImageView);
+
+void createImage(VkDevice device,
+                 VkDeviceSize nonCoherentAtomSize,
+                 VkPhysicalDeviceMemoryProperties const & physicalDeviceMemoryProperties,
+                 VkFormat format,
+                 uint32_t width,
+                 uint32_t height,
+                 uint32_t levelCount,
+                 VkImage * outImage,
+                 VkDeviceMemory * outMemory,
+                 VkImageView * outImageView);
+
+void textureTransfer(VkDevice device,
+                     VkQueue queue,
+                     VkCommandBuffer commandBuffer,
+                     VkFence fence,
+                     VkDeviceSize nonCoherentAtomSize,
+                     VkPhysicalDeviceMemoryProperties const & physicalDeviceMemoryProperties,
+                     uint32_t imageDataSize,
+                     void * imageData,
+                     VkImage image,
+                     uint32_t width,
+                     uint32_t height,
+                     uint32_t levelCount,
+                     uint32_t * levelOffsets);
+
+struct VertexIndex {
+  VkDeviceSize indexOffset;
+  VkBuffer buffer;
+  VkDeviceMemory memory;
+};
+
+VertexIndex createVertexIndexBuffer(VkDevice device,
+                                    VkPhysicalDeviceProperties const& physicalDeviceProperties,
+                                    VkPhysicalDeviceMemoryProperties const& physicalDeviceMemoryProperties,
+                                    void const * vertexStart,
+                                    uint32_t vertexSize,
+                                    void const * indexStart,
+                                    uint32_t indexSize);

@@ -35,3 +35,6 @@ data/minecraft/midnightmeadow/global.dump
 data/minecraft/midnightmeadow/global.lights.vtx
 
 data/minecraft/terrain2.dds
+
+shader/font.spv
+data/font/outline/uncial_antiqua_36.data

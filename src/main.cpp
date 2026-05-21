@@ -20,6 +20,7 @@
 #include "collada/scene/vulkan.h"
 
 #include "minecraft/vulkan.h"
+#include "font/outline.h"
 
 #include "scenes/shadow_test/shadow_test.h"
 #include "scenes/eidelwind/eidelwind.h"
@@ -679,6 +680,22 @@ int main()
   minecraft_state.init();
 
   //////////////////////////////////////////////////////////////////////
+  // initialize font
+  //////////////////////////////////////////////////////////////////////
+
+  font::outline::font font_state;
+  font_state.initial_state(instance,
+                           device,
+                           queue,
+                           commandPool,
+                           physicalDeviceProperties,
+                           physicalDeviceMemoryProperties,
+                           surfaceFormat.format,
+                           depthFormat,
+                           textureSamplers[2]);
+  font_state.init();
+
+  //////////////////////////////////////////////////////////////////////
   // initialize view
   //////////////////////////////////////////////////////////////////////
 
@@ -798,7 +815,7 @@ int main()
     // transfer
     //////////////////////////////////////////////////////////////////////
 
-    {
+    if (0) {
       collada_state.vulkan.change_frame(commandBuffer, frameIndex);
 
       XMMATRIX projection = currentProjection();
@@ -901,7 +918,7 @@ int main()
 
     collada_state.vulkan.excludeMaterialIndex = lightMaterialIndex;
     collada_state.vulkan.pipelineIndex = 0; // shadow pipeline
-    collada_state.draw();
+    //collada_state.draw();
 
     vkCmdEndRendering(commandBuffer);
 
@@ -1022,11 +1039,13 @@ int main()
 
     collada_state.vulkan.excludeMaterialIndex = -1;
     collada_state.vulkan.pipelineIndex = 1; // non-shadow pipeline
-    collada_state.draw();
+    //collada_state.draw();
     //collada_state.vulkan.pipelineIndex = 2; // geometry shader pipeline
     //collada_state.draw();
 
-    minecraft_state.draw(commandBuffer, frameIndex);
+    //minecraft_state.draw(commandBuffer, frameIndex);
+
+    font_state.draw(commandBuffer, frameIndex);
 
     vkCmdEndRendering(commandBuffer);
 

@@ -3,6 +3,7 @@
 #include "directxmath/directxmath.h"
 #include "volk/volk.h"
 
+#include "vulkan_helper.h"
 #include "minecraft/vulkan/per_world.h"
 
 namespace minecraft::vulkan {
@@ -24,12 +25,7 @@ namespace minecraft::vulkan {
     static constexpr int perVertexSize = (3 + 3 + 2) * 2;
     static constexpr int perInstanceSize = (3 + 1 + 3 + 1) * 2;
 
-    struct {
-      VkDeviceSize jointWeightOffset;
-      VkDeviceSize indexOffset;
-      VkBuffer buffer;
-      VkDeviceMemory memory;
-    } vertexIndex;
+    VertexIndex vertexIndex;
 
     // externally initialized, opaque handle
     VkInstance instance;
