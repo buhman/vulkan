@@ -1001,7 +1001,8 @@ int main()
       .imageLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL,
       .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
       .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
-      .clearValue{ .color{ 0.0f, 0.0f, 0.2f, 1.0f } }
+      //.clearValue{ .color{ 0.0f, 0.0f, 0.2f, 1.0f } }
+      .clearValue{ .color{ 0.0f, 0.0f, 0.0f, 0.0f } }
     };
     VkRenderingAttachmentInfo depthRenderingAttachmentInfo{
       .sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,

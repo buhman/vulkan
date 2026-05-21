@@ -58,7 +58,9 @@ namespace font::outline {
     load_shader();
     create_descriptor_sets();
     loadedFont = load_font(uncial_antiqua[0]);
+    create_glyphs_buffer(loadedFont.font, loadedFont.glyphs);
     write_descriptor_sets(loadedFont.allocatedImage.imageView);
+    create_instance_buffers();
     create_pipeline();
   }
 
@@ -201,7 +203,8 @@ namespace font::outline {
       .rasterizationSamples = VK_SAMPLE_COUNT_1_BIT
     };
 
-    VkVertexInputBindingDescription vertexBindingDescriptions[2]{
+    constexpr int vertexBindingDescriptionsCount = 2;
+    VkVertexInputBindingDescription vertexBindingDescriptions[vertexBindingDescriptionsCount]{
       {
         .binding = 0,
         .stride = perVertexSize,
@@ -214,7 +217,8 @@ namespace font::outline {
       }
     };
 
-    VkVertexInputAttributeDescription vertexAttributeDescriptions[2]{
+    constexpr int vertexAttributeDescriptionsCount = 5;
+    VkVertexInputAttributeDescription vertexAttributeDescriptions[vertexAttributeDescriptionsCount]{
       // per-vertex
       { // position
         .location = 0,
@@ -228,14 +232,32 @@ namespace font::outline {
         .format = VK_FORMAT_R16G16_SFLOAT,
         .offset = 4,
       },
+      // per-instance
+      {
+        .location = 2,
+        .binding = 1,
+        .format = VK_FORMAT_R16G16_UINT,
+        .offset = 0,
+      },
+      {
+        .location = 3,
+        .binding = 1,
+        .format = VK_FORMAT_R32_UINT,
+        .offset = 4,
+      },
+      {
+        .location = 4,
+        .binding = 1,
+        .format = VK_FORMAT_R8G8B8A8_UNORM,
+        .offset = 8,
+      },
     };
 
     VkPipelineVertexInputStateCreateInfo vertexInputState{
       .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
-      //.vertexBindingDescriptionCount = 2,
-      .vertexBindingDescriptionCount = 1,
+      .vertexBindingDescriptionCount = vertexBindingDescriptionsCount,
       .pVertexBindingDescriptions = vertexBindingDescriptions,
-      .vertexAttributeDescriptionCount = 2,
+      .vertexAttributeDescriptionCount = vertexAttributeDescriptionsCount,
       .pVertexAttributeDescriptions = vertexAttributeDescriptions,
     };
 
@@ -358,7 +380,7 @@ namespace font::outline {
     //
     // pool
     //
-    constexpr int descriptorPoolSizesCount = 2;
+    constexpr int descriptorPoolSizesCount = 3;
     VkDescriptorPoolSize descriptorPoolSizes[descriptorPoolSizesCount]{
       { // linear sampler
         .type = VK_DESCRIPTOR_TYPE_SAMPLER,
@@ -367,7 +389,11 @@ namespace font::outline {
       {
         .type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
         .descriptorCount = 1,
-      }
+      },
+      {
+        .type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+        .descriptorCount = 1,
+      },
     };
     VkDescriptorPoolCreateInfo descriptorPoolCreateInfo{
       .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
@@ -381,7 +407,7 @@ namespace font::outline {
     // (set 0, constant)
     //
     {
-      constexpr int bindingCount = 2;
+      constexpr int bindingCount = 3;
       VkDescriptorSetLayoutBinding descriptorSetLayoutBindings[bindingCount]{
         {
           .binding = 0,
@@ -394,6 +420,12 @@ namespace font::outline {
           .descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
           .descriptorCount = 1,
           .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT
+        },
+        {
+          .binding = 2,
+          .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+          .descriptorCount = 1,
+          .stageFlags = VK_SHADER_STAGE_VERTEX_BIT
         }
       };
 
@@ -420,7 +452,7 @@ namespace font::outline {
 
   void font::write_descriptor_sets(VkImageView fontImageView)
   {
-    constexpr uint32_t writeCount = 2;
+    constexpr uint32_t writeCount = 3;
     VkWriteDescriptorSet writeDescriptorSets[writeCount];
     uint32_t writeIndex = 0;
 
@@ -448,9 +480,127 @@ namespace font::outline {
       .descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
       .pImageInfo = &terrainDescriptorImageInfo
     };
-
+    VkDescriptorBufferInfo glyphsDescriptorBufferInfo{
+      .buffer = glyphsBuffer,
+      .offset = 0,
+      .range = glyphsBufferSize,
+    };
+    writeDescriptorSets[writeIndex++] = {
+      .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+      .dstSet = descriptorSet0,
+      .dstBinding = 2,
+      .descriptorCount = 1,
+      .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+      .pBufferInfo = &glyphsDescriptorBufferInfo
+    };
     assert(writeIndex == writeCount);
     vkUpdateDescriptorSets(device, writeIndex, writeDescriptorSets, 0, nullptr);
+  }
+
+  //////////////////////////////////////////////////////////////////////
+  // create instance buffer
+  //////////////////////////////////////////////////////////////////////
+
+  void font::create_instance_buffers()
+  {
+    constexpr VkDeviceSize bufferSize{ maximumGlyphCount * (sizeof (GlyphInstance)) };
+    instanceMemorySize = bufferSize * 2;
+    instanceBufferOffset[0] = bufferSize * 0;
+    instanceBufferOffset[1] = bufferSize * 1;
+
+    // create buffer
+    VkBufferCreateInfo bufferCreateInfo{
+      .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+      .size = instanceMemorySize,
+      .usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+      .sharingMode = VK_SHARING_MODE_EXCLUSIVE
+    };
+    VK_CHECK(vkCreateBuffer(device, &bufferCreateInfo, nullptr, &instanceBuffer));
+
+    // allocate memory
+
+    VkMemoryRequirements memoryRequirements;
+    vkGetBufferMemoryRequirements(device, instanceBuffer, &memoryRequirements);
+    VkMemoryPropertyFlags memoryPropertyFlags{ VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT };
+    VkMemoryAllocateFlags memoryAllocateFlags{};
+    VkDeviceSize stride;
+    allocateFromMemoryRequirements(device,
+                                   physicalDeviceProperties.limits.nonCoherentAtomSize,
+                                   physicalDeviceMemoryProperties,
+                                   memoryRequirements,
+                                   memoryPropertyFlags,
+                                   memoryAllocateFlags,
+                                   1,
+                                   &instanceMemory,
+                                   &stride);
+
+    VK_CHECK(vkBindBufferMemory(device, instanceBuffer, instanceMemory, 0));
+
+    // map memory
+
+    VK_CHECK(vkMapMemory(device, instanceMemory, 0, VK_WHOLE_SIZE, 0, (void **)&instanceMappedData));
+  }
+
+  //////////////////////////////////////////////////////////////////////
+  // create instance buffer
+  //////////////////////////////////////////////////////////////////////
+
+  void font::create_glyphs_buffer(types::font const * const font, types::glyph const * const glyphs)
+  {
+    glyphsBufferSize = (sizeof (Glyph)) * font->glyph_count;
+
+    // create buffer
+    VkBufferCreateInfo bufferCreateInfo{
+      .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+      .size = glyphsBufferSize,
+      .usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+      .sharingMode = VK_SHARING_MODE_EXCLUSIVE
+    };
+    VK_CHECK(vkCreateBuffer(device, &bufferCreateInfo, nullptr, &glyphsBuffer));
+
+    // allocate memory
+
+    VkMemoryRequirements memoryRequirements;
+    vkGetBufferMemoryRequirements(device, glyphsBuffer, &memoryRequirements);
+    VkMemoryPropertyFlags memoryPropertyFlags{ VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT };
+    VkMemoryAllocateFlags memoryAllocateFlags{};
+    VkDeviceSize stride;
+    allocateFromMemoryRequirements(device,
+                                   physicalDeviceProperties.limits.nonCoherentAtomSize,
+                                   physicalDeviceMemoryProperties,
+                                   memoryRequirements,
+                                   memoryPropertyFlags,
+                                   memoryAllocateFlags,
+                                   1,
+                                   &glyphsMemory,
+                                   &stride);
+
+    VK_CHECK(vkBindBufferMemory(device, glyphsBuffer, glyphsMemory, 0));
+
+    // map memory
+    Glyph * glyphsMappedData;
+    VK_CHECK(vkMapMemory(device, glyphsMemory, 0, VK_WHOLE_SIZE, 0, (void **)&glyphsMappedData));
+
+    for (int i = 0; i < font->glyph_count; i++) {
+      glyphsMappedData[i].x = glyphs[i].bitmap.x;
+      glyphsMappedData[i].y = glyphs[i].bitmap.y;
+      glyphsMappedData[i].width = glyphs[i].bitmap.width;
+      glyphsMappedData[i].height = glyphs[i].bitmap.height;
+    }
+
+    // flush
+    constexpr int mappedMemoryRangesCount = 1;
+    VkMappedMemoryRange mappedMemoryRanges[mappedMemoryRangesCount]{
+      {
+        .sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE,
+        .memory = glyphsMemory,
+        .offset = 0,
+        .size = VK_WHOLE_SIZE,
+      }
+    };
+    vkFlushMappedMemoryRanges(device, mappedMemoryRangesCount, mappedMemoryRanges);
+
+    vkUnmapMemory(device, glyphsMemory);
   }
 
   //////////////////////////////////////////////////////////////////////
@@ -460,6 +610,52 @@ namespace font::outline {
   void font::draw(VkCommandBuffer commandBuffer,
                   uint32_t frameIndex)
   {
+    // transfer
+    const char * string = "so when Nico wants to run this game on his\n4K monitor, he gets a dinky little 1280x720\nwindow instead?";
+    int outputIndex = 0;
+    int stringIndex = 0;
+
+    uint32_t x = 64 << 6;
+    uint32_t y = 64 << 6;
+    while (true) {
+      char c = string[stringIndex++];
+      if (c == 0)
+        break;
+
+      if (c != ' ') {
+        instanceMappedData[maximumGlyphCount * frameIndex + outputIndex++] = {
+          (uint16_t)((x + loadedFont.glyphs[c - 32].metrics.horiBearingX) >> 6),
+          (uint16_t)((y - loadedFont.glyphs[c - 32].metrics.horiBearingY) >> 6),
+          (uint32_t)(c - 32),
+          0xaabbccdd,
+        };
+      }
+
+      if (c == '\n') {
+        y += loadedFont.font->face_metrics.height * 1.2;
+        x = 64 << 6;
+      } else {
+        x += loadedFont.glyphs[c - 32].metrics.horiAdvance;
+      }
+    };
+    // flush
+    constexpr int mappedMemoryRangesCount = 1;
+    VkMappedMemoryRange mappedMemoryRanges[mappedMemoryRangesCount]{
+      {
+        .sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE,
+        .memory = instanceMemory,
+        .offset = 0,
+        .size = (sizeof (GlyphInstance)),
+      }
+    };
+    alignMappedMemoryRanges(physicalDeviceProperties.limits.nonCoherentAtomSize,
+                            instanceMemorySize,
+                            mappedMemoryRangesCount,
+                            mappedMemoryRanges);
+    vkFlushMappedMemoryRanges(device, mappedMemoryRangesCount, mappedMemoryRanges);
+
+    // bind/draw
+
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
     VkDescriptorSet descriptorSets[1] = {
@@ -473,9 +669,10 @@ namespace font::outline {
 
     vkCmdBindIndexBuffer(commandBuffer, vertexIndex.buffer, vertexIndex.indexOffset, VK_INDEX_TYPE_UINT16);
 
-    VkDeviceSize vertexOffset{ 0 };
-    vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexIndex.buffer, &vertexOffset);
+    VkDeviceSize vertexOffsets[2]{ 0, instanceBufferOffset[frameIndex] };
+    VkBuffer vertexBuffers[2]{ vertexIndex.buffer, instanceBuffer };
+    vkCmdBindVertexBuffers(commandBuffer, 0, 2, vertexBuffers, vertexOffsets);
 
-    vkCmdDrawIndexed(commandBuffer, 4, 1, 0, 0, 0);
+    vkCmdDrawIndexed(commandBuffer, 4, outputIndex, 0, 0, 0);
   }
 }

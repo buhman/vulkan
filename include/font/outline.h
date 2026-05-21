@@ -28,9 +28,26 @@ namespace font::outline {
     AllocatedImage allocatedImage;
   };
 
+  struct GlyphInstance {
+    uint16_t x;
+    uint16_t y;
+    uint32_t glyph;
+    uint32_t color;
+  };
+  static_assert((sizeof (GlyphInstance)) == 4 * 3);
+
+  struct Glyph {
+    uint32_t x;
+    uint32_t y;
+    uint32_t width;
+    uint32_t height;
+  };
+
   struct font {
     static constexpr int perVertexSize = (4) * 2;
-    static constexpr int perInstanceSize = (0) * 2;
+    static constexpr int perInstanceSize = (sizeof (GlyphInstance));
+
+    static constexpr int maximumGlyphCount = 1024;
 
     VkInstance instance;
     VkDevice device;
@@ -48,6 +65,16 @@ namespace font::outline {
     VkPipeline pipeline;
     VertexIndex vertexIndex;
     LoadedFont loadedFont;
+
+    VkDeviceSize instanceBufferOffset[2];
+    VkBuffer instanceBuffer;
+    VkDeviceMemory instanceMemory;
+    VkDeviceSize instanceMemorySize;
+    GlyphInstance * instanceMappedData;
+
+    VkBuffer glyphsBuffer;
+    VkDeviceMemory glyphsMemory;
+    VkDeviceSize glyphsBufferSize;
 
     VkDescriptorPool descriptorPool{ VK_NULL_HANDLE };
     static constexpr int descriptorSetLayoutCount = 1;
@@ -70,7 +97,9 @@ namespace font::outline {
     void load_shader();
     void create_descriptor_sets();
     void write_descriptor_sets(VkImageView fontImageView);
+    void create_instance_buffers();
     void create_pipeline();
+    void create_glyphs_buffer(types::font const * const font, types::glyph const * const glyphs);
     void draw(VkCommandBuffer commandBuffer,
               uint32_t frameIndex);
 
