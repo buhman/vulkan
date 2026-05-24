@@ -179,7 +179,7 @@ def next_token(mem, position):
     next_position.column += 1
 
     if c >= 128:
-        print(f"warning: invalid garbage byte {hex(c)} at {position}")
+        print(f"invalid garbage byte {hex(c)} at {position}", file=sys.stderr)
         next_position.column = position.column
         return next_token(mem, next_position)
     if c == ord('\n'):

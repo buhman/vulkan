@@ -213,16 +213,14 @@ def parse_define(tokens, index):
     return index, define
 
 def parse_label(tokens, index):
-    name = tokens[index + 0]
-    if name.type != TT.IDENTIFIER:
-        raise ParseException("expected identifier", name)
+    index, lhs = parse_lhs(tokens, index)
 
-    colon = tokens[index + 1]
+    colon = tokens[index]
     if colon.type != TT.COLON:
         raise ParseException("expected colon", colon)
 
     label = Label(
-        name = name
+        name = lhs
     )
 
     return index + 2, label
@@ -253,14 +251,11 @@ def parse_play(tokens, index):
     return index, play
 
 def parse_scene(tokens, index):
-    name = tokens[index + 0]
-    if name.type != TT.IDENTIFIER:
-        raise ParseException("expected identifier", name)
-
+    index, name = parse_lhs(tokens, index)
     scene = Scene(
         name = name,
     )
-    return index + 1, scene
+    return index, scene
 
 def parse_with(tokens, index):
     index, function_call = parse_function_call(tokens, index)
@@ -272,11 +267,8 @@ def parse_with(tokens, index):
     return index, _with
 
 def parse_say(tokens, index):
-    speaker = tokens[index + 0]
-    if speaker.type != TT.IDENTIFIER:
-        raise ParseException("expected identifier", name)
-
-    text = tokens[index + 1]
+    index, speaker = parse_lhs(tokens, index)
+    text = tokens[index]
     if text.type != TT.STRING:
         raise ParseException("expected string", text)
 
@@ -298,15 +290,13 @@ def parse_voice(tokens, index):
     return index + 1, voice
 
 def parse_show(tokens, index):
-    what = tokens[index + 0]
-    if what.type != TT.IDENTIFIER:
-        raise ParseException("expected identifier", path)
+    index, what = parse_lhs(tokens, index)
 
-    at = tokens[index + 1]
+    at = tokens[index + 0]
     if at.type != TT.AT:
         raise ParseException("expected at", at)
 
-    transform = tokens[index + 2]
+    transform = tokens[index + 1]
     if transform.type != TT.IDENTIFIER:
         raise ParseException("expected identifier", transform)
 
@@ -314,7 +304,7 @@ def parse_show(tokens, index):
         what = what,
         transform = transform
     )
-    return index + 3, show
+    return index + 2, show
 
 def parse_menu(tokens, index):
     menu = tokens[index + 0]
@@ -336,9 +326,7 @@ def parse_menu(tokens, index):
             continue
         peek = tokens[index+1]
 
-        if token.position.column < menu.position.column:
-            raise ParseException("invalid block dedent", token)
-        if token.position.column == menu.position.column:
+        if token.position.column <= menu.position.column:
             break
 
         if token.type == TT.STRING:
@@ -367,9 +355,7 @@ def parse_menu(tokens, index):
     return index, menu
 
 def parse_jump(tokens, index):
-    target = tokens[index + 0]
-    if target.type != TT.IDENTIFIER:
-        raise ParseException("expected identifier", target)
+    index, target = parse_lhs(tokens, index)
 
     jump = Jump(
         target = target,
@@ -395,7 +381,7 @@ def parse_init(tokens, index):
             continue
 
         if token.position.column < init.position.column:
-            raise ParseException("invalid block dedent", token)
+            raise ParseException("invalid init block dedent", token)
         if token.position.column == init.position.column:
             break
         index += 1

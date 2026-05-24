@@ -6,3 +6,4 @@ main
 tool/pack_file
 *.zip
 *.tar
+*.pyc

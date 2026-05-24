@@ -1,13 +1,61 @@
 #include <stdint.h>
 
-namespace language::statement {
-  enum type {
+namespace language {
+  struct option {
+    char const * const string;
+    uint32_t statementIndex;
+  };
+
+  struct character {
+    char const * const characterName;
+  };
+
+  struct audio {
+    char const * const path;
+  };
+
+  struct image {
+    char const * const path;
+  };
+
+  // statement
+
+  enum struct type {
+    jump,
+    menu,
+    play,
+    _return,
+    say,
+    scene,
     show,
     voice,
-    music,
-    text,
-    menu,
-    jump,
+    with,
+  };
+
+  struct jump {
+    uint32_t statementIndex;
+  };
+
+  struct menu {
+    uint32_t count;
+    uint32_t optionIndex;
+  };
+
+  struct play {
+    uint32_t channelIndex;
+    uint32_t audioIndex;
+  };
+
+  struct _return {
+  };
+
+  struct say {
+    uint32_t characterIndex;
+    uint32_t stringIndex;
+  };
+
+  struct scene {
+    uint32_t imageIndex;
   };
 
   struct show {
@@ -19,39 +67,19 @@ namespace language::statement {
     uint32_t audioIndex;
   };
 
-  struct music {
-    uint32_t channelIndex;
-    uint32_t audioIndex;
-  };
-
-  struct say {
-    uint32_t characterIndex;
-    uint32_t stringIndex;
-  };
-
-  struct option {
-    uint32_t stringIndex;
-    uint32_t statementIndex;
-  };
-
-  struct menu {
-    uint32_t count;
-    uint32_t optionIndex;
-  };
-
-  struct jump {
-    uint32_t statementIndex;
+  struct with {
   };
 
   struct statement {
-    enum statement_type type;
+    enum type type;
     union {
+      jump jump;
+      menu menu;
+      play play;
+      say say;
+      scene scene;
       show show;
       voice voice;
-      music music;
-      say say;
-      menu menu;
-      jump jump;
     };
   };
 }
