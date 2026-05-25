@@ -56,6 +56,14 @@ class Play:
     channel: lex.Token
     path: lex.Token
     fadeout: lex.Token
+    noloop: bool
+
+    __repr__ = lexeme_repr
+
+@dataclass
+class Stop:
+    channel: lex.Token
+    fadeout: lex.Token
 
     __repr__ = lexeme_repr
 
@@ -88,6 +96,7 @@ class Voice:
 class Show:
     what: lex.Token
     transform: lex.Token
+    properties: list[tuple[lex.Token, lex.Token]]
 
     __repr__ = lexeme_repr
 
@@ -99,6 +108,18 @@ class Menu:
 @dataclass
 class Jump:
     target: lex.Token
+
+    __repr__ = lexeme_repr
+
+@dataclass
+class Pause:
+    duration: lex.Token
+
+    __repr__ = lexeme_repr
+
+@dataclass
+class Hide:
+    what: lex.Token
 
     __repr__ = lexeme_repr
 
@@ -242,11 +263,16 @@ def parse_play(tokens, index):
         if fadeout.type != TT.NUMBER:
             raise ParseException("expected number", fadeout)
         index += 2
+    noloop = False
+    if token.type == TT.NOLOOP:
+        noloop = True
+        index += 1
 
     play = Play(
         channel = channel,
         path = path,
-        fadeout = fadeout
+        fadeout = fadeout,
+        noloop = noloop,
     )
     return index, play
 
@@ -290,6 +316,12 @@ def parse_voice(tokens, index):
     return index + 1, voice
 
 def parse_show(tokens, index):
+    show = tokens[index + 0]
+    if show.type != TT.SHOW:
+        raise ParseException("expected show", show)
+
+    index += 1
+
     index, what = parse_lhs(tokens, index)
 
     at = tokens[index + 0]
@@ -300,11 +332,36 @@ def parse_show(tokens, index):
     if transform.type != TT.IDENTIFIER:
         raise ParseException("expected identifier", transform)
 
+    index += 2
+
+    properties = []
+    if tokens[index + 0].type == TT.COLON:
+        index += 1
+        while index < len(tokens):
+            token = tokens[index + 0]
+            if token.type == TT.NEWLINE:
+                index += 1
+                continue
+
+            if token.position.column <= show.position.column:
+                break
+
+            if token.type != TT.IDENTIFIER:
+                raise ParseException("expected identifier")
+
+            number = tokens[index + 1]
+            if number.type != TT.NUMBER:
+                raise ParseException("expected number")
+
+            properties.append((token, number))
+            index += 2
+
     show = Show(
         what = what,
-        transform = transform
+        transform = transform,
+        properties = properties
     )
-    return index + 2, show
+    return index, show
 
 def parse_menu(tokens, index):
     menu = tokens[index + 0]
@@ -369,7 +426,7 @@ def parse_init(tokens, index):
 
     colon = tokens[index + 1]
     if colon.type != TT.COLON:
-        raise ParseException("expected identifier", colon)
+        raise ParseException("expected colon", colon)
 
     index += 2
 
@@ -387,6 +444,74 @@ def parse_init(tokens, index):
         index += 1
 
     return index, None
+
+def parse_transform(tokens, index):
+    transform = tokens[index + 0]
+    if transform.type != TT.TRANSFORM:
+        raise ParseException("expected transform", init)
+
+    identifier = tokens[index + 1]
+    if identifier.type != TT.IDENTIFIER:
+        raise ParseException("expected identifier", identifier)
+
+    colon = tokens[index + 2]
+    if colon.type != TT.COLON:
+        raise ParseException("expected colon", colon)
+
+    index += 3
+
+    # skip all tokens inside block
+    while index < len(tokens):
+        token = tokens[index]
+        if token.type == TT.NEWLINE:
+            index += 1
+            continue
+
+        if token.position.column < transform.position.column:
+            raise ParseException("invalid init block dedent", token)
+        if token.position.column == transform.position.column:
+            break
+        index += 1
+
+    return index, None
+
+def parse_stop(tokens, index):
+    channel = tokens[index + 0]
+    if channel.type != TT.IDENTIFIER:
+        raise ParseException("expected identifier", channel)
+
+    index += 1
+    token = tokens[index]
+    fadeout = None
+    if token.type == TT.FADEOUT:
+        fadeout = tokens[index + 1]
+        if fadeout.type != TT.NUMBER:
+            raise ParseException("expected number", fadeout)
+        index += 2
+
+    stop = Stop(
+        channel = channel,
+        fadeout = fadeout
+    )
+    return index, stop
+
+def parse_pause(tokens, index):
+    duration = tokens[index + 0]
+    if duration.type != TT.NUMBER:
+        raise ParseException("expected number", duration)
+
+    pause = Pause(
+        duration = duration
+    )
+    return index + 1, pause
+
+def parse_hide(tokens, index):
+    index, what = parse_lhs(tokens, index)
+
+    hide = Hide(
+        what = what
+    )
+    return index + 1, hide
 
 def parse_one(tokens, index):
     token = tokens[index]
@@ -421,7 +546,7 @@ def parse_one(tokens, index):
         index, ast = parse_voice(tokens, index + 1)
         return index, ast
     elif token.type == TT.SHOW:
-        index, ast = parse_show(tokens, index + 1)
+        index, ast = parse_show(tokens, index)
         return index, ast
     elif token.type == TT.MENU:
         index, ast = parse_menu(tokens, index)
@@ -433,6 +558,18 @@ def parse_one(tokens, index):
         return index + 1, Return()
     elif token.type == TT.INIT:
         index, ast = parse_init(tokens, index)
+        return index, ast
+    elif token.type == TT.TRANSFORM:
+        index, ast = parse_transform(tokens, index)
+        return index, ast
+    elif token.type == TT.STOP:
+        index, ast = parse_stop(tokens, index + 1)
+        return index, ast
+    elif token.type == TT.PAUSE:
+        index, ast = parse_pause(tokens, index + 1)
+        return index, ast
+    elif token.type == TT.HIDE:
+        index, ast = parse_hide(tokens, index + 1)
         return index, ast
     else:
         raise ParseException("unexpected token", token)

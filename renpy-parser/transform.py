@@ -43,6 +43,9 @@ simple_statement_types = {
     parse.Show,
     parse.Voice,
     parse.With,
+    parse.Stop,
+    parse.Pause,
+    parse.Hide,
 }
 
 def pass1(state, ast):
@@ -111,7 +114,7 @@ def pass2_statement(state, pc, statement):
     if type(statement) is parse.Play:
         comment = statement.path.lexeme.decode('utf-8')
         audio_index = state.audio_lookup[statement.path.lexeme]
-        yield f"{{ .type = type::play, .play = {{ .audioIndex = {audio_index} }} }}, // {pc} {comment}"
+        yield f"{{ .type = type::play, .play = {{ .audioIndex = {audio_index}, /* FIXME channel */ }} }}, // {pc} {comment}"
     elif type(statement) is parse.Scene:
         key = lhs_key(statement.name)
         image_index = state.images_lookup[key]
@@ -152,6 +155,16 @@ def pass2_statement(state, pc, statement):
         yield f"{{ .type = type::jump, .jump = {{ .statementIndex = {statement_index} }} }}, // {pc} {comment}"
     elif type(statement) is parse.Return:
         yield f"{{ .type = type::_return }}, // {pc}"
+    elif type(statement) is parse.Stop:
+        yield f"{{ .type = type::stop, .stop = {{ /* FIXME channel */ }} }}, // {pc}"
+    elif type(statement) is parse.Pause:
+        duration = statement.duration.lexeme
+        yield f"{{ .type = type::pause, .pause = {{ .duration = {duration} }} }}, // {pc}"
+    elif type(statement) is parse.Hide:
+        key = lhs_key(statement.what)
+        image_index = state.images_lookup[key]
+        comment = ".".join(k.decode('utf-8') for k in key)
+        yield f"{{ .type = type::hide, .hide = {{ .imageIndex = {image_index} }} }}, // {pc} {comment}"
     else:
         pass
         assert False, (type(statement), statement)
@@ -161,12 +174,14 @@ def pass2_statements(state):
     for pc, statement in enumerate(state.statements):
         yield from pass2_statement(state, pc, statement)
     yield "};"
+    yield "constexpr int statements_length = (sizeof (statements)) / (sizeof (statements[0]));"
 
 def pass2_strings(state):
     yield "char const * const strings[] = {"
     for string, i in sorted(state.string_lookup.items(), key=lambda kv: kv[1]):
         yield f"\"{string.decode('utf-8')}\", // {i}"
     yield "};"
+    yield "constexpr int strings_length = (sizeof (strings)) / (sizeof (strings[0]));"
 
 def pass2_characters(state):
     yield "const character characters[] = {"
@@ -174,24 +189,42 @@ def pass2_characters(state):
         character_name, = character.value.args
         yield f"{{ .characterName = \"{character_name.lexeme.decode('utf-8')}\" }}, // {i}"
     yield "};"
+    yield "constexpr int characters_length = (sizeof (characters)) / (sizeof (characters[0]));"
 
 def pass2_audio(state):
     yield "const audio audio[] = {"
     for audio, i in sorted(state.audio_lookup.items(), key=lambda kv: kv[1]):
-        yield f"{{ .path = \"{audio.decode('utf-8')}\" }}, // {i}"
+        orig_path = audio.decode('utf-8')
+        path = orig_path
+        if path.endswith(".mp3"):
+            path = path.removesuffix(".mp3")
+        elif path.endswith(".ogg"):
+            path = path.removesuffix(".ogg")
+        else:
+            assert False, path
+        yield f"{{ .path = \"{path}.opus\" }}, // {i} {orig_path}"
     yield "};"
+    yield "constexpr int audio_length = (sizeof (audio)) / (sizeof (audio[0]));"
 
 def pass2_images(state):
-    yield "const image image[] = {"
+    yield "const image images[] = {"
     for i, image in enumerate(state.images):
-        yield f"{{ .path = \"{image.path.lexeme.decode('utf-8')}\" }}, // {i}"
+        orig_path = image.path.lexeme.decode('utf-8')
+        path = orig_path
+        if path.endswith(".png"):
+            path = path.removesuffix(".png")
+        else:
+            assert False, path
+        yield f"{{ .path = \"{path}.dds\" }}, // {i} {orig_path}"
     yield "};"
+    yield "constexpr int images_length = (sizeof (images)) / (sizeof (images[0]));"
 
 def pass2_options(state):
     yield "const option options[] = {"
     for i, (lexeme, statement_index) in sorted(state.entries.items(), key=lambda kv: kv[0]):
         yield f"{{ .string = \"{lexeme.decode('utf-8')}\", .statementIndex = {statement_index} }}, // {i}"
     yield "};"
+    yield "constexpr int options_length = (sizeof (options)) / (sizeof (options[0]));"
 
 def pass2(state):
     yield "#include \"statement.h\""
@@ -224,9 +257,11 @@ def main():
         global_identifiers = set(),
     )
     try:
-        ast_list = list(parse.parse_all(tokens))
+        ast_list = []
+        for ast in parse.parse_all(tokens):
+            ast_list.append(ast)
     except parse.ParseException as e:
-        print(e, e.token)
+        print(e, e.token, file=sys.stderr)
         raise
 
     for t in ast_list:

@@ -30,6 +30,9 @@ namespace language {
     show,
     voice,
     with,
+    stop,
+    pause,
+    hide,
   };
 
   struct jump {
@@ -68,6 +71,18 @@ namespace language {
   };
 
   struct with {
+  };
+
+  struct stop {
+    uint32_t channelIndex;
+  };
+
+  struct pause {
+    float duration;
+  };
+
+  struct hide {
+    uint32_t imageIndex;
   };
 
   struct statement {

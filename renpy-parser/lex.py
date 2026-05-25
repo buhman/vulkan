@@ -45,6 +45,11 @@ class TT(Enum):
     RETURN = auto()
     INIT = auto()
     FADEOUT = auto()
+    TRANSFORM = auto()
+    STOP = auto()
+    NOLOOP = auto()
+    PAUSE = auto()
+    HIDE = auto()
 
 keywords = {
     b"play": TT.PLAY,
@@ -61,6 +66,11 @@ keywords = {
     b"return": TT.RETURN,
     b"init": TT.INIT,
     b"fadeout": TT.FADEOUT,
+    b"transform": TT.TRANSFORM,
+    b"stop": TT.STOP,
+    b"noloop": TT.NOLOOP,
+    b"pause": TT.PAUSE,
+    b"hide": TT.HIDE,
 }
 
 @dataclass
