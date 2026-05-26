@@ -2,7 +2,7 @@
 
 # Declare characters used by this game. The color argument colorizes the
 # name of the character.
-image bgwhite = "bg/white.png"
+image bgwhite = "#ffffff"
 image bgforest1 = "bg/forest1.png"
 image bgforest2 = "bg/forest2.png"
 image bgflower1 = "bg/flowerfield1.png"
@@ -37,7 +37,7 @@ transform centerleft:
 
 
 transform centerright:
-    xalign 0.7 
+    xalign 0.7
     yalign 1.0
 
 
@@ -48,7 +48,7 @@ init:
         renpy.music.register_channel("MistAmbience", "music", loop=False)
         renpy.music.register_channel("PhrygianButterflies", "music", loop=True)
         renpy.music.register_channel("WheatFields", "music", loop=True)
-        
+
 
 
 # The game starts here.
@@ -58,7 +58,7 @@ label start:
     # Show a background. This uses a placeholder by default, but you can
     # add a file (named either "bg room.png" or "bg room.jpg") to the
     # images directory to show it.
-    
+
     #play Chime "sfx/Chime.ogg" fadeout 1.0
     play sound "sfx/Chime.ogg"
     play MistAmbience "sfx/MistAmbience.ogg"
@@ -102,9 +102,9 @@ label start:
             a "Easy for you to say, all you have to carry is a little memory pipe!"
             a "I'm tired ><"
 
-            e "Don't start whining now!" 
+            e "Don't start whining now!"
 
-            e "You need to remember why we have come all this way" 
+            e "You need to remember why we have come all this way"
 
             a "I understand... I suppose it is for an important purpose"
 
@@ -115,9 +115,9 @@ label start:
 
 
     label mainbranch1:
-        e "We're almost out of the forest, we can take a little break once we clear the tree line" 
+        e "We're almost out of the forest, we can take a little break once we clear the tree line"
 
-        a "Is that where the flora field is?" 
+        a "Is that where the flora field is?"
 
         e "Why yes, If I remember correctly, it should be just up ahead"
         stop TinyForestMinstrels fadeout 5.5
@@ -129,19 +129,19 @@ label start:
 
         voice "n5test.ogg"
         n "As the minstrel mice girls continue along the path, the forest opens up into a beautiful field of flowers"
-        
+
         play PhrygianButterflies "music/PhrygianButterflies.ogg"
-        
+
 
         scene bgflower1
         with Dissolve(1.0)
 
         show ei at right
 
-        e "Look at all the butterflies! They are all so pretty!" 
+        e "Look at all the butterflies! They are all so pretty!"
 
         show al at left
-        
+
 
         a "This place is like a dream..."
 
@@ -173,16 +173,16 @@ label start:
                 stop PhrygianButterflies fadeout 4.2
                 a "They were asking for it, you know"
 
-            
 
 
 
-                
-                
+
+
+
         jump mainbranch2
 
         #Improvise music in the butterfly field
-        #Choose Between: Fleeting and 
+        #Choose Between: Fleeting and
         #Elri scares the mice
         #We learn why they want to petition the queen
         # elri: "Arent you sacred she will eat you?"
@@ -190,17 +190,17 @@ label start:
         #Elri shows them to the wheat town with the castle in the distance
         #They wish to speak to the queen of birds, but arent important enough
         #Elri helps
-        
 
 
 
-        #Cat is summoned to see the Queen of birds 
+
+        #Cat is summoned to see the Queen of birds
 
         #Mouse girls realize its their only chance
-        
+
 
         #
-        
+
         #Lenient on Taxes
         #Removed from the map
 
@@ -218,13 +218,13 @@ label start:
         show cat at right
         play ScaredMice "music/ScaredMice.ogg"
 
-                
+
         mg "AHHHHHHHHHH!!!!!"
-        
+
 
         c "Nyanyanyanya"
         c "Well, what do we have here? If it isn't two little meowse girls, all alone amongst the flowers"
-        
+
         menu:
             "Beg for mercy" :
                 a "Please don't eat us!!!"
@@ -232,11 +232,11 @@ label start:
             "Run" :
                 e "Alice don't run, our only chance is through pleading!"
                 e "Please don't eat us, miss kitty cat!!! ><"
-       
-       
-       
+
+
+
         jump mainbranch3
-        
+
 
 
 
@@ -279,7 +279,7 @@ label start:
         c "Well, no..."
 
         a "Then why are you traveling to Castle Alysen?"
-        
+
 
         c "uhhh"
         play MistAmbience "sfx/MistAmbience.ogg"
@@ -303,7 +303,7 @@ label start:
         with Dissolve(3.0)
 
         n "After their encounter with the weird cat, the mice scurry out of the flower field and into the nearby meadow"
-        scene forest2
+        scene bgforest2
         with Dissolve(3.0)
 
         show ei at right
@@ -312,7 +312,7 @@ label start:
         a "Then where did the path go?"
 
         e "How am I supposed to know?"
-        
+
 
         a "Did you hear that?!?!"
 
@@ -374,7 +374,7 @@ label start:
         e "You tell it then!"
 
         a "My cousin found this feather in one of the highest towers of a castle far to the north"
-        
+
         c "How do you know it belongs to the queen?"
 
         e "It said so itself above the display on the wall"
@@ -469,7 +469,7 @@ label start:
         c "You little mice truly are mad!"
 
         a "I like the wheat!"
-        
+
         e "Shut up!"
 
         c "Sounds like someone needs a nap!"
@@ -525,10 +525,10 @@ label start:
 
 
 
-        
-            
 
-    
+
+
+
 
 
 
@@ -539,4 +539,3 @@ label start:
 
 
     return
-

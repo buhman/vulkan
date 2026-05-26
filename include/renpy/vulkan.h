@@ -1,3 +1,7 @@
+#pragma once
+
+#include "renpy/interpreter.h"
+
 namespace renpy {
   struct Image {
     VkImage image;
@@ -7,17 +11,19 @@ namespace renpy {
 
   struct ImageInstance {
     struct {
-      uint16_t width;
-      uint16_t height;
+      int16_t width;
+      int16_t height;
     } size;
     struct {
-      uint16_t x;
-      uint16_t y;
+      int16_t x;
+      int16_t y;
     } topLeft;
-    uint16_t imageIndex;
+    uint32_t color;
+    int16_t imageIndex;
+    int16_t _padding;
   };
 
-  static_assert((sizeof (ImageInstance)) == 10);
+  static_assert((sizeof (ImageInstance)) == 16);
 
   struct vulkan {
     static constexpr int perVertexSize = (4) * 2;
@@ -75,7 +81,8 @@ namespace renpy {
     void create_pipeline();
     void create_instance_buffers();
     void draw(VkCommandBuffer commandBuffer,
-              uint32_t frameIndex);
+              uint32_t frameIndex,
+              renpy::interpreter const& state);
 
   };
 }

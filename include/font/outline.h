@@ -2,6 +2,7 @@
 
 #include "outline_types.h"
 #include "vulkan_helper.h"
+#include "renpy/interpreter.h"
 
 namespace font::outline {
 
@@ -9,12 +10,15 @@ namespace font::outline {
     char const * const path;
   };
 
-  font_desc const uncial_antiqua[] = {
+  font_desc const medieval_sharp[] = {
     {
-      .path = "data/font/outline/uncial_antiqua_36.data",
+      .path = "data/font/outline/medieval_sharp_24.data",
     },
   };
-  int const uncial_antiqua_length = (sizeof (uncial_antiqua)) / (sizeof (font_desc));
+  int const medieval_sharp_length = (sizeof (medieval_sharp)) / (sizeof (font_desc));
+
+  constexpr uint32_t textboxLeft = 410;
+  constexpr uint32_t textboxWidth = 450;
 
   struct AllocatedImage {
     VkImage image;
@@ -100,8 +104,21 @@ namespace font::outline {
     void create_instance_buffers();
     void create_pipeline();
     void create_glyphs_buffer(types::font const * const font, types::glyph const * const glyphs);
+    void emit_line(int frameIndex,
+                   char const * const string,
+                   uint32_t x, uint32_t y,
+                   int& outputIndex,
+                   int startIndex,
+                   int endIndex,
+                   uint32_t color);
+    void centered(int frameIndex, char const * const string, uint32_t& x, uint32_t& y,
+                  uint32_t minX,
+                  uint32_t maxWidth,
+                  int& outputIndex,
+                  uint32_t color);
     void draw(VkCommandBuffer commandBuffer,
-              uint32_t frameIndex);
+              uint32_t frameIndex,
+              renpy::interpreter const& state);
 
     LoadedFont load_font(font_desc const& desc);
   };

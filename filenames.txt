@@ -1,8 +1,8 @@
 shader/font.spv
-data/font/outline/uncial_antiqua_36.data
+data/font/outline/medieval_sharp_24.data
 
 shader/renpy.spv
-data/renpy/images/bg/white.dds
+data/renpy/images/flowers.dds
 data/renpy/images/bg/forest1.dds
 data/renpy/images/bg/forest2.dds
 data/renpy/images/bg/flowerfield1.dds

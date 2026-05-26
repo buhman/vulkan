@@ -23,12 +23,13 @@ struct VSOutput
 {
   float4 Position : SV_POSITION;
   float2 Texture : NORMAL0;
+  float4 Color : Color;
 };
 
 [shader("vertex")]
 VSOutput VSMain(VSInput input)
 {
-  float2 inverseTexel = float2(1.0 / 256.0, 1.0 / 256.0);
+  float2 inverseTexel = float2(1.0 / 128.0, 1.0 / 256.0);
   float2 inversePixel = float2(1.0 / 1280.0, 1.0 / 720.0);
   int index = input.InstanceGlyph;
 
@@ -36,6 +37,7 @@ VSOutput VSMain(VSInput input)
   float2 position = (input.Texture * Glyphs[index].Size + input.InstancePosition) * inversePixel;
   output.Position = float4(position * 2.0 - 1.0, 0, 1);
   output.Texture = (input.Texture * Glyphs[index].Size + Glyphs[index].Position) * inverseTexel;
+  output.Color = input.InstanceColor.zyxw;
 
   return output;
 }
@@ -44,5 +46,7 @@ VSOutput VSMain(VSInput input)
 float4 PSMain(VSOutput input) : SV_TARGET
 {
   float4 color = FontTexture.Sample(ClosestSampler, input.Texture);
-  return float4(color.xxx, 1.0);
+  if (color.x == 0)
+    discard;
+  return float4(input.Color.xyz, color.x);
 }

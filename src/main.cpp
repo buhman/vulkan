@@ -22,6 +22,7 @@
 #include "minecraft/vulkan.h"
 #include "font/outline.h"
 #include "renpy/vulkan.h"
+#include "renpy/interpreter.h"
 
 #include "scenes/shadow_test/shadow_test.h"
 #include "scenes/eidelwind/eidelwind.h"
@@ -717,6 +718,14 @@ int main()
   renpy_state.init();
 
   //////////////////////////////////////////////////////////////////////
+  // interpreter
+  //////////////////////////////////////////////////////////////////////
+
+  renpy::interpreter interpreter_state;
+  interpreter_state.reset();
+  interpreter_state.interpret();
+
+  //////////////////////////////////////////////////////////////////////
   // initialize view
   //////////////////////////////////////////////////////////////////////
 
@@ -1073,8 +1082,8 @@ int main()
 
     //minecraft_state.draw(commandBuffer, frameIndex);
 
-    renpy_state.draw(commandBuffer, frameIndex);
-    font_state.draw(commandBuffer, frameIndex);
+    renpy_state.draw(commandBuffer, frameIndex, interpreter_state);
+    font_state.draw(commandBuffer, frameIndex, interpreter_state);
 
     vkCmdEndRendering(commandBuffer);
 

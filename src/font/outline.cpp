@@ -12,6 +12,7 @@
 
 #include "font/outline.h"
 #include "font/outline_types.h"
+#include "renpy/script.h"
 
 namespace font::outline {
   static const _Float16 vertexData[] = {
@@ -57,7 +58,7 @@ namespace font::outline {
     load_vertex_index_buffer();
     load_shader();
     create_descriptor_sets();
-    loadedFont = load_font(uncial_antiqua[0]);
+    loadedFont = load_font(medieval_sharp[0]);
     create_glyphs_buffer(loadedFont.font, loadedFont.glyphs);
     write_descriptor_sets(loadedFont.allocatedImage.imageView);
     create_instance_buffers();
@@ -184,7 +185,14 @@ namespace font::outline {
     };
 
     VkPipelineColorBlendAttachmentState blendAttachment{
-      .colorWriteMask = 0xF
+      .blendEnable = VK_TRUE,
+      .srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA,
+      .dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+      .colorBlendOp = VK_BLEND_OP_ADD,
+      .srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE,
+      .dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO,
+      .alphaBlendOp = VK_BLEND_OP_ADD,
+      .colorWriteMask = 0xF,
     };
     VkPipelineColorBlendStateCreateInfo colorBlendState{
       .sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
@@ -603,41 +611,130 @@ namespace font::outline {
     vkUnmapMemory(device, glyphsMemory);
   }
 
-  //////////////////////////////////////////////////////////////////////
-  // draw
-  //////////////////////////////////////////////////////////////////////
-
-  void font::draw(VkCommandBuffer commandBuffer,
-                  uint32_t frameIndex)
+  void font::emit_line(int frameIndex,
+                       char const * const string,
+                       uint32_t x, uint32_t y,
+                       int& outputIndex,
+                       int startIndex,
+                       int endIndex,
+                       uint32_t color)
   {
-    // transfer
-    const char * string = "so when Nico wants to run this game on his\n4K monitor, he gets a dinky little 1280x720\nwindow instead?";
-    int outputIndex = 0;
-    int stringIndex = 0;
+    for (int i = startIndex; i < endIndex; i++) {
+      char c = string[i];
+      types::glyph const& glyph = loadedFont.glyphs[c - 32];
 
-    uint32_t x = 64 << 6;
-    uint32_t y = 64 << 6;
+      if (c != ' ' && c != '\n') {
+        instanceMappedData[maximumGlyphCount * frameIndex + outputIndex++] = {
+          (uint16_t)((x + glyph.metrics.horiBearingX) >> 6),
+          (uint16_t)((y - glyph.metrics.horiBearingY) >> 6),
+          (uint32_t)(c - 32),
+          color,
+        };
+      }
+
+      x += glyph.metrics.horiAdvance;
+    }
+  }
+
+  void font::centered(int frameIndex, char const * const string, uint32_t& x, uint32_t& y,
+                      uint32_t minX,
+                      uint32_t maxWidth,
+                      int& outputIndex,
+                      uint32_t color)
+  {
+    int stringIndex = 0;
+    int lineStart = stringIndex;
+    int lineWidth = 0;
+    uint32_t leftOffset = 0;
+
     while (true) {
       char c = string[stringIndex++];
       if (c == 0)
         break;
 
-      if (c != ' ') {
-        instanceMappedData[maximumGlyphCount * frameIndex + outputIndex++] = {
-          (uint16_t)((x + loadedFont.glyphs[c - 32].metrics.horiBearingX) >> 6),
-          (uint16_t)((y - loadedFont.glyphs[c - 32].metrics.horiBearingY) >> 6),
-          (uint32_t)(c - 32),
-          0xaabbccdd,
-        };
+      if (c == '\n') {
+        continue;
       }
 
-      if (c == '\n') {
+      types::glyph const& glyph = loadedFont.glyphs[c - 32];
+
+      if (lineWidth == 0) {
+        leftOffset = glyph.metrics.horiBearingX;
+      }
+
+      lineWidth += glyph.metrics.horiAdvance;
+
+      if ((lineWidth - leftOffset) + loadedFont.font->face_metrics.max_advance > (maxWidth << 6)) {
+        while (string[stringIndex] != ' ') {
+          char c = string[--stringIndex];
+          types::glyph const& glyph = loadedFont.glyphs[c - 32];
+          lineWidth -= glyph.metrics.horiAdvance;
+        }
+        uint32_t center = (minX + (maxWidth / 2)) << 6;
+        uint32_t left = center - (lineWidth / 2);
+        emit_line(frameIndex, string, left - leftOffset, y, outputIndex, lineStart, stringIndex, color);
+        while (string[stringIndex] == ' ') stringIndex++;
+        lineStart = stringIndex;
+        lineWidth = 0;
         y += loadedFont.font->face_metrics.height * 1.2;
-        x = 64 << 6;
-      } else {
-        x += loadedFont.glyphs[c - 32].metrics.horiAdvance;
+        x = minX << 6;
       }
     };
+    if (stringIndex != lineStart) {
+      uint32_t center = (minX + (maxWidth / 2)) << 6;
+      uint32_t left = center - (lineWidth / 2);
+      emit_line(frameIndex, string, left - leftOffset, y, outputIndex, lineStart, stringIndex, color);
+      y += loadedFont.font->face_metrics.height * 1.2;
+      x = minX << 6;
+    }
+  }
+
+  //////////////////////////////////////////////////////////////////////
+  // draw
+  //////////////////////////////////////////////////////////////////////
+
+  void font::draw(VkCommandBuffer commandBuffer,
+                  uint32_t frameIndex,
+                  renpy::interpreter const& state)
+  {
+    // transfer
+    int outputIndex = 0;
+
+    if (state.menu.count == 0) {
+      if (state.say.stringIndex != -1u) {
+        char const * const string = renpy::script::strings[state.say.stringIndex];
+        uint32_t x = textboxLeft << 6;
+        uint32_t y = 590 << 6;
+        centered(frameIndex, string,
+                 x, y,
+                 textboxLeft, textboxWidth,
+                 outputIndex,
+                 0x000000);
+      }
+
+      if (state.say.characterIndex != -1u) {
+        const renpy::language::character & character = renpy::script::characters[state.say.characterIndex];
+        char const * const string = character.characterName;
+        uint32_t x = 580 << 6;
+        uint32_t y = 550 << 6;
+        centered(frameIndex, string,
+                 x, y,
+                 580, 118,
+                 outputIndex,
+                 character.color);
+      }
+    } else {
+      for (uint32_t i = 0; i < state.menu.count; i++) {
+        uint32_t x = 400 << 6;
+        uint32_t y = (100 * i + 130) << 6;
+        centered(frameIndex, renpy::script::options[state.menu.optionIndex + i].string,
+                 x, y,
+                 400, 480,
+                 outputIndex,
+                 0x000000);
+      }
+    }
+
     // flush
     constexpr int mappedMemoryRangesCount = 1;
     VkMappedMemoryRange mappedMemoryRanges[mappedMemoryRangesCount]{

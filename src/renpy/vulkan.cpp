@@ -112,7 +112,7 @@ namespace renpy {
       },
       {
         .type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
-        .descriptorCount = script::images_length,
+        .descriptorCount = (uint32_t)script::images_length,
       },
     };
     VkDescriptorPoolCreateInfo descriptorPoolCreateInfo{
@@ -138,7 +138,7 @@ namespace renpy {
         { // font image
           .binding = 1,
           .descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
-          .descriptorCount = script::images_length,
+          .descriptorCount = (uint32_t)script::images_length,
           .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT
         }
       };
@@ -393,7 +393,14 @@ namespace renpy {
     };
 
     VkPipelineColorBlendAttachmentState blendAttachment{
-      .colorWriteMask = 0xF
+      .blendEnable = VK_TRUE,
+      .srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA,
+      .dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+      .colorBlendOp = VK_BLEND_OP_ADD,
+      .srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE,
+      .dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO,
+      .alphaBlendOp = VK_BLEND_OP_ADD,
+      .colorWriteMask = 0xF,
     };
     VkPipelineColorBlendStateCreateInfo colorBlendState{
       .sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
@@ -426,7 +433,7 @@ namespace renpy {
       },
     };
 
-    constexpr int vertexAttributeDescriptionsCount = 5;
+    constexpr int vertexAttributeDescriptionsCount = 6;
     VkVertexInputAttributeDescription vertexAttributeDescriptions[vertexAttributeDescriptionsCount]{
       // per-vertex
       { // position
@@ -445,20 +452,26 @@ namespace renpy {
       {
         .location = 2,
         .binding = 1,
-        .format = VK_FORMAT_R16G16_UINT,
+        .format = VK_FORMAT_R16G16_SINT,
         .offset = 0,
       },
       {
         .location = 3,
         .binding = 1,
-        .format = VK_FORMAT_R16G16_UINT,
+        .format = VK_FORMAT_R16G16_SINT,
         .offset = 4,
       },
       {
         .location = 4,
         .binding = 1,
-        .format = VK_FORMAT_R16_UINT,
+        .format = VK_FORMAT_R8G8B8A8_UNORM,
         .offset = 8,
+      },
+      {
+        .location = 5,
+        .binding = 1,
+        .format = VK_FORMAT_R16_SINT,
+        .offset = 12,
       },
     };
 
@@ -496,15 +509,60 @@ namespace renpy {
   //////////////////////////////////////////////////////////////////////
 
   void vulkan::draw(VkCommandBuffer commandBuffer,
-                    uint32_t frameIndex)
+                    uint32_t frameIndex,
+                    renpy::interpreter const& state)
   {
     int outputIndex = 0;
     // update
     instanceMappedData[maximumImageCount * frameIndex + outputIndex++] = {
       .size = {1280, 720},
       .topLeft = {0, 0},
-      .imageIndex = 3,
+      .color = state.backgroundColor,
+      .imageIndex = (int16_t)state.backgroundIndex,
     };
+
+    for (uint32_t i = 0; i < state.shownImagesCount; i++) {
+      renpy::top_left const& tl = renpy::transforms[state.shownImages[i].transformIndex];
+      instanceMappedData[maximumImageCount * frameIndex + outputIndex++] = {
+        .size = {452, 528},
+        .topLeft = {(int16_t)tl.left, (int16_t)tl.top},
+        .imageIndex = (int16_t)state.shownImages[i].imageIndex,
+      };
+    }
+
+    if (state.menu.count == 0) {
+      instanceMappedData[maximumImageCount * frameIndex + outputIndex++] = {
+        .size = {708, 200},
+        .topLeft = {286, 720 - 200},
+        .imageIndex = -2, // white gradient 1
+      };
+      instanceMappedData[maximumImageCount * frameIndex + outputIndex++] = {
+        .size = {244, 200},
+        .topLeft = {336, 720 - 200},
+        .imageIndex = 0, // flower
+      };
+      instanceMappedData[maximumImageCount * frameIndex + outputIndex++] = {
+        .size = {-244, 200},
+        .topLeft = {1280 - (336 + 244), 720 - 200},
+        .imageIndex = 0, // flower
+      };
+
+      if (state.say.characterIndex != -1u) {
+        instanceMappedData[maximumImageCount * frameIndex + outputIndex++] = {
+          .size = {148, 30},
+          .topLeft = {560, 528},
+          .imageIndex = -4, // white gradient 2
+        };
+      }
+    } else {
+      for (uint32_t i = 0; i < state.menu.count; i++) {
+        instanceMappedData[maximumImageCount * frameIndex + outputIndex++] = {
+          .size = {480, 40},
+          .topLeft = {400, (int16_t)(100 * i + 100)},
+          .imageIndex = -3, // white gradient 2
+        };
+      }
+    }
 
     // flush
     constexpr int mappedMemoryRangesCount = 1;

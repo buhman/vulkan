@@ -1,3 +1,5 @@
+#pragma once
+
 #include <stdint.h>
 
 namespace renpy::language {
@@ -18,6 +20,7 @@ namespace renpy::language {
 
   struct character {
     char const * const characterName;
+    uint32_t color;
   };
 
   struct audio {
@@ -37,12 +40,14 @@ namespace renpy::language {
     _return,
     say,
     scene,
+    scene_color,
     show,
     voice,
     with,
     stop,
     pause,
     hide,
+    dissolve,
   };
 
   struct jump {
@@ -71,6 +76,10 @@ namespace renpy::language {
     uint32_t imageIndex;
   };
 
+  struct scene_color {
+    uint32_t color;
+  };
+
   struct show {
     uint32_t imageIndex;
     uint32_t transformIndex;
@@ -95,6 +104,10 @@ namespace renpy::language {
     uint32_t imageIndex;
   };
 
+  struct dissolve {
+    float duration;
+  };
+
   struct statement {
     enum type type;
     union {
@@ -103,11 +116,13 @@ namespace renpy::language {
       renpy::language::play play;
       renpy::language::say say;
       renpy::language::scene scene;
+      renpy::language::scene_color scene_color;
       renpy::language::show show;
       renpy::language::voice voice;
       renpy::language::stop stop;
       renpy::language::pause pause;
       renpy::language::hide hide;
+      renpy::language::dissolve dissolve;
     };
   };
 }

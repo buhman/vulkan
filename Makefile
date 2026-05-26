@@ -7,7 +7,7 @@ OBJARCH = elf64-x86-64
 
 UNAME := $(shell uname -s)
 
-OPT += -O0 	-march=x86-64-v3
+OPT += -O3 	-march=x86-64-v3
 
 DEBUG = -g
 
@@ -24,10 +24,14 @@ CFLAGS += -I./include
 CFLAGS += -I./data
 CFLAGS += -I../SDL3-dist/include
 CFLAGS += -fpic
+CFLAGS += -ffunction-sections
+CFLAGS += -fdata-sections
 
 #FLAGS += -fstack-protector -fstack-protector-all -fno-omit-frame-pointer -fsanitize=address
 
 LDFLAGS += -lm
+LDFLAGS += -Wl,--gc-sections
+#-Wl,--print-gc-sections
 ifeq ($(UNAME),Linux)
 LDFLAGS += -Wl,-z noexecstack
 endif
@@ -36,6 +40,16 @@ LDFLAGS += -framework Foundation -framework Cocoa -framework IOKit -framework AV
 LDFLAGS += -lstdc++
 endif
 
+#	src/collada/scene/vulkan.o \
+#	src/collada/scene/reload.o \
+#	src/collada/scene.o \
+#	src/collada/node_state.o \
+#	src/collada/animate.o \
+#	src/minecraft/world.o \
+#	src/minecraft/entry_table.o \
+#	src/minecraft/vulkan.o \
+#	src/minecraft/vulkan/per_world.o \
+
 OBJS = \
 	src/main.o \
 	src/view.o \
@@ -43,19 +57,12 @@ OBJS = \
 	src/file.o \
 	src/pack.o \
 	src/dds/validate.o \
-	src/tga/tga.o \
 	src/vulkan_helper.o \
-	src/collada/scene/vulkan.o \
-	src/collada/scene/reload.o \
-	src/collada/scene.o \
-	src/collada/node_state.o \
-	src/collada/animate.o \
-	src/minecraft/world.o \
-	src/minecraft/entry_table.o \
-	src/minecraft/vulkan.o \
-	src/minecraft/vulkan/per_world.o \
+	src/tga/tga.o \
 	src/font/outline.o \
-	src/renpy/vulkan.o
+	src/renpy/vulkan.o \
+	src/renpy/script.o \
+	src/renpy/interpreter.o
 
 WORLDS = \
 	data/minecraft/midnightmeadow/inthash.o \

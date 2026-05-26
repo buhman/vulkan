@@ -3,17 +3,20 @@ import lex
 import parse
 from dataclasses import dataclass
 from pprint import pprint
+from itertools import chain
 import generate
 
 @dataclass
 class State:
     images: list
+    colors: list
     characters: list
     statements: list
     menus: list
     entries: dict
 
     images_lookup: dict[str, int] # identifier to image index
+    colors_lookup: dict[str, int] # identifier to image index
     characters_lookup: dict[str, int] # identifier to character index
     labels_lookup: dict[str, int] # identifier to statement index
     audio_lookup: dict[str, int]
@@ -53,8 +56,12 @@ def pass1(state, ast):
         key = lhs_key(ast.name)
         assert key not in state.global_identifiers
         state.global_identifiers.add(key)
-        state.images_lookup[key] = len(state.images)
-        state.images.append(ast)
+        if ast.path.lexeme.startswith(b"#"):
+            state.colors_lookup[key] = len(state.colors)
+            state.colors.append(ast)
+        else:
+            state.images_lookup[key] = len(state.images)
+            state.images.append(ast)
     elif type(ast) is parse.Define:
         key = lhs_key(ast.name)
         assert key not in state.global_identifiers
@@ -118,6 +125,12 @@ transforms_set = {
     b"right",
 }
 
+def parse_color(b):
+    assert b.startswith(b"#"), b
+    assert len(b) == 7
+    color = int(b[1:].decode('utf-8'), 16)
+    return color
+
 def pass2_statement(state, pc, statement):
     if type(statement) is parse.Play:
         comment = statement.path.lexeme.decode('utf-8')
@@ -125,12 +138,22 @@ def pass2_statement(state, pc, statement):
         yield f"{{ .type = type::play, .play = {{ .audioIndex = {audio_index}, /* FIXME channel */ }} }}, // {pc} {comment}"
     elif type(statement) is parse.Scene:
         key = lhs_key(statement.name)
-        image_index = state.images_lookup[key]
-        comment = ".".join(k.decode('utf-8') for k in key)
-        yield f"{{ .type = type::scene, .scene = {{ .imageIndex = {image_index} }} }}, // {pc} {comment}"
+        if key in state.images_lookup:
+            image_index = state.images_lookup[key]
+            comment = ".".join(k.decode('utf-8') for k in key)
+            yield f"{{ .type = type::scene, .scene = {{ .imageIndex = {image_index} }} }}, // {pc} {comment}"
+        else:
+            color_index = state.colors_lookup[key]
+            color = parse_color(state.colors[color_index].path.lexeme)
+            comment = ".".join(k.decode('utf-8') for k in key)
+            yield f"{{ .type = type::scene_color, .scene_color = {{ .color = 0x{color:06x} }} }}, // {pc} {comment}"
     elif type(statement) is parse.With:
-        print(f"not implemented: {statement}", file=sys.stderr)
-        pass
+        #print(f"not implemented: {statement}", file=sys.stderr)
+        if statement.function_call.name.lexeme == b'Dissolve':
+            duration, = statement.function_call.args
+            yield f"{{ .type = type::dissolve, .dissolve = {{ .duration = {duration.lexeme} }} }}, // {pc}"
+        else:
+            assert False, (pc, statement)
     elif type(statement) is parse.Voice:
         comment = statement.path.lexeme.decode('utf-8')
         audio_index = state.audio_lookup[statement.path.lexeme]
@@ -181,29 +204,32 @@ def pass2_statement(state, pc, statement):
         assert False, (type(statement), statement)
 
 def pass2_statements(state):
-    yield "const statement statements[] = {"
+    yield "const language::statement statements[] = {"
     for pc, statement in enumerate(state.statements):
+        print(pc, statement, file=sys.stderr)
         yield from pass2_statement(state, pc, statement)
     yield "};"
-    yield "constexpr int statements_length = (sizeof (statements)) / (sizeof (statements[0]));"
+    yield "const int statements_length = (sizeof (statements)) / (sizeof (statements[0]));"
 
 def pass2_strings(state):
     yield "char const * const strings[] = {"
     for string, i in sorted(state.string_lookup.items(), key=lambda kv: kv[1]):
         yield f"\"{string.decode('utf-8')}\", // {i}"
     yield "};"
-    yield "constexpr int strings_length = (sizeof (strings)) / (sizeof (strings[0]));"
+    yield "const int strings_length = (sizeof (strings)) / (sizeof (strings[0]));"
 
 def pass2_characters(state):
-    yield "const character characters[] = {"
+    yield "const language::character characters[] = {"
     for i, character in enumerate(state.characters):
         character_name, = character.value.args
-        yield f"{{ .characterName = \"{character_name.lexeme.decode('utf-8')}\" }}, // {i}"
+        color, = (value.lexeme for key, value in character.value.kwargs if key.lexeme == b'color')
+        color = int(color.decode('utf-8'), 16)
+        yield f"{{ .characterName = \"{character_name.lexeme.decode('utf-8')}\", .color = 0x{color:06x} }}, // {i}"
     yield "};"
-    yield "constexpr int characters_length = (sizeof (characters)) / (sizeof (characters[0]));"
+    yield "const int characters_length = (sizeof (characters)) / (sizeof (characters[0]));"
 
 def pass2_audio(state):
-    yield "const audio audio[] = {"
+    yield "const language::audio audio[] = {"
     for audio, i in sorted(state.audio_lookup.items(), key=lambda kv: kv[1]):
         orig_path = audio.decode('utf-8')
         path = orig_path
@@ -215,10 +241,10 @@ def pass2_audio(state):
             assert False, path
         yield f"{{ .path = \"{path}.opus\" }}, // {i} {orig_path}"
     yield "};"
-    yield "constexpr int audio_length = (sizeof (audio)) / (sizeof (audio[0]));"
+    yield "const int audio_length = (sizeof (audio)) / (sizeof (audio[0]));"
 
 def pass2_images(state):
-    yield "const image images[] = {"
+    yield "const language::image images[] = {"
     for i, image in enumerate(state.images):
         orig_path = image.path.lexeme.decode('utf-8')
         path = orig_path
@@ -228,17 +254,18 @@ def pass2_images(state):
             assert False, path
         yield f"{{ .path = \"data/renpy/images/{path}.dds\" }}, // {i} {orig_path}"
     yield "};"
-    yield "constexpr int images_length = (sizeof (images)) / (sizeof (images[0]));"
+    yield "const int images_length = (sizeof (images)) / (sizeof (images[0]));"
 
 def pass2_options(state):
-    yield "const option options[] = {"
+    yield "const language::option options[] = {"
     for i, (lexeme, statement_index) in sorted(state.entries.items(), key=lambda kv: kv[0]):
         yield f"{{ .string = \"{lexeme.decode('utf-8')}\", .statementIndex = {statement_index} }}, // {i}"
     yield "};"
-    yield "constexpr int options_length = (sizeof (options)) / (sizeof (options[0]));"
+    yield "const int options_length = (sizeof (options)) / (sizeof (options[0]));"
 
 def pass2(state):
     yield "#include \"renpy/language.h\""
+    yield "#include \"renpy/script.h\""
     yield ""
     yield "namespace renpy::script {"
     yield "using namespace renpy::language;"
@@ -251,17 +278,22 @@ def pass2(state):
     yield "}"
 
 def main():
+    preamble = b"""
+image _internal_flowers = "flowers.png"
+    """
     with open(sys.argv[1], 'rb') as f:
-        mem = memoryview(f.read())
+        mem = memoryview(bytes(chain(preamble, f.read())))
 
     tokens = list(lex.tokenize(mem))
     state = State(
         images = list(),
+        colors = list(),
         characters = list(),
         statements = list(),
         menus = list(),
         entries = dict(),
         images_lookup = dict(),
+        colors_lookup = dict(),
         characters_lookup = dict(),
         labels_lookup = dict(),
         audio_lookup = dict(),
