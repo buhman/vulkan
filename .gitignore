@@ -7,3 +7,4 @@ tool/pack_file
 *.zip
 *.tar
 *.pyc
+*.dds

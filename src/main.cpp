@@ -21,6 +21,7 @@
 
 #include "minecraft/vulkan.h"
 #include "font/outline.h"
+#include "renpy/vulkan.h"
 
 #include "scenes/shadow_test/shadow_test.h"
 #include "scenes/eidelwind/eidelwind.h"
@@ -496,7 +497,7 @@ int main()
   // window and surface
   //////////////////////////////////////////////////////////////////////
 
-  SDL_Window * window = SDL_CreateWindow("Vulkan", 1024, 1024, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
+  SDL_Window * window = SDL_CreateWindow("Vulkan", 1280, 720, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
   SDL_CHECK_NONNULL(window);
   SDL_CHECK(SDL_Vulkan_CreateSurface(window, instance, nullptr, &surface));
   SDL_CHECK(SDL_GetWindowSize(window, &windowSize.x, &windowSize.y));
@@ -546,8 +547,8 @@ int main()
 
   createDepth(physicalDeviceProperties.limits.nonCoherentAtomSize,
               physicalDeviceMemoryProperties,
-              1024,
-              1024,
+              1280,
+              720,
               depthFormat,
               VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
               shadowArrayLayers,
@@ -646,6 +647,7 @@ int main()
   // initialize collada
   //////////////////////////////////////////////////////////////////////
 
+  /*
   collada::scene::state collada_state;
 
   collada_state.vulkan.initial_state(instance,
@@ -661,11 +663,13 @@ int main()
 
   collada::types::descriptor const * collada_scene_descriptor = &eidelwind::descriptor;
   collada_state.load_scene(collada_scene_descriptor);
+  */
 
   //////////////////////////////////////////////////////////////////////
   // initialize minecraft
   //////////////////////////////////////////////////////////////////////
 
+  /*
   minecraft::vulkan::vulkan minecraft_state;
   minecraft_state.initial_state(instance,
                                 device,
@@ -678,6 +682,7 @@ int main()
                                 textureSamplers[2],
                                 shadowDepthImageViewDepth);
   minecraft_state.init();
+  */
 
   //////////////////////////////////////////////////////////////////////
   // initialize font
@@ -696,9 +701,26 @@ int main()
   font_state.init();
 
   //////////////////////////////////////////////////////////////////////
+  // initialize renpy
+  //////////////////////////////////////////////////////////////////////
+
+  renpy::vulkan renpy_state;
+  renpy_state.initial_state(instance,
+                            device,
+                            queue,
+                            commandPool,
+                            physicalDeviceProperties,
+                            physicalDeviceMemoryProperties,
+                            surfaceFormat.format,
+                            depthFormat,
+                            textureSamplers[2]);
+  renpy_state.init();
+
+  //////////////////////////////////////////////////////////////////////
   // initialize view
   //////////////////////////////////////////////////////////////////////
 
+  /*
   int cameraIndex = collada_state.find_node_index_by_name("Camera001");
   int cameraTargetIndex = collada_state.find_node_index_by_name("EidelwindRigPelvis");
   int lightIndex = collada_state.find_node_index_by_name("Camera001");
@@ -719,6 +741,7 @@ int main()
   viewState.forward = XMVectorSetZ(XMVector3Normalize(at - eye), 0);
   viewState.pitch = 0;
   viewState.applyTransform(0, 0, 0, 0, 0);
+  */
 
   //////////////////////////////////////////////////////////////////////
   // loop
@@ -732,7 +755,7 @@ int main()
   int64_t start_time;
   SDL_GetCurrentTime(&start_time);
 
-  collada_state.update(0);
+  //collada_state.update(0);
 
   while (quit == false) {
     SDL_Event event;
@@ -761,10 +784,10 @@ int main()
       }
       if (event.type == SDL_EVENT_MOUSE_MOTION) {
         if (event.motion.state & SDL_BUTTON_LMASK) {
-          collada_state.mouse_motion(cameraIndex, cameraTargetIndex, event.motion.xrel, event.motion.yrel, 0);
+          //collada_state.mouse_motion(cameraIndex, cameraTargetIndex, event.motion.xrel, event.motion.yrel, 0);
         }
         if (event.motion.state & SDL_BUTTON_RMASK) {
-          collada_state.mouse_motion(cameraIndex, cameraTargetIndex, event.motion.xrel, event.motion.yrel, 1);
+          //collada_state.mouse_motion(cameraIndex, cameraTargetIndex, event.motion.xrel, event.motion.yrel, 1);
         }
       }
       if (event.type == SDL_EVENT_WINDOW_RESIZED) {
@@ -782,14 +805,14 @@ int main()
     // gamepad update
     //////////////////////////////////////////////////////////////////////
 
-    gamepad_update(viewState);
+    //gamepad_update(viewState);
 
     //////////////////////////////////////////////////////////////////////
     // collada update
     //////////////////////////////////////////////////////////////////////
 
-    double time = getTime(start_time);
-    collada_state.update(time / 1.5f);
+    //double time = getTime(start_time);
+    //collada_state.update(time / 1.5f);
 
     //////////////////////////////////////////////////////////////////////
     // fence
@@ -816,6 +839,7 @@ int main()
     //////////////////////////////////////////////////////////////////////
 
     if (0) {
+      /*
       collada_state.vulkan.change_frame(commandBuffer, frameIndex);
 
       XMMATRIX projection = currentProjection();
@@ -836,13 +860,16 @@ int main()
                                                lightPositionWorld,
                                                collada_state.descriptor->nodes_count,
                                                collada_state.node_state.node_instances);
+      */
 
       // minecraft
 
+      /*
       minecraft_state.transfer_transforms(projection,
                                           view,
                                           lightPositionWorld,
                                           frameIndex);
+      */
     }
 
     //////////////////////////////////////////////////////////////////////
@@ -887,7 +914,7 @@ int main()
 
     VkRenderingInfo shadowRenderingInfo{
       .sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
-      .renderArea{ .extent{ .width = 1024, .height = 1024 } },
+      .renderArea{ .extent{ .width = 1280, .height = 720 } },
       .layerCount = 6,
       .colorAttachmentCount = 0,
       .pDepthAttachment = &shadowDepthRenderingAttachmentInfo,
@@ -900,24 +927,24 @@ int main()
     VkViewport shadowViewport{
       .x = 0,
       .y = 0,
-      .width = 1024,
-      .height = 1024,
+      .width = 1280,
+      .height = 720,
       .minDepth = 0.0f,
       .maxDepth = 1.0f
     };
     vkCmdSetViewport(commandBuffer, 0, 1, &shadowViewport);
     VkRect2D shadowScissor{
       .extent{
-        .width = 1024,
-        .height = 1024
+        .width = 1280,
+        .height = 720
       }
     };
     vkCmdSetScissor(commandBuffer, 0, 1, &shadowScissor);
 
     // draw
 
-    collada_state.vulkan.excludeMaterialIndex = lightMaterialIndex;
-    collada_state.vulkan.pipelineIndex = 0; // shadow pipeline
+    //collada_state.vulkan.excludeMaterialIndex = lightMaterialIndex;
+    //collada_state.vulkan.pipelineIndex = 0; // shadow pipeline
     //collada_state.draw();
 
     vkCmdEndRendering(commandBuffer);
@@ -1038,8 +1065,8 @@ int main()
 
     // draw
 
-    collada_state.vulkan.excludeMaterialIndex = -1;
-    collada_state.vulkan.pipelineIndex = 1; // non-shadow pipeline
+    //collada_state.vulkan.excludeMaterialIndex = -1;
+    //collada_state.vulkan.pipelineIndex = 1; // non-shadow pipeline
     //collada_state.draw();
     //collada_state.vulkan.pipelineIndex = 2; // geometry shader pipeline
     //collada_state.draw();
@@ -1047,6 +1074,8 @@ int main()
     //minecraft_state.draw(commandBuffer, frameIndex);
 
     font_state.draw(commandBuffer, frameIndex);
+
+    renpy_state.draw(commandBuffer, frameIndex);
 
     vkCmdEndRendering(commandBuffer);
 
@@ -1138,8 +1167,8 @@ int main()
 
   VK_CHECK(vkDeviceWaitIdle(device));
 
-  collada_state.vulkan.destroy_all(collada_scene_descriptor);
-  collada_state.unload_scene();
+  //collada_state.vulkan.destroy_all(collada_scene_descriptor);
+  //collada_state.unload_scene();
 
   for (uint32_t i = 0; i < maxFramesInFlight; i++) {
     vkDestroyFence(device, fences[i], nullptr);

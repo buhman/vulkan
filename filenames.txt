@@ -38,3 +38,13 @@ data/minecraft/terrain2.dds
 
 shader/font.spv
 data/font/outline/uncial_antiqua_36.data
+
+shader/renpy.spv
+data/renpy/images/bg/white.dds
+data/renpy/images/bg/forest1.dds
+data/renpy/images/bg/flowerfield1.dds
+data/renpy/images/bg/wheatfield1.dds
+data/renpy/images/ch/cat.dds
+data/renpy/images/ch/catw.dds
+data/renpy/images/ch/Eily.dds
+data/renpy/images/ch/Alice.dds

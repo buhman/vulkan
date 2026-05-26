@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #include "new.h"
 #include "dds/validate.h"
@@ -71,6 +72,13 @@ static inline dds_size_levels dds_mip_total_size(DXGI_FORMAT dxgiFormat,
   return {mip_total_size, mip_levels};
 }
 
+/*
+static inline bool is_power_of_two(uint32_t n)
+{
+  return (n & (n - 1)) == 0;
+}
+*/
+
 namespace dds {
   DDS_FILE const * validate(void const * data, uint32_t size, uint32_t ** out_offsets, void ** out_data, uint32_t * out_size)
   {
@@ -84,14 +92,21 @@ namespace dds {
 
     uint32_t * offsets = NewM<uint32_t>(dds->header.dwMipMapCount);
 
+    //bool power_of_two = is_power_of_two(dds->header.dwHeight) && is_power_of_two(dds->header.dwWidth);
+    //uint32_t max_mip_levels = power_of_two ? dds->header.dwMipMapCount : 1;
+    uint32_t max_mip_levels = dds->header.dwMipMapCount;
+
     uintptr_t image_data = ((uintptr_t)dds) + (sizeof (DDS_FILE));
     dds_size_levels ret = dds_mip_total_size(dds->header10.dxgiFormat,
                                              dds->header.dwHeight,
                                              dds->header.dwWidth,
-                                             dds->header.dwMipMapCount,
+                                             max_mip_levels,
                                              offsets);
+    if (ret.size + (sizeof (DDS_FILE)) != size) {
+      fprintf(stderr, "%d %ld %d\n", ret.size, (sizeof (DDS_FILE)), size);
+    }
     assert(ret.size + (sizeof (DDS_FILE)) == size);
-    assert(ret.levels == dds->header.dwMipMapCount);
+    assert(ret.levels == max_mip_levels);
 
     *out_offsets = offsets;
     *out_data = (void *)image_data;

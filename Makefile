@@ -54,7 +54,8 @@ OBJS = \
 	src/minecraft/entry_table.o \
 	src/minecraft/vulkan.o \
 	src/minecraft/vulkan/per_world.o \
-	src/font/outline.o
+	src/font/outline.o \
+	src/renpy/vulkan.o
 
 WORLDS = \
 	data/minecraft/midnightmeadow/inthash.o \
@@ -82,6 +83,9 @@ all: main
 
 %.o: %.s
 	$(AS) $< -o $@
+
+#%.dds: %.png
+#	WINEDEBUG=-all wine $(HOME)/Texconv.exe -y -nogpu -nowic -dx10 --format BC7_UNORM_SRGB -m 1 $< -o $(dir $@)
 
 main: $(OBJS) $(LIBS) $(SCENES) $(WORLDS)
 	$(CC) $(ARCH) $(LDFLAGS) $(FLAGS) $(OPT) $(DEBUG) $^ -o $@

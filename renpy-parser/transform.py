@@ -215,7 +215,7 @@ def pass2_images(state):
             path = path.removesuffix(".png")
         else:
             assert False, path
-        yield f"{{ .path = \"{path}.dds\" }}, // {i} {orig_path}"
+        yield f"{{ .path = \"data/renpy/images/{path}.dds\" }}, // {i} {orig_path}"
     yield "};"
     yield "constexpr int images_length = (sizeof (images)) / (sizeof (images[0]));"
 

@@ -1,6 +1,6 @@
 #include <stdint.h>
 
-namespace language {
+namespace renpy::language {
   struct option {
     char const * const string;
     uint32_t statementIndex;
@@ -88,13 +88,16 @@ namespace language {
   struct statement {
     enum type type;
     union {
-      jump jump;
-      menu menu;
-      play play;
-      say say;
-      scene scene;
-      show show;
-      voice voice;
+      renpy::language::jump jump;
+      renpy::language::menu menu;
+      renpy::language::play play;
+      renpy::language::say say;
+      renpy::language::scene scene;
+      renpy::language::show show;
+      renpy::language::voice voice;
+      renpy::language::stop stop;
+      renpy::language::pause pause;
+      renpy::language::hide hide;
     };
   };
 }
