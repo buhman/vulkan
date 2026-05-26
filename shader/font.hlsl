@@ -29,7 +29,7 @@ struct VSOutput
 VSOutput VSMain(VSInput input)
 {
   float2 inverseTexel = float2(1.0 / 256.0, 1.0 / 256.0);
-  float2 inversePixel = float2(1.0 / 1024.0, 1.0 / 1024.0);
+  float2 inversePixel = float2(1.0 / 1280.0, 1.0 / 720.0);
   int index = input.InstanceGlyph;
 
   VSOutput output = (VSOutput)0;

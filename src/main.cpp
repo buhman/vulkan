@@ -1073,9 +1073,8 @@ int main()
 
     //minecraft_state.draw(commandBuffer, frameIndex);
 
-    font_state.draw(commandBuffer, frameIndex);
-
     renpy_state.draw(commandBuffer, frameIndex);
+    font_state.draw(commandBuffer, frameIndex);
 
     vkCmdEndRendering(commandBuffer);
 

@@ -110,6 +110,14 @@ def pass1(state, ast):
     if type(ast) in simple_statement_types:
         state.statements.append(ast)
 
+transforms_set = {
+    b"left",
+    b"centerleft",
+    b"center",
+    b"centerright",
+    b"right",
+}
+
 def pass2_statement(state, pc, statement):
     if type(statement) is parse.Play:
         comment = statement.path.lexeme.decode('utf-8')
@@ -136,8 +144,11 @@ def pass2_statement(state, pc, statement):
     elif type(statement) is parse.Show:
         key = lhs_key(statement.what)
         image_index = state.images_lookup[key]
+        transform = statement.transform.lexeme
+        assert transform in transforms_set
+        transform = transform.decode('utf-8')
         comment = ".".join(k.decode('utf-8') for k in key)
-        yield f"{{ .type = type::show, .show = {{ .imageIndex = {image_index} }} }}, // {pc} {comment}"
+        yield f"{{ .type = type::show, .show = {{ .imageIndex = {image_index}, .transformIndex = transform::{transform} }} }}, // {pc} {comment}"
     elif type(statement) is InternalMenu:
         count = len(statement.menu.entries)
         option_index = statement.entry_index
@@ -227,9 +238,10 @@ def pass2_options(state):
     yield "constexpr int options_length = (sizeof (options)) / (sizeof (options[0]));"
 
 def pass2(state):
-    yield "#include \"statement.h\""
+    yield "#include \"renpy/language.h\""
     yield ""
-    yield "namespace language {"
+    yield "namespace renpy::script {"
+    yield "using namespace renpy::language;"
     yield from pass2_strings(state)
     yield from pass2_characters(state)
     yield from pass2_audio(state)

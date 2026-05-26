@@ -1,6 +1,16 @@
 #include <stdint.h>
 
 namespace renpy::language {
+  struct transform {
+    enum _transform {
+      left,
+      centerleft,
+      center,
+      centerright,
+      right,
+    };
+  };
+
   struct option {
     char const * const string;
     uint32_t statementIndex;

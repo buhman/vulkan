@@ -5,8 +5,24 @@ namespace renpy {
     VkImageView imageView;
   };
 
+  struct ImageInstance {
+    struct {
+      uint16_t width;
+      uint16_t height;
+    } size;
+    struct {
+      uint16_t x;
+      uint16_t y;
+    } topLeft;
+    uint16_t imageIndex;
+  };
+
+  static_assert((sizeof (ImageInstance)) == 10);
+
   struct vulkan {
     static constexpr int perVertexSize = (4) * 2;
+    static constexpr int perInstanceSize = (sizeof (ImageInstance));
+    static constexpr int maximumImageCount = 16;
 
     // externally initialized, opaque handle
     VkInstance instance;
@@ -26,6 +42,12 @@ namespace renpy {
     VkShaderModule shaderModule;
     VkPipeline pipeline;
     VertexIndex vertexIndex;
+
+    VkDeviceSize instanceBufferOffset[2];
+    VkBuffer instanceBuffer;
+    VkDeviceMemory instanceMemory;
+    VkDeviceSize instanceMemorySize;
+    ImageInstance * instanceMappedData;
 
     VkDescriptorPool descriptorPool{ VK_NULL_HANDLE };
     static constexpr int descriptorSetLayoutCount = 1;
@@ -51,6 +73,7 @@ namespace renpy {
     void load_image_inner(VkCommandBuffer commandBuffer, VkFence fence, int i, char const * filename);
     void load_images();
     void create_pipeline();
+    void create_instance_buffers();
     void draw(VkCommandBuffer commandBuffer,
               uint32_t frameIndex);
 

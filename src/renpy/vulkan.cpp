@@ -59,6 +59,7 @@ namespace renpy {
     load_images();
     write_descriptor_sets();
     create_pipeline();
+    create_instance_buffers();
   }
 
   //////////////////////////////////////////////////////////////////////
@@ -262,6 +263,50 @@ namespace renpy {
   }
 
   //////////////////////////////////////////////////////////////////////
+  // create instance buffer
+  //////////////////////////////////////////////////////////////////////
+
+  void vulkan::create_instance_buffers()
+  {
+    constexpr VkDeviceSize bufferSize{ maximumImageCount * (sizeof (ImageInstance)) };
+    instanceMemorySize = bufferSize * 2;
+    instanceBufferOffset[0] = bufferSize * 0;
+    instanceBufferOffset[1] = bufferSize * 1;
+
+    // create buffer
+    VkBufferCreateInfo bufferCreateInfo{
+      .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+      .size = instanceMemorySize,
+      .usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+      .sharingMode = VK_SHARING_MODE_EXCLUSIVE
+    };
+    VK_CHECK(vkCreateBuffer(device, &bufferCreateInfo, nullptr, &instanceBuffer));
+
+    // allocate memory
+
+    VkMemoryRequirements memoryRequirements;
+    vkGetBufferMemoryRequirements(device, instanceBuffer, &memoryRequirements);
+    VkMemoryPropertyFlags memoryPropertyFlags{ VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT };
+    VkMemoryAllocateFlags memoryAllocateFlags{};
+    VkDeviceSize stride;
+    allocateFromMemoryRequirements(device,
+                                   physicalDeviceProperties.limits.nonCoherentAtomSize,
+                                   physicalDeviceMemoryProperties,
+                                   memoryRequirements,
+                                   memoryPropertyFlags,
+                                   memoryAllocateFlags,
+                                   1,
+                                   &instanceMemory,
+                                   &stride);
+
+    VK_CHECK(vkBindBufferMemory(device, instanceBuffer, instanceMemory, 0));
+
+    // map memory
+
+    VK_CHECK(vkMapMemory(device, instanceMemory, 0, VK_WHOLE_SIZE, 0, (void **)&instanceMappedData));
+  }
+
+  //////////////////////////////////////////////////////////////////////
   // pipeline
   //////////////////////////////////////////////////////////////////////
 
@@ -367,16 +412,21 @@ namespace renpy {
       .rasterizationSamples = VK_SAMPLE_COUNT_1_BIT
     };
 
-    constexpr int vertexBindingDescriptionsCount = 1;
+    constexpr int vertexBindingDescriptionsCount = 2;
     VkVertexInputBindingDescription vertexBindingDescriptions[vertexBindingDescriptionsCount]{
       {
         .binding = 0,
         .stride = perVertexSize,
         .inputRate = VK_VERTEX_INPUT_RATE_VERTEX
       },
+      {
+        .binding = 1,
+        .stride = perInstanceSize,
+        .inputRate = VK_VERTEX_INPUT_RATE_INSTANCE
+      },
     };
 
-    constexpr int vertexAttributeDescriptionsCount = 2;
+    constexpr int vertexAttributeDescriptionsCount = 5;
     VkVertexInputAttributeDescription vertexAttributeDescriptions[vertexAttributeDescriptionsCount]{
       // per-vertex
       { // position
@@ -390,6 +440,25 @@ namespace renpy {
         .binding = 0,
         .format = VK_FORMAT_R16G16_SFLOAT,
         .offset = 4,
+      },
+      // per-instance
+      {
+        .location = 2,
+        .binding = 1,
+        .format = VK_FORMAT_R16G16_UINT,
+        .offset = 0,
+      },
+      {
+        .location = 3,
+        .binding = 1,
+        .format = VK_FORMAT_R16G16_UINT,
+        .offset = 4,
+      },
+      {
+        .location = 4,
+        .binding = 1,
+        .format = VK_FORMAT_R16_UINT,
+        .offset = 8,
       },
     };
 
@@ -429,6 +498,32 @@ namespace renpy {
   void vulkan::draw(VkCommandBuffer commandBuffer,
                     uint32_t frameIndex)
   {
+    int outputIndex = 0;
+    // update
+    instanceMappedData[maximumImageCount * frameIndex + outputIndex++] = {
+      .size = {1280, 720},
+      .topLeft = {0, 0},
+      .imageIndex = 3,
+    };
+
+    // flush
+    constexpr int mappedMemoryRangesCount = 1;
+    VkMappedMemoryRange mappedMemoryRanges[mappedMemoryRangesCount]{
+      {
+        .sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE,
+        .memory = instanceMemory,
+        .offset = 0,
+        .size = (sizeof (ImageInstance)) * outputIndex,
+      }
+    };
+    alignMappedMemoryRanges(physicalDeviceProperties.limits.nonCoherentAtomSize,
+                            instanceMemorySize,
+                            mappedMemoryRangesCount,
+                            mappedMemoryRanges);
+    vkFlushMappedMemoryRanges(device, mappedMemoryRangesCount, mappedMemoryRanges);
+
+    // draw
+
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
     VkDescriptorSet descriptorSets[1] = {
@@ -442,10 +537,10 @@ namespace renpy {
 
     vkCmdBindIndexBuffer(commandBuffer, vertexIndex.buffer, vertexIndex.indexOffset, VK_INDEX_TYPE_UINT16);
 
-    VkDeviceSize vertexOffsets[1]{ 0 };
-    VkBuffer vertexBuffers[1]{ vertexIndex.buffer };
-    vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, vertexOffsets);
+    VkDeviceSize vertexOffsets[2]{ 0, instanceBufferOffset[frameIndex] };
+    VkBuffer vertexBuffers[2]{ vertexIndex.buffer, instanceBuffer };
+    vkCmdBindVertexBuffers(commandBuffer, 0, 2, vertexBuffers, vertexOffsets);
 
-    vkCmdDrawIndexed(commandBuffer, 4, 1, 0, 0, 0);
+    vkCmdDrawIndexed(commandBuffer, 4, outputIndex, 0, 0, 0);
   }
 }

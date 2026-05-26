@@ -521,7 +521,7 @@ namespace font::outline {
 
     VkMemoryRequirements memoryRequirements;
     vkGetBufferMemoryRequirements(device, instanceBuffer, &memoryRequirements);
-    VkMemoryPropertyFlags memoryPropertyFlags{ VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT };
+    VkMemoryPropertyFlags memoryPropertyFlags{ VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT };
     VkMemoryAllocateFlags memoryAllocateFlags{};
     VkDeviceSize stride;
     allocateFromMemoryRequirements(device,
@@ -542,7 +542,7 @@ namespace font::outline {
   }
 
   //////////////////////////////////////////////////////////////////////
-  // create instance buffer
+  // create glyphs buffer
   //////////////////////////////////////////////////////////////////////
 
   void font::create_glyphs_buffer(types::font const * const font, types::glyph const * const glyphs)
@@ -645,7 +645,7 @@ namespace font::outline {
         .sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE,
         .memory = instanceMemory,
         .offset = 0,
-        .size = (sizeof (GlyphInstance)),
+        .size = (sizeof (GlyphInstance)) * outputIndex,
       }
     };
     alignMappedMemoryRanges(physicalDeviceProperties.limits.nonCoherentAtomSize,
