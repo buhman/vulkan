@@ -8,3 +8,5 @@ tool/pack_file
 *.tar
 *.pyc
 *.dds
+*.zlib
+tools/compress

@@ -355,6 +355,8 @@ void gamepad_update(view & viewState)
 
 int main()
 {
+  file::init();
+
   SDL_CHECK(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD));
   SDL_CHECK(SDL_Vulkan_LoadLibrary(NULL));
   volkInitialize();

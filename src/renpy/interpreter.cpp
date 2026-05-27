@@ -71,12 +71,17 @@ namespace renpy {
       fprintf(stderr, "interpret_one[%d]: scene_color\n", pc);
       backgroundIndex = -1;
       backgroundColor = statement.scene_color.color;
+
+      shownImagesCount = 0;
+      say.stringIndex = -1;
+      say.characterIndex = -1;
       pc += 1;
       break;
     case language::type::scene:
       fprintf(stderr, "interpret_one[%d]: scene\n", pc);
       assert(statement.scene.imageIndex < (uint32_t)script::images_length);
       backgroundIndex = statement.scene.imageIndex;
+
       shownImagesCount = 0;
       say.stringIndex = -1;
       say.characterIndex = -1;

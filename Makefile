@@ -65,13 +65,19 @@ OBJS = \
 	src/renpy/interpreter.o \
 	src/renpy/interact.o
 
-WORLDS = \
-	data/minecraft/midnightmeadow/inthash.o \
-	data/minecraft/grandlecturn/inthash.o
-
-SCENES = \
-	data/scenes/shadow_test/shadow_test.o \
-	data/scenes/eidelwind/eidelwind.o
+ifeq ($(UNAME),Linux)
+ZLIB = ../zlib-1.3.2
+CFLAGS += -I$(ZLIB)
+OBJS += \
+	$(ZLIB)/uncompr.o \
+	$(ZLIB)/inflate.o \
+	$(ZLIB)/inffast.o \
+	$(ZLIB)/inftrees.o \
+	$(ZLIB)/trees.o \
+	$(ZLIB)/zutil.o \
+	$(ZLIB)/crc32.o \
+	$(ZLIB)/adler32.o
+endif
 
 ifeq ($(UNAME),Darwin)
 LIBS = \
@@ -95,7 +101,7 @@ all: main
 #%.dds: %.png
 #	WINEDEBUG=-all wine $(HOME)/Texconv.exe -y -nogpu -nowic -dx10 --format BC7_UNORM_SRGB -m 1 $< -o $(dir $@)
 
-main: $(OBJS) $(LIBS) $(SCENES) $(WORLDS)
+main: $(OBJS) $(LIBS)
 	$(CC) $(ARCH) $(LDFLAGS) $(FLAGS) $(OPT) $(DEBUG) $^ -o $@
 
 %.spv: %.hlsl
@@ -104,7 +110,10 @@ main: $(OBJS) $(LIBS) $(SCENES) $(WORLDS)
 tool/pack_file: tool/pack_file.cpp
 	make -C tool pack_file
 
-src/pack.o: files.pack
+%.pack.zlib: %.pack
+	./tools/compress $< $@
+
+src/pack.o: files.pack.zlib
 
 PACK_FILENAMES = $(shell cat filenames.txt)
 files.pack: tool/pack_file $(PACK_FILENAMES) filenames.txt

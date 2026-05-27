@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -7,6 +8,7 @@
 
 #include "pack.h"
 #include "file.h"
+#include "zlib.h"
 
 extern "C" {
 #ifdef __APPLE__
@@ -22,18 +24,41 @@ extern "C" {
 #endif
 };
 
+uint8_t * decompressed_start = NULL;
+
 namespace file {
+
+  void init()
+  {
+    uint32_t * header = (uint32_t *)files_pack_start;
+    if (header[0] != 0x56c8f1cb) {
+      fprintf(stderr, "invalid compressed header magic: %08x expected magic value: %08x\n", header[0], 0x56c8f1cb);
+      exit(EXIT_FAILURE);
+    }
+    printf("decompressed size %d\n", header[1]);
+    printf("compressed size %d\n", header[2]);
+
+    uint8_t * dest = (uint8_t *)malloc(header[1]);
+
+    uint64_t dest_len = header[1];
+    uint8_t * src = (uint8_t *)&header[3];
+    uint64_t src_len = header[2];
+    int ret = uncompress2(dest, &dest_len, src, &src_len);
+    assert(ret == Z_OK);
+    decompressed_start = dest;
+  }
 
   void const * open(const char * filename, uint32_t * out_size)
   {
+    assert(decompressed_start != NULL);
     fprintf(stderr, "(pack) filename: %s\n", filename);
 
-    pack::header const * header = (pack::header const *)&files_pack_start[0];
+    pack::header const * header = (pack::header const *)&decompressed_start[0];
     if (header->magic != pack::magic_value) {
       fprintf(stderr, "invalid header magic: %08x expected magic value: %08x\n", header->magic, pack::magic_value);
       exit(EXIT_FAILURE);
     }
-    ptrdiff_t data = (ptrdiff_t)&files_pack_start[header->header_size];
+    ptrdiff_t data = (ptrdiff_t)&decompressed_start[header->header_size];
 
     for (unsigned int i = 0; i < header->entry_count; i++) {
       if (strcmp(header->entry[i].filename, filename) == 0) {
