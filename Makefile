@@ -23,6 +23,10 @@ CFLAGS += -fno-strict-aliasing
 CFLAGS += -I./include
 CFLAGS += -I./data
 CFLAGS += -I../SDL3-dist/include
+ifeq ($(UNAME),Darwin)
+CFLAGS += -I../MoltenVK/MoltenVK/include
+endif
+CFLAGS += -I../opus-dist/include
 CFLAGS += -fpic
 CFLAGS += -ffunction-sections
 CFLAGS += -fdata-sections
@@ -63,7 +67,8 @@ OBJS = \
 	src/renpy/vulkan.o \
 	src/renpy/script.o \
 	src/renpy/interpreter.o \
-	src/renpy/interact.o
+	src/renpy/interact.o \
+	src/audio.o
 
 ifeq ($(UNAME),Linux)
 ZLIB = ../zlib-1.3.2
@@ -84,7 +89,8 @@ LIBS = \
 	 ../SDL3-dist/lib/libSDL3.a
 else
 LIBS = \
-	 ../SDL3-dist/lib64/libSDL3.a
+	 ../SDL3-dist/lib64/libSDL3.a \
+	../opus-dist/lib/libopus.a
 endif
 
 all: main
@@ -100,6 +106,12 @@ all: main
 
 #%.dds: %.png
 #	WINEDEBUG=-all wine $(HOME)/Texconv.exe -y -nogpu -nowic -dx10 --format BC7_UNORM_SRGB -m 1 $< -o $(dir $@)
+
+%.pcm: %.wav
+	ffmpeg -loglevel quiet -y -i $< -c:a pcm_s16le -ar 48000 -ac 2 -f s16le $@
+
+%.opus.bin: %.pcm
+	./tools/opus_encode $< $@
 
 main: $(OBJS) $(LIBS)
 	$(CC) $(ARCH) $(LDFLAGS) $(FLAGS) $(OPT) $(DEBUG) $^ -o $@

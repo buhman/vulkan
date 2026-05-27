@@ -10,3 +10,5 @@ tool/pack_file
 *.dds
 *.zlib
 tools/compress
+tools/opus_encode
+*.pcm

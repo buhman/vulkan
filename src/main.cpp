@@ -28,6 +28,8 @@
 #include "scenes/shadow_test/shadow_test.h"
 #include "scenes/eidelwind/eidelwind.h"
 
+#include "audio.h"
+
 VkInstance instance{ VK_NULL_HANDLE };
 VkDevice device{ VK_NULL_HANDLE };
 VkQueue queue{ VK_NULL_HANDLE };
@@ -357,7 +359,8 @@ int main()
 {
   file::init();
 
-  SDL_CHECK(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD));
+  SDL_InitFlags init_flags = SDL_INIT_VIDEO | SDL_INIT_GAMEPAD | SDL_INIT_AUDIO;
+  SDL_CHECK(SDL_Init(init_flags));
   SDL_CHECK(SDL_Vulkan_LoadLibrary(NULL));
   volkInitialize();
 
@@ -768,7 +771,11 @@ int main()
 
   //collada_state.update(0);
 
+  audio::init();
+  audio::load();
+
   while (quit == false) {
+    audio::update();
     interpreter_state.interpret();
 
     SDL_Event event;
@@ -1216,7 +1223,7 @@ int main()
   vkDestroyCommandPool(device, commandPool, nullptr);
 
   SDL_DestroyWindow(window);
-  SDL_QuitSubSystem(SDL_INIT_VIDEO);
+  SDL_QuitSubSystem(init_flags);
   SDL_Quit();
 
   vkDestroyDevice(device, nullptr);
