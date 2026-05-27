@@ -82,7 +82,9 @@ namespace renpy {
     void create_instance_buffers();
     void draw(VkCommandBuffer commandBuffer,
               uint32_t frameIndex,
-              renpy::interpreter const& state);
+              renpy::interpreter const& state,
+              int mx,
+              int my);
 
   };
 }

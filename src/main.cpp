@@ -23,6 +23,7 @@
 #include "font/outline.h"
 #include "renpy/vulkan.h"
 #include "renpy/interpreter.h"
+#include "renpy/interact.h"
 
 #include "scenes/shadow_test/shadow_test.h"
 #include "scenes/eidelwind/eidelwind.h"
@@ -723,7 +724,6 @@ int main()
 
   renpy::interpreter interpreter_state;
   interpreter_state.reset();
-  interpreter_state.interpret();
 
   //////////////////////////////////////////////////////////////////////
   // initialize view
@@ -767,6 +767,8 @@ int main()
   //collada_state.update(0);
 
   while (quit == false) {
+    interpreter_state.interpret();
+
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
       if (event.type == SDL_EVENT_QUIT) {
@@ -1082,7 +1084,12 @@ int main()
 
     //minecraft_state.draw(commandBuffer, frameIndex);
 
-    renpy_state.draw(commandBuffer, frameIndex, interpreter_state);
+    float mx;
+    float my;
+    uint32_t mouseFlags = SDL_GetMouseState(&mx, &my);
+    bool mLeft = (mouseFlags & SDL_BUTTON_LMASK) != 0;
+    renpy::update(interpreter_state, mx, my, mLeft);
+    renpy_state.draw(commandBuffer, frameIndex, interpreter_state, mx, my);
     font_state.draw(commandBuffer, frameIndex, interpreter_state);
 
     vkCmdEndRendering(commandBuffer);

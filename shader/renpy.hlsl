@@ -34,7 +34,7 @@ VSOutput VSMain(VSInput input)
   output.Position = float4(position * 2.0 - 1.0, 0, 1);
   output.Texture = texture;
   output.TextureIndex = input.TextureIndex;
-  output.Color = input.Color;
+  output.Color = input.Color.zyxw;
 
   return output;
 }
@@ -44,8 +44,8 @@ float4 PSGradient1(VSOutput input) : SV_TARGET
   float a = smoothstep(0.05, 0.2, input.Texture.x);
   float b = 1.0 - smoothstep(0.8, 0.95, input.Texture.x);
   float c = smoothstep(0.05, 0.2, input.Texture.y);
-  float d = a * b * c * 0.5;
-  float3 color = float3(1.0, 1.0, 1.0);
+  float d = a * b * c * input.Color.w;
+  float3 color = input.Color.xyz;
   return float4(color, d);
 }
 
@@ -53,8 +53,8 @@ float4 PSGradient2(VSOutput input) : SV_TARGET
 {
   float a = smoothstep(0.05, 0.2, input.Texture.x);
   float b = 1.0 - smoothstep(0.8, 0.95, input.Texture.x);
-  float d = a * b * 0.5;
-  float3 color = float3(1.0, 1.0, 1.0);
+  float d = a * b * input.Color.w;
+  float3 color = input.Color.xyz;
   return float4(color, d);
 }
 
@@ -62,8 +62,8 @@ float4 PSGradient3(VSOutput input) : SV_TARGET
 {
   float a = smoothstep(0.02, 0.1, input.Texture.x);
   float b = 1.0 - smoothstep(0.9, 0.98, input.Texture.x);
-  float d = a * b * 0.5;
-  float3 color = float3(1.0, 1.0, 1.0);
+  float d = a * b * input.Color.w;
+  float3 color = input.Color.xyz;
   return float4(color, d);
 }
 

@@ -62,7 +62,8 @@ OBJS = \
 	src/font/outline.o \
 	src/renpy/vulkan.o \
 	src/renpy/script.o \
-	src/renpy/interpreter.o
+	src/renpy/interpreter.o \
+	src/renpy/interact.o
 
 WORLDS = \
 	data/minecraft/midnightmeadow/inthash.o \

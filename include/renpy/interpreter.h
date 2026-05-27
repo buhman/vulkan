@@ -40,6 +40,7 @@ namespace renpy {
       uint32_t count;
       uint32_t optionIndex;
     } menu;
+    bool interactionWait;
 
     uint32_t findImage(uint32_t imageIndex);
     void showImage(uint32_t imageIndex, uint32_t transformIndex);

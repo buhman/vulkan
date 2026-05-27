@@ -14,6 +14,7 @@ namespace renpy {
     say.stringIndex = -1;
     say.characterIndex = -1;
     menu.count = 0;
+    interactionWait = false;
   }
 
   uint32_t interpreter::findImage(uint32_t imageIndex)
@@ -86,6 +87,7 @@ namespace renpy {
       assert(statement.say.stringIndex < (uint32_t)script::strings_length);
       say.stringIndex = statement.say.stringIndex;
       say.characterIndex = statement.say.characterIndex;
+      interactionWait = true;
       pc += 1;
       break;
     case language::type::hide:
@@ -110,6 +112,11 @@ namespace renpy {
       menu.optionIndex = statement.menu.optionIndex;
       pc += 1;
       break;
+    case language::type::jump:
+      fprintf(stderr, "interpret_one[%d]: jump %d\n", pc, statement.jump.statementIndex);
+      assert(statement.jump.statementIndex < (uint32_t)script::statements_length);
+      pc = statement.jump.statementIndex;
+      break;
     default:
       fprintf(stderr, "unknown statement type at pc %d\n", pc);
       pc += 1;
@@ -119,16 +126,13 @@ namespace renpy {
 
   void interpreter::interpret()
   {
-    while (true) {
+    while (!interactionWait) {
+    //while (true) {
       uint32_t last_pc = pc;
       interpret_one();
       assert(pc != last_pc);
 
-      if (pc == 17) {
-        break;
-      }
-      //if (stop)
-      //break;
+      //if (pc == 18) break;
     }
   }
 };
