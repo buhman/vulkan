@@ -40,9 +40,9 @@ namespace file {
 
     uint8_t * dest = (uint8_t *)malloc(header[1]);
 
-    uint64_t dest_len = header[1];
+    uLongf dest_len = header[1];
     uint8_t * src = (uint8_t *)&header[3];
-    uint64_t src_len = header[2];
+    uLongf src_len = header[2];
     int ret = uncompress2(dest, &dest_len, src, &src_len);
     assert(ret == Z_OK);
     decompressed_start = dest;
