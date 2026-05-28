@@ -4,6 +4,8 @@
 #include "renpy/script.h"
 #include "renpy/interpreter.h"
 
+#include "audio.h"
+
 namespace renpy {
   void interpreter::reset()
   {
@@ -64,7 +66,12 @@ namespace renpy {
 
     switch (statement.type) {
     case language::type::play:
-      fprintf(stderr, "interpret_one[%d]: play\n", pc);
+      fprintf(stderr, "interpret_one[%d]: play %d\n", pc, statement.play.audioIndex);
+      audio::play(statement.play.audioIndex);
+      pc += 1;
+      break;
+    case language::type::stop:
+      audio::stop(statement.stop.audioIndex, statement.stop.fadeout);
       pc += 1;
       break;
     case language::type::scene_color:

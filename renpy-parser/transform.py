@@ -20,6 +20,7 @@ class State:
     characters_lookup: dict[str, int] # identifier to character index
     labels_lookup: dict[str, int] # identifier to statement index
     audio_lookup: dict[str, int]
+    channel_lookup: dict[str, int]
     string_lookup: dict[str, int]
 
     global_identifiers: set[str]
@@ -83,11 +84,15 @@ def pass1(state, ast):
         key = lhs_key(ast.name)
         assert key not in state.labels_lookup
         state.labels_lookup[key] = len(state.statements)
-    elif type(ast) in {parse.Play, parse.Voice}:
+    elif type(ast) is parse.Play:
         if ast.path.lexeme not in state.audio_lookup:
             index = len(state.audio_lookup)
-            channel = ast.channel.lexeme if type(ast) is parse.Play else None
-            state.audio_lookup[ast.path.lexeme] = (index, channel)
+            state.audio_lookup[ast.path.lexeme] = index
+            state.channel_lookup[ast.channel.lexeme] = index
+    elif type(ast) is parse.Voice:
+        if ast.path.lexeme not in state.audio_lookup:
+            index = len(state.audio_lookup)
+            state.audio_lookup[ast.path.lexeme] = index
     elif type(ast) is parse.Say:
         if ast.text.lexeme not in state.string_lookup:
             index = len(state.string_lookup)
@@ -143,8 +148,7 @@ def parse_color(b):
 def pass2_statement(state, pc, statement):
     if type(statement) is parse.Play:
         comment = statement.path.lexeme.decode('utf-8')
-        audio_index, channel = state.audio_lookup[statement.path.lexeme]
-        assert channel is not None
+        audio_index = state.audio_lookup[statement.path.lexeme]
         yield f"{{ .type = type::play, .play = {{ .audioIndex = {audio_index} }} }}, // {pc} {comment}"
     elif type(statement) is parse.Scene:
         key = lhs_key(statement.name)
@@ -166,8 +170,7 @@ def pass2_statement(state, pc, statement):
             assert False, (pc, statement)
     elif type(statement) is parse.Voice:
         comment = statement.path.lexeme.decode('utf-8')
-        audio_index, channel = state.audio_lookup[statement.path.lexeme]
-        assert channel is None
+        audio_index = state.audio_lookup[statement.path.lexeme]
         yield f"{{ .type = type::voice, .voice = {{ .audioIndex = {audio_index} }} }}, // {pc} {comment}"
     elif type(statement) is parse.Say:
         key = lhs_key(statement.speaker)
@@ -201,7 +204,10 @@ def pass2_statement(state, pc, statement):
     elif type(statement) is parse.Return:
         yield f"{{ .type = type::_return }}, // {pc}"
     elif type(statement) is parse.Stop:
-        yield f"{{ .type = type::stop, .stop = {{ /* FIXME channel */ }} }}, // {pc}"
+        audio_index = state.channel_lookup[statement.channel.lexeme]
+        fadeout = statement.fadeout.lexeme
+        channel = statement.channel.lexeme.decode('utf-8')
+        yield f"{{ .type = type::stop, .stop = {{ .audioIndex = {audio_index}, .fadeout = {float(fadeout)} }} }}, // {pc} {channel}"
     elif type(statement) is parse.Pause:
         duration = statement.duration.lexeme
         yield f"{{ .type = type::pause, .pause = {{ .duration = {duration} }} }}, // {pc}"
@@ -241,7 +247,8 @@ def pass2_characters(state):
 
 def pass2_audio(state):
     yield "const language::audio audio[] = {"
-    for audio, (i, channel) in sorted(state.audio_lookup.items(), key=lambda kv: kv[1][0]):
+    reverse_channel = {v: k for k, v in state.channel_lookup.items()}
+    for audio, i in sorted(state.audio_lookup.items(), key=lambda kv: kv[1]):
         orig_path = audio.decode('utf-8')
         path = orig_path
         if path.endswith(".mp3"):
@@ -251,11 +258,11 @@ def pass2_audio(state):
         else:
             assert False, path
         name = audio
-        channel_name = channel.decode('utf-8') if channel is not None else None
-        name = f"\"{channel_name}\"" if channel is not None else "nullptr"
+        channel_name = reverse_channel[i].decode('utf-8') if i in reverse_channel else None
+        name = f"\"{channel_name}\"" if channel_name is not None else "nullptr"
         loop = loops[channel_name] if channel_name in loops else 0
         assert loop < 20_000, loop
-        yield f"{{ .path = \"audio/{path}.opus.bin\", .name = {name}, .loop = {int(loop * 48000)} }}, // {i} {orig_path}"
+        yield f"{{ .path = \"audio/{path}.opus.bin\", .loop_end = {float(loop)} }}, // {i} {orig_path}"
     yield "};"
     yield "const int audio_length = (sizeof (audio)) / (sizeof (audio[0]));"
 
@@ -313,6 +320,7 @@ image _internal_flowers = "flowers.png"
         characters_lookup = dict(),
         labels_lookup = dict(),
         audio_lookup = dict(),
+        channel_lookup = dict(),
         string_lookup = dict(),
         global_identifiers = set(),
     )

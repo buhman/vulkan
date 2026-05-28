@@ -25,8 +25,7 @@ namespace renpy::language {
 
   struct audio {
     char const * const path;
-    char const * const name;
-    uint32_t loop;
+    double loop_end;
   };
 
   struct image {
@@ -66,6 +65,11 @@ namespace renpy::language {
     uint32_t audioIndex;
   };
 
+  struct stop {
+    uint32_t audioIndex;
+    double fadeout;
+  };
+
   struct _return {
   };
 
@@ -92,10 +96,6 @@ namespace renpy::language {
   };
 
   struct with {
-  };
-
-  struct stop {
-    uint32_t channelIndex;
   };
 
   struct pause {

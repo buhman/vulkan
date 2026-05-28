@@ -13,20 +13,23 @@
 
 namespace audio {
 
-  int const frame_samples = 960; // 20 milliseconds @ 48kHz
-  int const sample_rate = 48000;
-  int const channels = 2;
-  int const sample_size = (sizeof (int16_t));
+  static int const frame_samples = 960; // 20 milliseconds @ 48kHz
+  static int const sample_rate = 48000;
+  static int const channels = 2;
+  static int const sample_size = (sizeof (int16_t));
 
-  int const max_frame_size = 960 * 3; // 20ms at 48kHz
-  int const max_packet_size = 1275;
+  static int const max_frame_size = 960 * 3; // 20ms at 48kHz
+  static int const max_packet_size = 1275;
+
+  static int const half_period_samples = sample_rate / 2;
+  static int const half_period_size = half_period_samples * sample_size * channels;
 
   //
 
-  SDL_AudioStream * audio_stream;
-  SDL_AudioSpec audio_spec;
+  static SDL_AudioStream * audio_stream;
+  static SDL_AudioSpec audio_spec;
 
-  OpusDecoder * opus_decoder;
+  static OpusDecoder * opus_decoder;
 
   struct AudioBuffer {
     renpy::language::audio const * audio;
@@ -35,16 +38,20 @@ namespace audio {
   };
 
   struct AudioInstance {
+    int audio_index;
     AudioBuffer * audio_buffer;
     uint32_t sample_index;
     uint32_t tail_index;
+    uint32_t fadeout_end;
+    uint32_t fadeout_index;
   };
 
-  AudioBuffer * audio_buffers;
+  static AudioBuffer * audio_buffers;
+  static int audio_buffers_count;
 
-  constexpr int max_audio_instances = 16;
-  AudioInstance audio_instances[max_audio_instances];
-  int instance_count;
+  constexpr int max_audio_instances = 128;
+  static AudioInstance audio_instances[max_audio_instances];
+  static int audio_instances_count;
 
   void init()
   {
@@ -62,7 +69,7 @@ namespace audio {
       assert(!"opus_decoder_create");
     }
 
-    instance_count = 0;
+    audio_instances_count = 0;
   }
 
   void decode(char const * const filename, AudioBuffer * audio_buffer)
@@ -121,62 +128,148 @@ namespace audio {
   void load(renpy::language::audio const * const audio, int count)
   {
     audio_buffers = NewM<AudioBuffer>(count);
+    audio_buffers_count = count;
     for (int i = 0; i < count; i++) {
       audio_buffers[i].audio = &audio[i];
       decode(audio[i].path, &audio_buffers[i]);
-      //audio_instances[i].audio_buffer = &audio_buffers[i];
-      //audio_instances[i].sample_index = 0;
-      //audio_instances[i].tail_index = audio_buffers[i].sample_count;
     }
   }
 
-  inline static int min(int a, int b)
+  void play(int audio_index)
   {
-    return (a < b) ? a : b;
+    assert(audio_index >= 0 && audio_index < audio_buffers_count);
+    assert(audio_instances_count < max_audio_instances);
+
+    AudioInstance & instance = audio_instances[audio_instances_count++];
+
+    instance.audio_index = (int)audio_index;
+    instance.audio_buffer = &audio_buffers[audio_index];
+    instance.sample_index = 0;
+    instance.tail_index = audio_buffers[audio_index].sample_count;
+    instance.fadeout_end = 0;
+    instance.fadeout_index = 0;
   }
 
-  void update()
+  void stop(int audio_index, double fadeout)
   {
-    int half_period_samples = audio_spec.freq / 2;
-    int half_period_size = half_period_samples * sample_size * audio_spec.channels;
-    if (SDL_GetAudioStreamQueued(audio_stream) >= half_period_size)
-      return;
+    assert(audio_index >= 0 && audio_index < audio_buffers_count);
 
-    int16_t mix_buffer[half_period_samples * channels];
-    memset(mix_buffer, 0, (sizeof (mix_buffer)));
+    for (int i = 0; i < audio_instances_count; i++) {
+      if (audio_instances[i].audio_index == audio_index) {
+        if (audio_instances[i].fadeout_end == 0) {
+          fprintf(stderr, "audio: stop instance %d index %d\n", i, audio_index);
+          audio_instances[i].fadeout_end = fadeout * (double)sample_rate;
+          audio_instances[i].fadeout_index = 0;
+        } else {
+          fprintf(stderr, "audio: duplicate stop on instance %d index %d\n", i, audio_index);
+        }
+      }
+    }
+  }
 
-    /*
-    AudioInstance & instance = audio_instances[0];
+  static inline void saturation_add(int16_t * mix_buffer, int32_t value)
+  {
+    int32_t mix_value = *mix_buffer;
+    mix_value += value;
+    if (mix_value > 32767)
+      mix_value = 32767;
+    if (mix_value < -32768)
+      mix_value = -32768;
+    *mix_buffer = mix_value;
+  }
+
+  static inline void remove_instance(int instance_index)
+  {
+    fprintf(stderr, "removed instance %d index %d\n", instance_index, audio_instances[instance_index].audio_index);
+
+    for (int i = instance_index; i < (audio_instances_count - 1); i++) {
+      audio_instances[i] = audio_instances[i + 1];
+    }
+    audio_instances_count -= 1;
+  }
+
+  static inline void update_instance(int16_t * mix_buffer, AudioInstance & instance)
+  {
     int16_t const * const buf = instance.audio_buffer->buf;
     uint32_t const sample_count = instance.audio_buffer->sample_count;
-    uint32_t const loop_end = instance.audio_buffer->audio_file->loop_end;
+    uint32_t const loop_end = instance.audio_buffer->audio->loop_end * (double)sample_rate;
 
     uint32_t mix_index = 0;
     for (int i = 0; i < half_period_samples; i++) {
-      if (instance.sample_index >= loop_end) {
-        instance.sample_index = 0;
-        instance.tail_index = loop_end;
-        fprintf(stderr, "loop\n");
+      if (loop_end != 0) {
+        if (instance.sample_index >= loop_end) {
+          instance.sample_index = 0;
+          instance.tail_index = loop_end;
+        }
+      } else if (instance.sample_index >= sample_count) {
+        return;
+      }
+
+      if (instance.fadeout_end != 0 && instance.fadeout_index >= instance.fadeout_end) {
+        return;
       }
 
       assert(instance.sample_index < sample_count);
       assert(instance.tail_index <= sample_count);
 
+
+      double fadeout = 1.0;
+      if (instance.fadeout_end != 0) {
+        fadeout = 1.0 - ((double)instance.fadeout_index / (double)instance.fadeout_end);
+      }
+
       for (int ch = 0; ch < channels; ch++) {
-        mix_buffer[mix_index * channels + ch] += buf[instance.sample_index * channels + ch];
+        int32_t value = buf[instance.sample_index * channels + ch];
         if (instance.tail_index != sample_count) {
-          mix_buffer[mix_index * channels + ch] += buf[instance.tail_index * channels + ch];
+          value += buf[instance.tail_index * channels + ch];
         }
+        saturation_add(&mix_buffer[mix_index * channels + ch], (double)value * fadeout);
       }
       instance.sample_index += 1;
+      instance.fadeout_index += 1;
       if (instance.tail_index != sample_count) {
         instance.tail_index += 1;
       }
 
       mix_index += 1;
     }
+  }
+
+  static inline bool should_cull_instance(AudioInstance & instance)
+  {
+    if (instance.audio_buffer->audio->loop_end != 0.0 && instance.sample_index >= instance.audio_buffer->sample_count) {
+      return true;
+    }
+    if (instance.fadeout_end != 0 && instance.fadeout_index >= instance.fadeout_end) {
+      return true;
+    }
+    return false;
+  }
+
+  void update()
+  {
+    if (SDL_GetAudioStreamQueued(audio_stream) >= half_period_size)
+      return;
+
+    int16_t mix_buffer[half_period_samples * channels];
+    memset(mix_buffer, 0, (sizeof (mix_buffer)));
+
+    for (int i = 0; i < audio_instances_count; i++) {
+      update_instance(mix_buffer, audio_instances[i]);
+    }
+
+    bool culled = true;
+    while (culled) {
+      culled = false;
+      for (int i = 0; i < audio_instances_count; i++) {
+        if (should_cull_instance(audio_instances[i])) {
+          culled = true;
+          remove_instance(i);
+          break;
+        }
+      }
+    }
 
     SDL_PutAudioStreamData(audio_stream, (void *)mix_buffer, half_period_size);
-    */
   }
 }

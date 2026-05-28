@@ -76,6 +76,7 @@ label start:
     #voice "n4test.mp3"
     play TinyForestMinstrels "music/TinyForestMinstrels.ogg"
     n "Tiny minstrels can be heard amongst the trees"
+    stop TinyForestMinstrels fadeout 5.5
 
 
     scene bgforest1

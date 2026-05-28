@@ -478,18 +478,19 @@ def parse_stop(tokens, index):
     if channel.type != TT.IDENTIFIER:
         raise ParseException("expected identifier", channel)
 
-    index += 1
-    token = tokens[index]
-    fadeout = None
-    if token.type == TT.FADEOUT:
-        fadeout = tokens[index + 1]
-        if fadeout.type != TT.NUMBER:
-            raise ParseException("expected number", fadeout)
-        index += 2
+    fadeout = tokens[index + 1]
+    if fadeout.type != TT.FADEOUT:
+        raise ParseException("expected fadeout", channel)
+
+    number = tokens[index + 2]
+    if number.type != TT.NUMBER:
+        raise ParseException("expected number", number)
+
+    index += 3
 
     stop = Stop(
         channel = channel,
-        fadeout = fadeout
+        fadeout = number
     )
     return index, stop
 
