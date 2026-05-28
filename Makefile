@@ -110,6 +110,12 @@ all: main
 %.pcm: %.wav
 	ffmpeg -loglevel quiet -y -i $< -c:a pcm_s16le -ar 48000 -ac 2 -f s16le $@
 
+%.pcm: %.ogg
+	ffmpeg -loglevel quiet -y -i $< -c:a pcm_s16le -ar 48000 -ac 2 -f s16le $@
+
+%.pcm: %.mp3
+	ffmpeg -loglevel quiet -y -i $< -c:a pcm_s16le -ar 48000 -ac 2 -f s16le $@
+
 %.opus.bin: %.pcm
 	./tools/opus_encode $< $@
 

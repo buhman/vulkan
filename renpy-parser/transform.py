@@ -51,6 +51,14 @@ simple_statement_types = {
     parse.Hide,
 }
 
+loops = {
+    "ScaredMice": 8.0,
+    "PhrygianButterflies": 40.125,
+    "MistAmbience": 22.0,
+    "TinyForestMinstrels": 44.0,
+    "WheatFields": 34.0,
+}
+
 def pass1(state, ast):
     if type(ast) is parse.Image:
         key = lhs_key(ast.name)
@@ -78,7 +86,8 @@ def pass1(state, ast):
     elif type(ast) in {parse.Play, parse.Voice}:
         if ast.path.lexeme not in state.audio_lookup:
             index = len(state.audio_lookup)
-            state.audio_lookup[ast.path.lexeme] = index
+            channel = ast.channel.lexeme if type(ast) is parse.Play else None
+            state.audio_lookup[ast.path.lexeme] = (index, channel)
     elif type(ast) is parse.Say:
         if ast.text.lexeme not in state.string_lookup:
             index = len(state.string_lookup)
@@ -134,8 +143,9 @@ def parse_color(b):
 def pass2_statement(state, pc, statement):
     if type(statement) is parse.Play:
         comment = statement.path.lexeme.decode('utf-8')
-        audio_index = state.audio_lookup[statement.path.lexeme]
-        yield f"{{ .type = type::play, .play = {{ .audioIndex = {audio_index}, /* FIXME channel */ }} }}, // {pc} {comment}"
+        audio_index, channel = state.audio_lookup[statement.path.lexeme]
+        assert channel is not None
+        yield f"{{ .type = type::play, .play = {{ .audioIndex = {audio_index} }} }}, // {pc} {comment}"
     elif type(statement) is parse.Scene:
         key = lhs_key(statement.name)
         if key in state.images_lookup:
@@ -156,7 +166,8 @@ def pass2_statement(state, pc, statement):
             assert False, (pc, statement)
     elif type(statement) is parse.Voice:
         comment = statement.path.lexeme.decode('utf-8')
-        audio_index = state.audio_lookup[statement.path.lexeme]
+        audio_index, channel = state.audio_lookup[statement.path.lexeme]
+        assert channel is None
         yield f"{{ .type = type::voice, .voice = {{ .audioIndex = {audio_index} }} }}, // {pc} {comment}"
     elif type(statement) is parse.Say:
         key = lhs_key(statement.speaker)
@@ -230,7 +241,7 @@ def pass2_characters(state):
 
 def pass2_audio(state):
     yield "const language::audio audio[] = {"
-    for audio, i in sorted(state.audio_lookup.items(), key=lambda kv: kv[1]):
+    for audio, (i, channel) in sorted(state.audio_lookup.items(), key=lambda kv: kv[1][0]):
         orig_path = audio.decode('utf-8')
         path = orig_path
         if path.endswith(".mp3"):
@@ -239,7 +250,12 @@ def pass2_audio(state):
             path = path.removesuffix(".ogg")
         else:
             assert False, path
-        yield f"{{ .path = \"{path}.opus\" }}, // {i} {orig_path}"
+        name = audio
+        channel_name = channel.decode('utf-8') if channel is not None else None
+        name = f"\"{channel_name}\"" if channel is not None else "nullptr"
+        loop = loops[channel_name] if channel_name in loops else 0
+        assert loop < 20_000, loop
+        yield f"{{ .path = \"audio/{path}.opus.bin\", .name = {name}, .loop = {int(loop * 48000)} }}, // {i} {orig_path}"
     yield "};"
     yield "const int audio_length = (sizeof (audio)) / (sizeof (audio[0]));"
 

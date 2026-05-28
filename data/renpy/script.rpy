@@ -127,7 +127,7 @@ label start:
         with Dissolve(1.0)
 
 
-        voice "n5test.ogg"
+        #voice "n5test.ogg"
         n "As the minstrel mice girls continue along the path, the forest opens up into a beautiful field of flowers"
 
         play PhrygianButterflies "music/PhrygianButterflies.ogg"

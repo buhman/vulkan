@@ -25,6 +25,8 @@ namespace renpy::language {
 
   struct audio {
     char const * const path;
+    char const * const name;
+    uint32_t loop;
   };
 
   struct image {

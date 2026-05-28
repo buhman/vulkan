@@ -9,6 +9,7 @@
 #include "audio.h"
 #include "new.h"
 #include "minmax.h"
+#include "renpy/language.h"
 
 namespace audio {
 
@@ -27,13 +28,8 @@ namespace audio {
 
   OpusDecoder * opus_decoder;
 
-  struct AudioFile {
-    char const * const path;
-    uint32_t loop_end;
-  };
-
   struct AudioBuffer {
-    AudioFile * audio_file;
+    renpy::language::audio const * audio;
     int16_t * buf;
     uint32_t sample_count;
   };
@@ -44,22 +40,11 @@ namespace audio {
     uint32_t tail_index;
   };
 
-  consteval uint32_t time_to_samples(double m, double s)
-  {
-    return (m * 60.0 + s) * sample_rate;
-  }
-
-  AudioFile audio_files[] = {
-    {
-      .path = "audio/PhrygianButterflies.opus.bin",
-      .loop_end = time_to_samples(0, 40.125),
-    },
-  };
-  constexpr int audio_files_count = (sizeof (audio_files)) / (sizeof (audio_files[0]));
-  AudioBuffer audio_buffers[audio_files_count];
+  AudioBuffer * audio_buffers;
 
   constexpr int max_audio_instances = 16;
   AudioInstance audio_instances[max_audio_instances];
+  int instance_count;
 
   void init()
   {
@@ -76,6 +61,8 @@ namespace audio {
       fprintf(stderr, "opus_decoder_create: %s\n", opus_strerror(err));
       assert(!"opus_decoder_create");
     }
+
+    instance_count = 0;
   }
 
   void decode(char const * const filename, AudioBuffer * audio_buffer)
@@ -131,14 +118,15 @@ namespace audio {
     assert(audio_buffer->sample_count / 2);
   }
 
-  void load()
+  void load(renpy::language::audio const * const audio, int count)
   {
-    for (int i = 0; i < audio_files_count; i++) {
-      audio_buffers[i].audio_file = &audio_files[i];
-      decode(audio_files[i].path, &audio_buffers[i]);
-      audio_instances[i].audio_buffer = &audio_buffers[i];
-      audio_instances[i].sample_index = 0;
-      audio_instances[i].tail_index = audio_buffers[i].sample_count;
+    audio_buffers = NewM<AudioBuffer>(count);
+    for (int i = 0; i < count; i++) {
+      audio_buffers[i].audio = &audio[i];
+      decode(audio[i].path, &audio_buffers[i]);
+      //audio_instances[i].audio_buffer = &audio_buffers[i];
+      //audio_instances[i].sample_index = 0;
+      //audio_instances[i].tail_index = audio_buffers[i].sample_count;
     }
   }
 
@@ -157,6 +145,7 @@ namespace audio {
     int16_t mix_buffer[half_period_samples * channels];
     memset(mix_buffer, 0, (sizeof (mix_buffer)));
 
+    /*
     AudioInstance & instance = audio_instances[0];
     int16_t const * const buf = instance.audio_buffer->buf;
     uint32_t const sample_count = instance.audio_buffer->sample_count;
@@ -188,5 +177,6 @@ namespace audio {
     }
 
     SDL_PutAudioStreamData(audio_stream, (void *)mix_buffer, half_period_size);
+    */
   }
 }

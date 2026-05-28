@@ -56,7 +56,6 @@ class Play:
     channel: lex.Token
     path: lex.Token
     fadeout: lex.Token
-    noloop: bool
 
     __repr__ = lexeme_repr
 
@@ -263,16 +262,15 @@ def parse_play(tokens, index):
         if fadeout.type != TT.NUMBER:
             raise ParseException("expected number", fadeout)
         index += 2
-    noloop = False
+    #noloop = False
     if token.type == TT.NOLOOP:
-        noloop = True
+        #noloop = True
         index += 1
 
     play = Play(
         channel = channel,
         path = path,
         fadeout = fadeout,
-        noloop = noloop,
     )
     return index, play
 

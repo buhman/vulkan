@@ -24,6 +24,7 @@
 #include "renpy/vulkan.h"
 #include "renpy/interpreter.h"
 #include "renpy/interact.h"
+#include "renpy/script.h"
 
 #include "scenes/shadow_test/shadow_test.h"
 #include "scenes/eidelwind/eidelwind.h"
@@ -772,7 +773,7 @@ int main()
   //collada_state.update(0);
 
   audio::init();
-  audio::load();
+  audio::load(renpy::script::audio, renpy::script::audio_length);
 
   while (quit == false) {
     audio::update();

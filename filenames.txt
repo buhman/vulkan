@@ -12,4 +12,11 @@ data/renpy/images/ch/catw.dds
 data/renpy/images/ch/Eily.dds
 data/renpy/images/ch/Alice.dds
 
-audio/PhrygianButterflies.opus.bin
+audio/sfx/Chime.opus.bin
+audio/sfx/MistAmbience.opus.bin
+audio/music/TinyForestMinstrels.opus.bin
+audio/music/PhrygianButterflies.opus.bin
+audio/music/Poem1.opus.bin
+audio/placeholdermeow.opus.bin
+audio/music/ScaredMice.opus.bin
+audio/music/WheatFields.opus.bin
