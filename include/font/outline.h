@@ -110,15 +110,15 @@ namespace font::outline {
                    int& outputIndex,
                    int startIndex,
                    int endIndex,
-                   uint32_t color);
+                   uint32_t color) const;
     void centered(int frameIndex, char const * const string, uint32_t& x, uint32_t& y,
                   uint32_t minX,
                   uint32_t maxWidth,
                   int& outputIndex,
-                  uint32_t color);
+                  uint32_t color) const;
     void draw(VkCommandBuffer commandBuffer,
               uint32_t frameIndex,
-              renpy::interpreter const& state);
+              renpy::interpreter const& state) const;
 
     LoadedFont load_font(font_desc const& desc);
   };

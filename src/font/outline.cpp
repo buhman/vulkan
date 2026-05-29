@@ -622,7 +622,7 @@ namespace font::outline {
                        int& outputIndex,
                        int startIndex,
                        int endIndex,
-                       uint32_t color)
+                       uint32_t color) const
   {
     for (int i = startIndex; i < endIndex; i++) {
       char c = string[i];
@@ -645,7 +645,7 @@ namespace font::outline {
                       uint32_t minX,
                       uint32_t maxWidth,
                       int& outputIndex,
-                      uint32_t color)
+                      uint32_t color) const
   {
     int stringIndex = 0;
     int lineStart = stringIndex;
@@ -700,7 +700,7 @@ namespace font::outline {
 
   void font::draw(VkCommandBuffer commandBuffer,
                   uint32_t frameIndex,
-                  renpy::interpreter const& state)
+                  renpy::interpreter const& state) const
   {
     // transfer
     int outputIndex = 0;

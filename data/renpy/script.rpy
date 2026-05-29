@@ -3,6 +3,7 @@
 # Declare characters used by this game. The color argument colorizes the
 # name of the character.
 image bgwhite = "#ffffff"
+image bgblack = "#000000"
 image bgforest1 = "bg/forest1.png"
 image bgforest2 = "bg/forest2.png"
 image bgflower1 = "bg/flowerfield1.png"
@@ -62,6 +63,8 @@ label start:
     #play Chime "sfx/Chime.ogg" fadeout 1.0
     play sound "sfx/Chime.ogg"
     play MistAmbience "sfx/MistAmbience.ogg"
+    scene bgblack
+    pause 0.0
     scene bgwhite
     with Dissolve(3.0)
     #play music "IntroMusicTest.ogg"

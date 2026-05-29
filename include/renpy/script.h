@@ -16,6 +16,9 @@ namespace renpy::script {
   extern const language::option options[];
   extern const int options_length;
 
+  extern const language::dissolve dissolves[];
+  extern const int dissolves_length;
+
   extern const language::statement statements[];
   extern const int statements_length;
 

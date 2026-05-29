@@ -70,6 +70,7 @@ OBJS = \
 	src/tga/tga.o \
 	src/font/outline.o \
 	src/renpy/vulkan.o \
+	src/renpy/composite/vulkan.o \
 	src/renpy/script.o \
 	src/renpy/interpreter.o \
 	src/renpy/interact.o \
@@ -130,8 +131,8 @@ all: main
 main: $(OBJS) $(LIBS)
 	$(CC) $(ARCH) $(LDFLAGS) $(FLAGS) $(OPT) $(DEBUG) $^ -o $@
 
-#%.spv: %.hlsl
-#	../dxc/bin/dxc -spirv -T lib_6_3 -fspv-target-env=vulkan1.3 $< -Fo $@
+%.spv: %.hlsl
+	../dxc/bin/dxc -spirv -T lib_6_3 -fspv-target-env=vulkan1.3 $< -Fo $@
 
 tool/pack_file: tool/pack_file.cpp
 	make -C tool pack_file
@@ -140,6 +141,9 @@ tool/pack_file: tool/pack_file.cpp
 	./tools/compress $< $@
 
 src/pack.o: files.pack.zlib
+
+#src/renpy/script.cpp: data/renpy/script.rpy
+#	PYTHONPATH=renpy-parser python -m transform $< > $@
 
 PACK_FILENAMES = $(shell cat filenames.txt)
 files.pack: tool/pack_file $(PACK_FILENAMES) filenames.txt

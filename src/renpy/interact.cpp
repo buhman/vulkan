@@ -22,7 +22,7 @@ namespace renpy {
     bool mDown = mLeft && (!lastmLeft);
     lastmLeft = mLeft;
     if (mDown) {
-      state.interactionWait = false;
+      state.pause.voice = false;
     }
 
     if (state.menu.count == 0 || !mDown)

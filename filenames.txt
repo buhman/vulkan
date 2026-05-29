@@ -2,6 +2,7 @@ shader/font.spv
 data/font/outline/medieval_sharp_24.data
 
 shader/renpy.spv
+shader/renpy_composite.spv
 data/renpy/images/flowers.dds
 data/renpy/images/bg/forest1.dds
 data/renpy/images/bg/forest2.dds

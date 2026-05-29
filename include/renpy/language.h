@@ -48,7 +48,6 @@ namespace renpy::language {
     stop,
     pause,
     hide,
-    dissolve,
   };
 
   struct jump {
@@ -107,7 +106,9 @@ namespace renpy::language {
   };
 
   struct dissolve {
-    float duration;
+    double duration;
+    uint32_t first_statement;
+    uint32_t count;
   };
 
   struct statement {
@@ -124,7 +125,6 @@ namespace renpy::language {
       renpy::language::stop stop;
       renpy::language::pause pause;
       renpy::language::hide hide;
-      renpy::language::dissolve dissolve;
     };
   };
 }

@@ -10,13 +10,17 @@ namespace renpy {
   void interpreter::reset()
   {
     pc = 0;
-    backgroundIndex = -1;
+    backgroundIndex = ~0u;
     backgroundColor = 0;
     shownImagesCount = 0;
-    say.stringIndex = -1;
-    say.characterIndex = -1;
+    say.stringIndex = ~0u;
+    say.characterIndex = ~0u;
     menu.count = 0;
-    interactionWait = false;
+    dissolveIndex = 0;
+    pause.voice = false;
+    pause.menu = false;
+    pause.dissolve = false;
+    pause.pause = false;
   }
 
   uint32_t interpreter::findImage(uint32_t imageIndex)
@@ -60,6 +64,8 @@ namespace renpy {
 
   void interpreter::interpret_one()
   {
+    uint32_t last_pc = pc;
+
     assert(pc < (uint32_t)script::statements_length);
 
     language::statement const& statement = script::statements[pc];
@@ -90,8 +96,8 @@ namespace renpy {
       backgroundIndex = statement.scene.imageIndex;
 
       shownImagesCount = 0;
-      say.stringIndex = -1;
-      say.characterIndex = -1;
+      say.stringIndex = ~0u;
+      say.characterIndex = ~0u;
       pc += 1;
       break;
     case language::type::say:
@@ -99,7 +105,7 @@ namespace renpy {
       assert(statement.say.stringIndex < (uint32_t)script::strings_length);
       say.stringIndex = statement.say.stringIndex;
       say.characterIndex = statement.say.characterIndex;
-      interactionWait = true;
+      pause.voice = true;
       pc += 1;
       break;
     case language::type::hide:
@@ -129,22 +135,37 @@ namespace renpy {
       assert(statement.jump.statementIndex < (uint32_t)script::statements_length);
       pc = statement.jump.statementIndex;
       break;
+    case language::type::pause:
+      fprintf(stderr, "interpret_one[%d]: pause %f\n", pc, statement.pause.duration);
+      pauseDuration = statement.pause.duration;
+      pause.pause = true;
+      pc += 1;
+      break;
     default:
       fprintf(stderr, "unknown statement type at pc %d\n", pc);
+      assert(false);
       pc += 1;
       break;
     }
+
+    assert(pc != last_pc);
   }
 
   void interpreter::interpret()
   {
-    while (!interactionWait) {
-    //while (true) {
-      uint32_t last_pc = pc;
-      interpret_one();
-      assert(pc != last_pc);
-
-      //if (pc == 18) break;
+    while (!interactionWait()) {
+      if (dissolvePC()) {
+        fprintf(stderr, "dissolve pc %d\n", pc);
+        language::dissolve const & dissolve = script::dissolves[dissolveIndex];
+        for (uint32_t i = 0; i < dissolve.count; i++) {
+          interpret_one();
+        }
+        pause.dissolve = true;
+        dissolveDuration = dissolve.duration;
+        dissolveIndex += 1;
+      } else {
+        interpret_one();
+      }
     }
   }
 };

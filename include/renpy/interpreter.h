@@ -3,6 +3,7 @@
 #include <stdint.h>
 
 #include "renpy/language.h"
+#include "renpy/script.h"
 
 namespace renpy {
   struct top_left {
@@ -40,7 +41,15 @@ namespace renpy {
       uint32_t count;
       uint32_t optionIndex;
     } menu;
-    bool interactionWait;
+    uint32_t dissolveIndex;
+    struct {
+      bool voice;
+      bool menu;
+      bool dissolve;
+      bool pause;
+    } pause;
+    double dissolveDuration;
+    double pauseDuration;
 
     uint32_t findImage(uint32_t imageIndex);
     void showImage(uint32_t imageIndex, uint32_t transformIndex);
@@ -48,5 +57,15 @@ namespace renpy {
     void reset();
     void interpret_one();
     void interpret();
+
+    inline bool interactionWait()
+    {
+      return pause.voice || pause.menu || pause.dissolve || pause.pause;
+    }
+
+    inline bool dissolvePC()
+    {
+      return dissolveIndex < (uint32_t)script::dissolves_length && script::dissolves[dissolveIndex].first_statement == pc;
+    }
   };
 }

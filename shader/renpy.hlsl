@@ -88,8 +88,8 @@ float4 PSMain(VSOutput input) : SV_TARGET
   if (color.w == 0.0)
     discard;
 
-  float gamma = 2.2;
-  color.xyz = pow(color.xyz, float3(gamma.xxx));
+  //float gamma = 2.2;
+  //color.xyz = pow(color.xyz, float3(gamma.xxx));
 
   return float4(color.xyzw);
 }

@@ -14,6 +14,7 @@ class State:
     statements: list
     menus: list
     entries: dict
+    dissolves: list
 
     images_lookup: dict[str, int] # identifier to image index
     colors_lookup: dict[str, int] # identifier to image index
@@ -35,6 +36,12 @@ class InternalMenu:
 class InternalJump:
     target: tuple
 
+@dataclass
+class InternalDissolve:
+    duration: int
+    first_statement: int
+    count: int
+
 def lhs_key(lhs):
     return tuple(l.lexeme for l in lhs)
 
@@ -46,7 +53,6 @@ simple_statement_types = {
     parse.Scene,
     parse.Show,
     parse.Voice,
-    parse.With,
     parse.Stop,
     parse.Pause,
     parse.Hide,
@@ -123,6 +129,34 @@ def pass1(state, ast):
             state.statements.append(InternalJump(menu_end_key))
         assert menu_end_key not in state.labels_lookup
         state.labels_lookup[menu_end_key] = len(state.statements)
+    elif type(ast) is parse.With:
+        if ast.function_call.name.lexeme != b'Dissolve':
+            assert False, ast
+        duration, = ast.function_call.args
+        duration = duration.lexeme
+
+        scene_index = None
+        for i in reversed(range(len(state.statements))):
+            if type(state.statements[i]) is parse.Scene:
+                scene_index = i
+                break
+        for i in range(scene_index + 1, len(state.statements)):
+            ast = state.statements[i]
+            if type(ast) is parse.Voice:
+                assert False, ast
+            elif type(ast) is parse.Menu:
+                assert False, ast
+            elif type(ast) is parse.Pause:
+                assert False, ast
+            else:
+                assert type(ast) in simple_statement_types, ast
+
+        assert scene_index is not None
+        state.dissolves.append(InternalDissolve(
+            duration = duration,
+            first_statement = scene_index,
+            count = len(state.statements) - scene_index,
+        ))
     elif type(ast) in simple_statement_types:
         pass
     else:
@@ -161,13 +195,6 @@ def pass2_statement(state, pc, statement):
             color = parse_color(state.colors[color_index].path.lexeme)
             comment = ".".join(k.decode('utf-8') for k in key)
             yield f"{{ .type = type::scene_color, .scene_color = {{ .color = 0x{color:06x} }} }}, // {pc} {comment}"
-    elif type(statement) is parse.With:
-        #print(f"not implemented: {statement}", file=sys.stderr)
-        if statement.function_call.name.lexeme == b'Dissolve':
-            duration, = statement.function_call.args
-            yield f"{{ .type = type::dissolve, .dissolve = {{ .duration = {duration.lexeme} }} }}, // {pc}"
-        else:
-            assert False, (pc, statement)
     elif type(statement) is parse.Voice:
         comment = statement.path.lexeme.decode('utf-8')
         audio_index = state.audio_lookup[statement.path.lexeme]
@@ -217,7 +244,6 @@ def pass2_statement(state, pc, statement):
         comment = ".".join(k.decode('utf-8') for k in key)
         yield f"{{ .type = type::hide, .hide = {{ .imageIndex = {image_index} }} }}, // {pc} {comment}"
     else:
-        pass
         assert False, (type(statement), statement)
 
 def pass2_statements(state):
@@ -286,6 +312,13 @@ def pass2_options(state):
     yield "};"
     yield "const int options_length = (sizeof (options)) / (sizeof (options[0]));"
 
+def pass2_dissolves(state):
+    yield "const language::dissolve dissolves[] = {"
+    for dissolve in state.dissolves:
+        yield f"{{ .duration = {dissolve.duration}, .first_statement = {dissolve.first_statement}, .count = {dissolve.count} }},"
+    yield "};"
+    yield "const int dissolves_length = (sizeof (dissolves)) / (sizeof (dissolves[0]));"
+
 def pass2(state):
     yield "#include \"renpy/language.h\""
     yield "#include \"renpy/script.h\""
@@ -297,6 +330,7 @@ def pass2(state):
     yield from pass2_audio(state)
     yield from pass2_images(state)
     yield from pass2_options(state)
+    yield from pass2_dissolves(state)
     yield from pass2_statements(state)
     yield "}"
 
@@ -315,6 +349,7 @@ image _internal_flowers = "flowers.png"
         statements = list(),
         menus = list(),
         entries = dict(),
+        dissolves = list(),
         images_lookup = dict(),
         colors_lookup = dict(),
         characters_lookup = dict(),

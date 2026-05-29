@@ -23,6 +23,7 @@
 
 #include "font/outline.h"
 #include "renpy/vulkan.h"
+#include "renpy/composite/vulkan.h"
 #include "renpy/interpreter.h"
 #include "renpy/interact.h"
 #include "renpy/script.h"
@@ -42,6 +43,11 @@ VkImageView * swapchainImageViews{ nullptr };
 VkImage depthImage{ VK_NULL_HANDLE };
 VkImageView depthImageView{ VK_NULL_HANDLE };
 VkDeviceMemory depthMemory{ VK_NULL_HANDLE };
+
+constexpr int colorImageCount = 3;
+VkImage colorImage[colorImageCount]{ VK_NULL_HANDLE, VK_NULL_HANDLE };
+VkImageView colorImageView[colorImageCount]{ VK_NULL_HANDLE, VK_NULL_HANDLE };
+VkDeviceMemory colorMemory[colorImageCount]{ VK_NULL_HANDLE, VK_NULL_HANDLE };
 
 uint32_t shadowArrayLayers{ 6 };
 VkImage shadowDepthImage{ VK_NULL_HANDLE };
@@ -114,6 +120,7 @@ void createDepth(VkDeviceSize nonCoherentAtomSize,
                  uint32_t height,
                  VkFormat format,
                  VkImageUsageFlags usage,
+                 VkImageAspectFlags aspect,
                  uint32_t arrayLayers,
                  VkImage * image,
                  VkDeviceMemory * memory,
@@ -160,7 +167,7 @@ void createDepth(VkDeviceSize nonCoherentAtomSize,
     .viewType = viewType,
     .format = format,
     .subresourceRange{
-      .aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT,
+      .aspectMask = aspect,
       .levelCount = 1,
       .layerCount = arrayLayers
     }
@@ -275,6 +282,7 @@ void recreateSwapchain(VkSurfaceFormatKHR surfaceFormat,
               imageExtent.height,
               depthFormat,
               VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+              VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT,
               arrayLayers,
               &depthImage,
               &depthMemory,
@@ -354,6 +362,151 @@ void gamepad_update(view & viewState)
     //viewState.applyTransform(delta_forward, delta_strafe, delta_elevation,
     //delta_yaw, delta_pitch);
   }
+}
+
+void offscreenRender(VkCommandBuffer commandBuffer, int frameIndex,
+                     int mx, int my, int colorIndex, bool drawText,
+                     renpy::vulkan const & renpy_state,
+                     renpy::interpreter const & interpreter_state,
+                     font::outline::font const & font_state)
+{
+  // barrier
+  constexpr int colorBarriersCount = 2;
+  VkImageMemoryBarrier2 colorBarriers[colorBarriersCount]{
+    {
+      .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
+      .srcStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+      .srcAccessMask = 0,
+      .dstStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+      .dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+      .oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+      .newLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL,
+      .image = colorImage[colorIndex],
+      .subresourceRange{
+        .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+        .levelCount = 1,
+        .layerCount = 1
+      }
+    },
+    {
+      .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
+      .srcStageMask = VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT,
+      .srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+      .dstStageMask = VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT,
+      .dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+      .oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+      .newLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL,
+      .image = depthImage,
+      .subresourceRange{
+        .aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT,
+        .levelCount = 1,
+        .layerCount = 1
+      }
+    }
+  };
+  VkDependencyInfo colorBarrierDependencyInfo{
+    .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
+    .imageMemoryBarrierCount = colorBarriersCount,
+    .pImageMemoryBarriers = colorBarriers
+  };
+  vkCmdPipelineBarrier2(commandBuffer, &colorBarrierDependencyInfo);
+
+  // attachments
+
+  VkRenderingAttachmentInfo colorRenderingAttachmentInfo{
+    .sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
+    .imageView = colorImageView[colorIndex],
+    .imageLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL,
+    .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
+    .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
+    .clearValue{ .color{ { 0.0f, 0.0f, 0.0f, 0.0f}  } }
+  };
+  VkRenderingAttachmentInfo depthRenderingAttachmentInfo{
+    .sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
+    .imageView = depthImageView,
+    .imageLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL,
+    .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
+    .storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+    .clearValue{ .depthStencil{ 1.0f, 0 } }
+  };
+
+  VkRenderingInfo colorRenderingInfo{
+    .sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
+    .renderArea{ .extent{ .width = 1280, .height = 720 } },
+    .layerCount = 1,
+    .colorAttachmentCount = 1,
+    .pColorAttachments = &colorRenderingAttachmentInfo,
+    .pDepthAttachment = &depthRenderingAttachmentInfo,
+    .pStencilAttachment = &depthRenderingAttachmentInfo,
+  };
+  vkCmdBeginRendering(commandBuffer, &colorRenderingInfo);
+
+  // viewport/scissor
+
+  VkViewport shadowViewport{
+    .x = 0,
+    .y = 0,
+    .width = static_cast<float>(windowSize.x),
+    .height = static_cast<float>(windowSize.y),
+    .minDepth = 0.0f,
+    .maxDepth = 1.0f
+  };
+  vkCmdSetViewport(commandBuffer, 0, 1, &shadowViewport);
+  VkRect2D shadowScissor{
+    .extent{
+      .width = (uint32_t)windowSize.x,
+      .height = (uint32_t)windowSize.y
+    }
+  };
+  vkCmdSetScissor(commandBuffer, 0, 1, &shadowScissor);
+
+  // draw
+
+  //collada_state.vulkan.excludeMaterialIndex = lightMaterialIndex;
+  //collada_state.vulkan.pipelineIndex = 0; // shadow pipeline
+  //collada_state.draw();
+
+  renpy_state.draw(commandBuffer, frameIndex, interpreter_state, mx, my, drawText);
+  if (drawText) {
+    font_state.draw(commandBuffer, frameIndex, interpreter_state);
+  }
+
+  vkCmdEndRendering(commandBuffer);
+
+  // barrier
+
+  {
+    VkImageMemoryBarrier2 colorBarriers[1]{
+      {
+        .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
+        .srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+        .srcAccessMask = VK_ACCESS_MEMORY_READ_BIT,
+        .dstStageMask = VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
+        .dstAccessMask = VK_ACCESS_2_INPUT_ATTACHMENT_READ_BIT,
+        .oldLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL,
+        .newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+        .image = colorImage[frameIndex],
+        .subresourceRange{
+          .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+          .levelCount = 1,
+          .layerCount = 1,
+        }
+      }
+    };
+    VkDependencyInfo colorBarrierDependencyInfo{
+      .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
+      .imageMemoryBarrierCount = 1,
+      .pImageMemoryBarriers = colorBarriers
+    };
+    vkCmdPipelineBarrier2(commandBuffer, &colorBarrierDependencyInfo);
+  }
+}
+
+static inline double clamp01(double a)
+{
+  if (a < 0.0) return 0.0;
+  if (a > 1.0) return 1.0;
+  return a;
 }
 
 int main()
@@ -531,6 +684,16 @@ int main()
   uint32_t surfaceFormatIndex{ 0 };
   printf("surfaceFormatCount %d\n", surfaceFormatCount);
   for (uint32_t i = 0; i < surfaceFormatCount; i++) {
+    if (surfaceFormats[i].format == VK_FORMAT_B8G8R8A8_UNORM) {
+      surfaceFormatIndex = i;
+      break;
+    }
+    if (surfaceFormats[i].format == VK_FORMAT_R8G8B8A8_UNORM) {
+      surfaceFormatIndex = i;
+      break;
+    }
+  }
+  for (uint32_t i = 0; i < surfaceFormatCount; i++) {
     printf("surfaceFormat[%d] %s %s%s\n", i, string_VkFormat(surfaceFormats[i].format), string_VkColorSpaceKHR(surfaceFormats[i].colorSpace), (i == surfaceFormatIndex) ? " [selected]" : "");
   }
   VkSurfaceFormatKHR surfaceFormat = surfaceFormats[surfaceFormatIndex];
@@ -564,6 +727,7 @@ int main()
               720,
               depthFormat,
               VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+              VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT,
               shadowArrayLayers,
               &shadowDepthImage,
               &shadowDepthMemory,
@@ -657,6 +821,25 @@ int main()
   VK_CHECK(vkCreateSampler(device, &samplerCreateInfo2, nullptr, &textureSamplers[2]));
 
   //////////////////////////////////////////////////////////////////////
+  // off-screen color buffers
+  //////////////////////////////////////////////////////////////////////
+
+  for (int i = 0; i < colorImageCount; i++) {
+    uint32_t arrayLayers{ 1 };
+    createDepth(physicalDeviceProperties.limits.nonCoherentAtomSize,
+                physicalDeviceMemoryProperties,
+                1280,
+                720,
+                surfaceFormat.format,
+                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                VK_IMAGE_ASPECT_COLOR_BIT,
+                arrayLayers,
+                &colorImage[i],
+                &colorMemory[i],
+                &colorImageView[i]);
+  }
+
+  //////////////////////////////////////////////////////////////////////
   // initialize collada
   //////////////////////////////////////////////////////////////////////
 
@@ -737,6 +920,23 @@ int main()
   interpreter_state.reset();
 
   //////////////////////////////////////////////////////////////////////
+  // renpy composite
+  //////////////////////////////////////////////////////////////////////
+
+  renpy::composite::vulkan composite_state;
+  composite_state.initial_state(instance,
+                                device,
+                                queue,
+                                commandPool,
+                                physicalDeviceProperties,
+                                physicalDeviceMemoryProperties,
+                                surfaceFormat.format,
+                                depthFormat,
+                                textureSamplers[2]);
+  composite_state.init();
+  composite_state.write_descriptor_sets(colorImageView, colorImageCount);
+
+  //////////////////////////////////////////////////////////////////////
   // initialize view
   //////////////////////////////////////////////////////////////////////
 
@@ -775,6 +975,9 @@ int main()
   int64_t start_time;
   SDL_GetCurrentTime(&start_time);
 
+  double pause_start = 0.0;
+  double dissolve_start = 0.0;
+
   //collada_state.update(0);
 
   audio::init();
@@ -782,7 +985,38 @@ int main()
 
   while (quit == false) {
     audio::update();
+
+    //////////////////////////////////////////////////////////////////////
+    // interpreter update
+    //////////////////////////////////////////////////////////////////////
+
     interpreter_state.interpret();
+
+    if (interpreter_state.pause.pause) {
+      if (pause_start == 0.0) {
+        fprintf(stderr, "pause %f\n", interpreter_state.pauseDuration);
+        pause_start = getTime(start_time);
+      } else if (getTime(start_time) - pause_start >= interpreter_state.pauseDuration) {
+        fprintf(stderr, "unpause %f\n", interpreter_state.pauseDuration);
+        pause_start = 0.0;
+        interpreter_state.pause.pause = false;
+      }
+    }
+
+    if (interpreter_state.pause.dissolve) {
+      if (dissolve_start == 0.0) {
+        fprintf(stderr, "dissolve %f\n", interpreter_state.dissolveDuration);
+        dissolve_start = getTime(start_time);
+      } else if (getTime(start_time) - dissolve_start >= interpreter_state.dissolveDuration) {
+        fprintf(stderr, "undissolve %f\n", interpreter_state.dissolveDuration);
+        dissolve_start = 0.0;
+        interpreter_state.pause.dissolve = false;
+      }
+    }
+
+    //////////////////////////////////////////////////////////////////////
+    // sdl
+    //////////////////////////////////////////////////////////////////////
 
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
@@ -826,6 +1060,16 @@ int main()
         remove_gamepad(event.gdevice.which);
       }
     }
+
+    //////////////////////////////////////////////////////////////////////
+    // renpy update
+    //////////////////////////////////////////////////////////////////////
+
+    float mx;
+    float my;
+    uint32_t mouseFlags = SDL_GetMouseState(&mx, &my);
+    bool mLeft = (mouseFlags & SDL_BUTTON_LMASK) != 0;
+    renpy::update(interpreter_state, mx, my, mLeft);
 
     //////////////////////////////////////////////////////////////////////
     // gamepad update
@@ -902,6 +1146,7 @@ int main()
     // shadow render
     //////////////////////////////////////////////////////////////////////
 
+    /*
     // barrier
     VkImageMemoryBarrier2 shadowBarriers[1]{
       VkImageMemoryBarrier2{
@@ -1002,6 +1247,19 @@ int main()
       };
       vkCmdPipelineBarrier2(commandBuffer, &shadowBarrierDependencyInfo);
     }
+    */
+
+
+    //////////////////////////////////////////////////////////////////////
+    // offscreen render
+    //////////////////////////////////////////////////////////////////////
+
+    if (interpreter_state.pause.dissolve) {
+      offscreenRender(commandBuffer, frameIndex, mx, my, 2, true, renpy_state, interpreter_state, font_state);
+    } else {
+      offscreenRender(commandBuffer, frameIndex, mx, my, 0, true, renpy_state, interpreter_state, font_state);
+      offscreenRender(commandBuffer, frameIndex, mx, my, 1, false, renpy_state, interpreter_state, font_state);
+    }
 
     //////////////////////////////////////////////////////////////////////
     // render
@@ -1086,7 +1344,12 @@ int main()
       .maxDepth = 1.0f
     };
     vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
-    VkRect2D scissor{ .extent{ .width = (uint32_t)windowSize.x, .height = (uint32_t)windowSize.y } };
+    VkRect2D scissor{
+      .extent{
+        .width = (uint32_t)windowSize.x,
+        .height = (uint32_t)windowSize.y
+      }
+    };
     vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
     // draw
@@ -1099,13 +1362,19 @@ int main()
 
     //minecraft_state.draw(commandBuffer, frameIndex);
 
-    float mx;
-    float my;
-    uint32_t mouseFlags = SDL_GetMouseState(&mx, &my);
-    bool mLeft = (mouseFlags & SDL_BUTTON_LMASK) != 0;
-    renpy::update(interpreter_state, mx, my, mLeft);
-    renpy_state.draw(commandBuffer, frameIndex, interpreter_state, mx, my);
-    font_state.draw(commandBuffer, frameIndex, interpreter_state);
+    //renpy_state.draw(commandBuffer, frameIndex, interpreter_state, mx, my);
+    //font_state.draw(commandBuffer, frameIndex, interpreter_state);
+
+    float dissolve_lerp = -1.0;
+    float text_lerp = -1.0;
+    constexpr double textDissolveDuration = 0.3;
+    if (interpreter_state.pause.dissolve) {
+      double delta = getTime(start_time) - dissolve_start;
+      assert(interpreter_state.dissolveDuration > 0.0000001);
+      dissolve_lerp = clamp01(delta / interpreter_state.dissolveDuration);
+      text_lerp = clamp01(delta / textDissolveDuration);
+    }
+    composite_state.draw(commandBuffer, frameIndex, dissolve_lerp, text_lerp);
 
     vkCmdEndRendering(commandBuffer);
 
