@@ -443,22 +443,22 @@ void offscreenRender(VkCommandBuffer commandBuffer, int frameIndex,
 
   // viewport/scissor
 
-  VkViewport shadowViewport{
+  VkViewport viewport{
     .x = 0,
     .y = 0,
-    .width = static_cast<float>(windowSize.x),
-    .height = static_cast<float>(windowSize.y),
+    .width = 1280,
+    .height = 720,
     .minDepth = 0.0f,
     .maxDepth = 1.0f
   };
-  vkCmdSetViewport(commandBuffer, 0, 1, &shadowViewport);
-  VkRect2D shadowScissor{
+  vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+  VkRect2D scissor{
     .extent{
-      .width = (uint32_t)windowSize.x,
-      .height = (uint32_t)windowSize.y
+      .width = 1280,
+      .height = 720
     }
   };
-  vkCmdSetScissor(commandBuffer, 0, 1, &shadowScissor);
+  vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
   // draw
 
@@ -663,8 +663,9 @@ int main()
   // window and surface
   //////////////////////////////////////////////////////////////////////
 
-  SDL_Window * window = SDL_CreateWindow("Vulkan", 1280, 720, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
+  SDL_Window * window = SDL_CreateWindow("The Road to Alysen", 1280, 720, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
   SDL_CHECK_NONNULL(window);
+  SDL_CHECK(SDL_SetWindowMinimumSize(window, 1280, 720));
   SDL_CHECK(SDL_Vulkan_CreateSurface(window, instance, nullptr, &surface));
   SDL_CHECK(SDL_GetWindowSize(window, &windowSize.x, &windowSize.y));
   VkSurfaceCapabilitiesKHR surfaceCapabilities{};
@@ -918,6 +919,7 @@ int main()
 
   renpy::interpreter interpreter_state;
   interpreter_state.reset();
+  interpreter_state.pc = 11;
 
   //////////////////////////////////////////////////////////////////////
   // renpy composite
@@ -1338,16 +1340,16 @@ int main()
     VkViewport viewport{
       .x = 0,
       .y = 0,
-      .width = static_cast<float>(windowSize.x),
-      .height = static_cast<float>(windowSize.y),
+      .width = static_cast<float>(surfaceCapabilities.currentExtent.width),
+      .height = static_cast<float>(surfaceCapabilities.currentExtent.height),
       .minDepth = 0.0f,
       .maxDepth = 1.0f
     };
     vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
     VkRect2D scissor{
       .extent{
-        .width = (uint32_t)windowSize.x,
-        .height = (uint32_t)windowSize.y
+        .width = (uint32_t)surfaceCapabilities.currentExtent.width,
+        .height = (uint32_t)surfaceCapabilities.currentExtent.height
       }
     };
     vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
@@ -1374,7 +1376,7 @@ int main()
       dissolve_lerp = clamp01(delta / interpreter_state.dissolveDuration);
       text_lerp = clamp01(delta / textDissolveDuration);
     }
-    composite_state.draw(commandBuffer, frameIndex, dissolve_lerp, text_lerp);
+    composite_state.draw(commandBuffer, frameIndex, dissolve_lerp, text_lerp, surfaceCapabilities.currentExtent.width, surfaceCapabilities.currentExtent.height);
 
     vkCmdEndRendering(commandBuffer);
 

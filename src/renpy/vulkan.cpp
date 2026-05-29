@@ -545,20 +545,20 @@ namespace renpy {
       .imageIndex = -2, // white gradient 1
     };
     instanceMappedData[maximumImageCount * frameIndex + outputIndex++] = {
-      .size = {244, 200},
-      .topLeft = {336, 720 - 200},
+      .size = {216, 184},
+      .topLeft = {336, 720 - 184},
       .imageIndex = 0, // flower
     };
     instanceMappedData[maximumImageCount * frameIndex + outputIndex++] = {
-      .size = {-244, 200},
-      .topLeft = {1280 - (336 + 244), 720 - 200},
+      .size = {-216, 184},
+      .topLeft = {1280 - (336 + 216), 720 - 184},
       .imageIndex = 0, // flower
     };
 
     if (state.say.characterIndex != -1u) {
       instanceMappedData[maximumImageCount * frameIndex + outputIndex++] = {
-        .size = {148, 30},
-        .topLeft = {560, 528},
+        .size = {180, 30},
+        .topLeft = {550, 542},
         .color = 0x80ffffffu,
         .imageIndex = -4, // white gradient 2
       };

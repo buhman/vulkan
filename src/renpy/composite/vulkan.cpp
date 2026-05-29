@@ -215,7 +215,7 @@ namespace renpy::composite {
   {
     VkPushConstantRange pushConstantRange{
       .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
-      .size = (sizeof (float)),
+      .size = (sizeof (float)) * 4,
     };
 
     VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{
@@ -387,12 +387,14 @@ namespace renpy::composite {
   void vulkan::draw(VkCommandBuffer commandBuffer,
                     uint32_t frameIndex,
                     float dissolveLerp,
-                    float textLerp)
+                    float textLerp,
+                    float framebufferWidth,
+                    float framebufferHeight)
   {
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
-    float lerp[2] = { dissolveLerp, textLerp };
-    vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, (sizeof (float)) * 2, lerp);
+    float constants[4] = { dissolveLerp, textLerp, framebufferWidth, framebufferHeight };
+    vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, (sizeof (float)) * 4, constants);
 
     VkDescriptorSet descriptorSets[1] = {
       descriptorSet0,

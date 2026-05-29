@@ -185,7 +185,7 @@ const int strings_length = (sizeof (strings)) / (sizeof (strings[0]));
 const language::character characters[] = {
   { .characterName = "Alice", .color = 0x00765e }, // 0
   { .characterName = "Cat", .color = 0x590093 }, // 1
-  { .characterName = "Eily", .color = 0x0b6092 }, // 2
+  { .characterName = "Mouse Girls", .color = 0x0b6092 }, // 2
   { .characterName = "Mouse Girls", .color = 0x000000 }, // 3
   { .characterName = "Narrator", .color = 0x000000 }, // 4
   { .characterName = "Leona", .color = 0x590093 }, // 5

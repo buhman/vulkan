@@ -709,7 +709,7 @@ namespace font::outline {
       if (state.say.stringIndex != -1u) {
         char const * const string = renpy::script::strings[state.say.stringIndex];
         uint32_t x = textboxLeft << 6;
-        uint32_t y = 590 << 6;
+        uint32_t y = 600 << 6;
         centered(frameIndex, string,
                  x, y,
                  textboxLeft, textboxWidth,
@@ -720,11 +720,11 @@ namespace font::outline {
       if (state.say.characterIndex != -1u) {
         const renpy::language::character & character = renpy::script::characters[state.say.characterIndex];
         char const * const string = character.characterName;
-        uint32_t x = 580 << 6;
-        uint32_t y = 550 << 6;
+        uint32_t x = 550 << 6;
+        uint32_t y = 565 << 6;
         centered(frameIndex, string,
                  x, y,
-                 580, 118,
+                 550, 180,
                  outputIndex,
                  character.color);
       }

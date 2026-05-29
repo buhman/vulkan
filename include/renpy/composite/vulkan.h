@@ -47,6 +47,8 @@ namespace renpy::composite {
     void draw(VkCommandBuffer commandBuffer,
               uint32_t frameIndex,
               float dissolveLerp,
-              float textLerp);
+              float textLerp,
+              float framebufferWidth,
+              float framebufferHeight);
   };
 }

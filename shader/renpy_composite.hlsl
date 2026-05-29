@@ -4,6 +4,8 @@
 struct PushConstant {
   float DissolveLerp;
   float TextLerp;
+  float Width;
+  float Height;
 };
 
 [[vk::push_constant]] PushConstant PushConstant;
@@ -31,7 +33,17 @@ float4 mix(float4 x, float4 y, float a)
 VSOutput VSMain(VSInput input)
 {
   VSOutput output = (VSOutput)0;
-  output.Position = float4(input.Position, 0, 1);
+
+  float2 canonicalSize = float2(1280, 720);
+  float2 size = float2(PushConstant.Width, PushConstant.Height);
+  while (canonicalSize.x * 2 <= size.x && canonicalSize.y * 2 <= size.y) {
+    canonicalSize *= 2;
+  }
+
+  float2 inverseSize = 1.0 / size;
+  float2 scale = canonicalSize * inverseSize;
+
+  output.Position = float4(input.Position * scale, 0, 1);
   output.Texture = input.Texture;
   output.DissolveLerp = PushConstant.DissolveLerp;
   output.TextLerp = PushConstant.TextLerp;
@@ -42,14 +54,14 @@ VSOutput VSMain(VSInput input)
 [shader("pixel")]
 float4 PSMain(VSOutput input) : SV_TARGET
 {
-  float4 color0 = Texture[0].Sample(ClosestSampler, input.Texture);
+  float4 color0 = Texture[0].Load(int3(input.Texture * float2(1280, 720), 0));
 
   float4 color = float4(0, 0, 0, 0);
   if (input.DissolveLerp >= 0) {
-    float4 color1 = Texture[1].Sample(ClosestSampler, input.Texture);
+    float4 color1 = Texture[1].Load(int3(input.Texture * float2(1280, 720), 0));
     float4 color01 = mix(color0, color1, input.TextLerp);
 
-    float4 color2 = Texture[2].Sample(ClosestSampler, input.Texture);
+    float4 color2 = Texture[2].Load(int3(input.Texture * float2(1280, 720), 0));
     color = mix(color01, color2, input.DissolveLerp);
   } else {
     color = color0;
