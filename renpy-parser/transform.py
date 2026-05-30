@@ -73,6 +73,7 @@ attenuations = {
     "MistAmbience": 1.0,
     "TinyForestMinstrels": 0.45,
     "WheatFields": 1.0,
+    "Preludium": 1.0,
 }
 
 character_images = {

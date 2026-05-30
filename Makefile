@@ -113,11 +113,11 @@ all: main
 %.o: %.s
 	$(AS) $< -o $@
 
-#%.dds: %.png
-#	WINEDEBUG=-all wine $(HOME)/Texconv.exe -y -nogpu -nowic -dx10 --format BC7_UNORM_SRGB -m 1 $< -o $(dir $@)
+%.dds: %.png
+	WINEDEBUG=-all wine $(HOME)/Texconv.exe -y -nogpu -nowic -dx10 --format BC7_UNORM_SRGB -m 1 $< -o $(dir $@)
 
-#%.pcm: %.wav
-#	ffmpeg -loglevel quiet -y -i $< -c:a pcm_s16le -ar 48000 -ac 2 -f s16le $@
+%.pcm: %.wav
+	ffmpeg -loglevel quiet -y -i $< -c:a pcm_s16le -ar 48000 -ac 2 -f s16le $@
 
 #%.pcm: %.ogg
 #	ffmpeg -loglevel quiet -y -i $< -c:a pcm_s16le -ar 48000 -ac 2 -f s16le $@
@@ -125,8 +125,8 @@ all: main
 #%.pcm: %.mp3
 #	ffmpeg -loglevel quiet -y -i $< -c:a pcm_s16le -ar 48000 -ac 2 -f s16le $@
 
-#%.opus.bin: %.pcm
-#	./tools/opus_encode $< $@
+%.opus.bin: %.pcm
+	./tools/opus_encode $< $@
 
 main: $(OBJS) $(LIBS)
 	$(CC) $(ARCH) $(LDFLAGS) $(FLAGS) $(OPT) $(DEBUG) $^ -o $@

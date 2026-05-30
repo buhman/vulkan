@@ -13,17 +13,15 @@ image bgcastle2 = "bg/castle2.png"
 image bgcastle3 = "bg/castle3.png"
 image bgcastle4 = "bg/castle4.png"
 
-image al = "ch/ialice/Alice.png"
-image sal = "ch/ialice/Salice.png"
-image wal = "ch/ialice/Walice.png"
 
 image bi = "ch/ibird/Bird.png"
-
 image cat = "ch/icat/Cat.png"
 image catw = "ch/icat/Catw.png"
-
 image ei = "ch/ieily/Eily.png"
+image al = "ch/ialice/Alice.png"
 image sei = "ch/ieily/Seily.png"
+image sal = "ch/ialice/Salice.png"
+image wal = "ch/ialice/Walice.png"
 
 define a = Character("Alice",color="409b5d")
 define b = Character("Queen Alary",color="0b1845")
@@ -60,6 +58,7 @@ init:
         renpy.music.register_channel("MistAmbience", "music", loop=True)
         renpy.music.register_channel("PhrygianButterflies", "music", loop=True)
         renpy.music.register_channel("WheatFields", "music", loop=True)
+        renpy.music.register_channel("Preludium", "music", loop=True)
 
 
 
@@ -67,10 +66,11 @@ init:
 
 label start:
 
-    play sound "sfx/Chime.ogg"
+
     play MistAmbience "music/MistAmbience.ogg"
     scene bgblue
     pause 1.0
+    play sound "sfx/Chime.ogg"
     scene bgwhite
     with Dissolve(3.0)
     #play music "IntroMusicTest.ogg"
@@ -206,7 +206,7 @@ label start:
                 a "Why dont you sing the story of Eleanor the Hero!"
                 voice "eily/e15.ogg"
                 e "Sure"
-                e "..."
+                a "..."
                 play music "poem/Poem1.ogg" noloop
                 pause 40
             "I am too tired" :
@@ -690,7 +690,9 @@ label start:
         c "Nyanyanya"
         voice "leona/c52.ogg"
         c "Nyevermind"
+
         stop WheatFields fadeout 3.0
+
         voice "leona/c53.ogg"
         c "Sing me a song little minstrels!"
         #stop WheatFields fadeout 3.0
@@ -728,13 +730,16 @@ label start:
         n "Upon approaching the gates, the three were escorted to a large room"
         voice "nara/n10.ogg"
         n "They were then instructed to wait for an audience with the Queen"
+        #play Preludium "music/Preludium.ogg"
         voice "hera/h1.ogg"
         h "You may now present yourselves before her Majesty, Queen Alary of Alysen"
 
 
         scene bgcastle1
-        show bi at right
+        play Preludium "music/Preludium.ogg"
+        #show bi at right
         with Dissolve(2.0)
+        show bi at right
         pause 1.0
         voice "hera/h2.ogg"
         h "Leona Agrepen of Elmindeer"
@@ -875,13 +880,15 @@ label start:
         voice "eily/e77.ogg"
         e "Please allow us to perform a song for Your Majesty and Your Majesty's court"
 
+        stop Preludium fadeout 4.2
+
         voice "bird/b19.ogg"
         b "I appreciate your loyalty to the crown of Corvidae little mice"
         stop MistAmbience fadeout 4.2
         voice "bird/b20.ogg"
         b "You are most welcome to proceed with your little song"
 
-        #play music "poem/Poem3.ogg" noloop
+        play music "poem/Poem3.ogg" noloop
 
 
         scene bgcastle2
