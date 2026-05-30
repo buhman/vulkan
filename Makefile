@@ -113,8 +113,8 @@ all: main
 %.o: %.s
 	$(AS) $< -o $@
 
-%.dds: %.png
-	WINEDEBUG=-all wine $(HOME)/Texconv.exe -y -nogpu -nowic -dx10 --format BC7_UNORM_SRGB -m 1 $< -o $(dir $@)
+#%.dds: %.png
+#	WINEDEBUG=-all wine $(HOME)/Texconv.exe -y -nogpu -nowic -dx10 --format BC7_UNORM_SRGB -m 1 $< -o $(dir $@)
 
 %.pcm: %.wav
 	ffmpeg -loglevel quiet -y -i $< -c:a pcm_s16le -ar 48000 -ac 2 -f s16le $@
