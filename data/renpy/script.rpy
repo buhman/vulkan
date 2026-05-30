@@ -207,7 +207,7 @@ label start:
                 voice "eily/e15.ogg"
                 e "Sure"
                 e "..."
-                play music "music/Poem1.ogg" noloop
+                play music "poem/Poem1.ogg" noloop
                 pause 40
             "I am too tired" :
                 voice "eily/e16.ogg"
@@ -697,7 +697,7 @@ label start:
 
         voice "mousegirls/mg2.ogg"
         mg "..."
-        play music "music/Poem1.ogg" noloop
+        play music "poem/Poem1.ogg" noloop
         pause 40
 
 
@@ -881,7 +881,7 @@ label start:
         voice "bird/b20.ogg"
         b "You are most welcome to proceed with your little song"
 
-        #play music "music/Poem3.ogg" noloop
+        #play music "poem/Poem3.ogg" noloop
 
 
         scene bgcastle2

@@ -270,273 +270,273 @@ static const uint32_t character_images_7[] = {  };
 static constexpr uint32_t character_images_7_length = 0;
 
 const language::character characters[] = {
-  { .characterName = "Alice", .color = 0x409b5d, .images = character_images_0, .imagesLength = character_images_0_length }, // 0
-  { .characterName = "Queen Alary", .color = 0x0b1845, .images = character_images_1, .imagesLength = character_images_1_length }, // 1
-  { .characterName = "Cat", .color = 0x590093, .images = character_images_2, .imagesLength = character_images_2_length }, // 2
-  { .characterName = "Eily", .color = 0x0b6092, .images = character_images_3, .imagesLength = character_images_3_length }, // 3
-  { .characterName = "Mouse Girls", .color = 0x000000, .images = character_images_4, .imagesLength = character_images_4_length }, // 4
-  { .characterName = "Narrator", .color = 0x000000, .images = character_images_5, .imagesLength = character_images_5_length }, // 5
-  { .characterName = "Leona", .color = 0x590093, .images = character_images_6, .imagesLength = character_images_6_length }, // 6
-  { .characterName = "Herald", .color = 0x860000, .images = character_images_7, .imagesLength = character_images_7_length }, // 7
+  { .characterName = "Alice", .color = 0x409b5d, .images = character_images_0, .images_length = character_images_0_length }, // 0
+  { .characterName = "Queen Alary", .color = 0x0b1845, .images = character_images_1, .images_length = character_images_1_length }, // 1
+  { .characterName = "Cat", .color = 0x590093, .images = character_images_2, .images_length = character_images_2_length }, // 2
+  { .characterName = "Eily", .color = 0x0b6092, .images = character_images_3, .images_length = character_images_3_length }, // 3
+  { .characterName = "Mouse Girls", .color = 0x000000, .images = character_images_4, .images_length = character_images_4_length }, // 4
+  { .characterName = "Narrator", .color = 0x000000, .images = character_images_5, .images_length = character_images_5_length }, // 5
+  { .characterName = "Leona", .color = 0x590093, .images = character_images_6, .images_length = character_images_6_length }, // 6
+  { .characterName = "Herald", .color = 0x860000, .images = character_images_7, .images_length = character_images_7_length }, // 7
 };
 
 const int characters_length = (sizeof (characters)) / (sizeof (characters[0]));
 
 const language::audio audio[] = {
-  { .path = "audio/sfx/Chime.opus.bin", .loop_end = 0.0 }, // 0 sfx/Chime.ogg
-  { .path = "audio/music/MistAmbience.opus.bin", .loop_end = 22.0 }, // 1 music/MistAmbience.ogg
-  { .path = "audio/nara/n1.opus.bin", .loop_end = 0.0 }, // 2 nara/n1.ogg
-  { .path = "audio/nara/n2.opus.bin", .loop_end = 0.0 }, // 3 nara/n2.ogg
-  { .path = "audio/nara/n3.opus.bin", .loop_end = 0.0 }, // 4 nara/n3.ogg
-  { .path = "audio/music/TinyForestMinstrels.opus.bin", .loop_end = 44.0 }, // 5 music/TinyForestMinstrels.ogg
-  { .path = "audio/nara/n4.opus.bin", .loop_end = 0.0 }, // 6 nara/n4.ogg
-  { .path = "audio/alice/a1.opus.bin", .loop_end = 0.0 }, // 7 alice/a1.ogg
-  { .path = "audio/eily/e1.opus.bin", .loop_end = 0.0 }, // 8 eily/e1.ogg
-  { .path = "audio/alice/a2.opus.bin", .loop_end = 0.0 }, // 9 alice/a2.ogg
-  { .path = "audio/eily/e2.opus.bin", .loop_end = 0.0 }, // 10 eily/e2.ogg
-  { .path = "audio/alice/a3.opus.bin", .loop_end = 0.0 }, // 11 alice/a3.ogg
-  { .path = "audio/eily/e3.opus.bin", .loop_end = 0.0 }, // 12 eily/e3.ogg
-  { .path = "audio/alice/a4.opus.bin", .loop_end = 0.0 }, // 13 alice/a4.ogg
-  { .path = "audio/alice/a5.opus.bin", .loop_end = 0.0 }, // 14 alice/a5.ogg
-  { .path = "audio/eily/e4.opus.bin", .loop_end = 0.0 }, // 15 eily/e4.ogg
-  { .path = "audio/eily/e5.opus.bin", .loop_end = 0.0 }, // 16 eily/e5.ogg
-  { .path = "audio/alice/a6.opus.bin", .loop_end = 0.0 }, // 17 alice/a6.ogg
-  { .path = "audio/eily/e6.opus.bin", .loop_end = 0.0 }, // 18 eily/e6.ogg
-  { .path = "audio/alice/a7.opus.bin", .loop_end = 0.0 }, // 19 alice/a7.ogg
-  { .path = "audio/eily/e7.opus.bin", .loop_end = 0.0 }, // 20 eily/e7.ogg
-  { .path = "audio/nara/n5.opus.bin", .loop_end = 0.0 }, // 21 nara/n5.ogg
-  { .path = "audio/music/PhrygianButterflies.opus.bin", .loop_end = 40.2 }, // 22 music/PhrygianButterflies.ogg
-  { .path = "audio/eily/e8.opus.bin", .loop_end = 0.0 }, // 23 eily/e8.ogg
-  { .path = "audio/alice/a8.opus.bin", .loop_end = 0.0 }, // 24 alice/a8.ogg
-  { .path = "audio/eily/e9.opus.bin", .loop_end = 0.0 }, // 25 eily/e9.ogg
-  { .path = "audio/eily/e10.opus.bin", .loop_end = 0.0 }, // 26 eily/e10.ogg
-  { .path = "audio/alice/a9.opus.bin", .loop_end = 0.0 }, // 27 alice/a9.ogg
-  { .path = "audio/eily/e11.opus.bin", .loop_end = 0.0 }, // 28 eily/e11.ogg
-  { .path = "audio/eily/e12.opus.bin", .loop_end = 0.0 }, // 29 eily/e12.ogg
-  { .path = "audio/alice/a10.opus.bin", .loop_end = 0.0 }, // 30 alice/a10.ogg
-  { .path = "audio/eily/e13.opus.bin", .loop_end = 0.0 }, // 31 eily/e13.ogg
-  { .path = "audio/eily/e14.opus.bin", .loop_end = 0.0 }, // 32 eily/e14.ogg
-  { .path = "audio/alice/a11.opus.bin", .loop_end = 0.0 }, // 33 alice/a11.ogg
-  { .path = "audio/eily/e15.opus.bin", .loop_end = 0.0 }, // 34 eily/e15.ogg
-  { .path = "audio/music/Poem1.opus.bin", .loop_end = 0.0 }, // 35 music/Poem1.ogg
-  { .path = "audio/eily/e16.opus.bin", .loop_end = 0.0 }, // 36 eily/e16.ogg
-  { .path = "audio/alice/a12.opus.bin", .loop_end = 0.0 }, // 37 alice/a12.ogg
-  { .path = "audio/leona/c1.opus.bin", .loop_end = 0.0 }, // 38 leona/c1.ogg
-  { .path = "audio/music/ScaredMice.opus.bin", .loop_end = 8.0 }, // 39 music/ScaredMice.ogg
-  { .path = "audio/mousegirls/mg1.opus.bin", .loop_end = 0.0 }, // 40 mousegirls/mg1.ogg
-  { .path = "audio/leona/c2.opus.bin", .loop_end = 0.0 }, // 41 leona/c2.ogg
-  { .path = "audio/leona/c3.opus.bin", .loop_end = 0.0 }, // 42 leona/c3.ogg
-  { .path = "audio/alice/a14.opus.bin", .loop_end = 0.0 }, // 43 alice/a14.ogg
-  { .path = "audio/eily/e18.opus.bin", .loop_end = 0.0 }, // 44 eily/e18.ogg
-  { .path = "audio/eily/e19.opus.bin", .loop_end = 0.0 }, // 45 eily/e19.ogg
-  { .path = "audio/leona/c4.opus.bin", .loop_end = 0.0 }, // 46 leona/c4.ogg
-  { .path = "audio/leona/c5.opus.bin", .loop_end = 0.0 }, // 47 leona/c5.ogg
-  { .path = "audio/leona/c6.opus.bin", .loop_end = 0.0 }, // 48 leona/c6.ogg
-  { .path = "audio/eily/e20.opus.bin", .loop_end = 0.0 }, // 49 eily/e20.ogg
-  { .path = "audio/alice/a15.opus.bin", .loop_end = 0.0 }, // 50 alice/a15.ogg
-  { .path = "audio/eily/e21.opus.bin", .loop_end = 0.0 }, // 51 eily/e21.ogg
-  { .path = "audio/leona/c7.opus.bin", .loop_end = 0.0 }, // 52 leona/c7.ogg
-  { .path = "audio/leona/c8.opus.bin", .loop_end = 0.0 }, // 53 leona/c8.ogg
-  { .path = "audio/eily/e22.opus.bin", .loop_end = 0.0 }, // 54 eily/e22.ogg
-  { .path = "audio/leona/c9.opus.bin", .loop_end = 0.0 }, // 55 leona/c9.ogg
-  { .path = "audio/eily/e23.opus.bin", .loop_end = 0.0 }, // 56 eily/e23.ogg
-  { .path = "audio/leona/c10.opus.bin", .loop_end = 0.0 }, // 57 leona/c10.ogg
-  { .path = "audio/eily/e24.opus.bin", .loop_end = 0.0 }, // 58 eily/e24.ogg
-  { .path = "audio/leona/c11.opus.bin", .loop_end = 0.0 }, // 59 leona/c11.ogg
-  { .path = "audio/eily/e25.opus.bin", .loop_end = 0.0 }, // 60 eily/e25.ogg
-  { .path = "audio/leona/c12.opus.bin", .loop_end = 0.0 }, // 61 leona/c12.ogg
-  { .path = "audio/leona/c13.opus.bin", .loop_end = 0.0 }, // 62 leona/c13.ogg
-  { .path = "audio/eily/e26.opus.bin", .loop_end = 0.0 }, // 63 eily/e26.ogg
-  { .path = "audio/eily/e27.opus.bin", .loop_end = 0.0 }, // 64 eily/e27.ogg
-  { .path = "audio/leona/c14.opus.bin", .loop_end = 0.0 }, // 65 leona/c14.ogg
-  { .path = "audio/alice/a16.opus.bin", .loop_end = 0.0 }, // 66 alice/a16.ogg
-  { .path = "audio/leona/c15.opus.bin", .loop_end = 0.0 }, // 67 leona/c15.ogg
-  { .path = "audio/leona/c16.opus.bin", .loop_end = 0.0 }, // 68 leona/c16.ogg
-  { .path = "audio/leona/c17.opus.bin", .loop_end = 0.0 }, // 69 leona/c17.ogg
-  { .path = "audio/alice/a17.opus.bin", .loop_end = 0.0 }, // 70 alice/a17.ogg
-  { .path = "audio/eily/e28.opus.bin", .loop_end = 0.0 }, // 71 eily/e28.ogg
-  { .path = "audio/alice/a18.opus.bin", .loop_end = 0.0 }, // 72 alice/a18.ogg
-  { .path = "audio/eily/e29.opus.bin", .loop_end = 0.0 }, // 73 eily/e29.ogg
-  { .path = "audio/nara/n6.opus.bin", .loop_end = 0.0 }, // 74 nara/n6.ogg
-  { .path = "audio/eily/e30.opus.bin", .loop_end = 0.0 }, // 75 eily/e30.ogg
-  { .path = "audio/alice/a19.opus.bin", .loop_end = 0.0 }, // 76 alice/a19.ogg
-  { .path = "audio/eily/e31.opus.bin", .loop_end = 0.0 }, // 77 eily/e31.ogg
-  { .path = "audio/alice/a20.opus.bin", .loop_end = 0.0 }, // 78 alice/a20.ogg
-  { .path = "audio/leona/c18.opus.bin", .loop_end = 0.0 }, // 79 leona/c18.ogg
-  { .path = "audio/eily/e32.opus.bin", .loop_end = 0.0 }, // 80 eily/e32.ogg
-  { .path = "audio/alice/a21.opus.bin", .loop_end = 0.0 }, // 81 alice/a21.ogg
-  { .path = "audio/eily/e33.opus.bin", .loop_end = 0.0 }, // 82 eily/e33.ogg
-  { .path = "audio/leona/c19.opus.bin", .loop_end = 0.0 }, // 83 leona/c19.ogg
-  { .path = "audio/leona/c20.opus.bin", .loop_end = 0.0 }, // 84 leona/c20.ogg
-  { .path = "audio/leona/c21.opus.bin", .loop_end = 0.0 }, // 85 leona/c21.ogg
-  { .path = "audio/alice/a22.opus.bin", .loop_end = 0.0 }, // 86 alice/a22.ogg
-  { .path = "audio/leona/c22.opus.bin", .loop_end = 0.0 }, // 87 leona/c22.ogg
-  { .path = "audio/leona/c23.opus.bin", .loop_end = 0.0 }, // 88 leona/c23.ogg
-  { .path = "audio/alice/a23.opus.bin", .loop_end = 0.0 }, // 89 alice/a23.ogg
-  { .path = "audio/eily/e34.opus.bin", .loop_end = 0.0 }, // 90 eily/e34.ogg
-  { .path = "audio/alice/a24.opus.bin", .loop_end = 0.0 }, // 91 alice/a24.ogg
-  { .path = "audio/eily/e35.opus.bin", .loop_end = 0.0 }, // 92 eily/e35.ogg
-  { .path = "audio/leona/c24.opus.bin", .loop_end = 0.0 }, // 93 leona/c24.ogg
-  { .path = "audio/leona/c25.opus.bin", .loop_end = 0.0 }, // 94 leona/c25.ogg
-  { .path = "audio/leona/c26.opus.bin", .loop_end = 0.0 }, // 95 leona/c26.ogg
-  { .path = "audio/eily/e36.opus.bin", .loop_end = 0.0 }, // 96 eily/e36.ogg
-  { .path = "audio/eily/e37.opus.bin", .loop_end = 0.0 }, // 97 eily/e37.ogg
-  { .path = "audio/eily/e38.opus.bin", .loop_end = 0.0 }, // 98 eily/e38.ogg
-  { .path = "audio/eily/e39.opus.bin", .loop_end = 0.0 }, // 99 eily/e39.ogg
-  { .path = "audio/eily/e40.opus.bin", .loop_end = 0.0 }, // 100 eily/e40.ogg
-  { .path = "audio/eily/e41.opus.bin", .loop_end = 0.0 }, // 101 eily/e41.ogg
-  { .path = "audio/eily/e42.opus.bin", .loop_end = 0.0 }, // 102 eily/e42.ogg
-  { .path = "audio/alice/a25.opus.bin", .loop_end = 0.0 }, // 103 alice/a25.ogg
-  { .path = "audio/eily/e43.opus.bin", .loop_end = 0.0 }, // 104 eily/e43.ogg
-  { .path = "audio/alice/a26.opus.bin", .loop_end = 0.0 }, // 105 alice/a26.ogg
-  { .path = "audio/eily/e44.opus.bin", .loop_end = 0.0 }, // 106 eily/e44.ogg
-  { .path = "audio/eily/e45.opus.bin", .loop_end = 0.0 }, // 107 eily/e45.ogg
-  { .path = "audio/alice/a27.opus.bin", .loop_end = 0.0 }, // 108 alice/a27.ogg
-  { .path = "audio/eily/e46.opus.bin", .loop_end = 0.0 }, // 109 eily/e46.ogg
-  { .path = "audio/alice/a28.opus.bin", .loop_end = 0.0 }, // 110 alice/a28.ogg
-  { .path = "audio/leona/c27.opus.bin", .loop_end = 0.0 }, // 111 leona/c27.ogg
-  { .path = "audio/eily/e47.opus.bin", .loop_end = 0.0 }, // 112 eily/e47.ogg
-  { .path = "audio/alice/a29.opus.bin", .loop_end = 0.0 }, // 113 alice/a29.ogg
-  { .path = "audio/leona/c28.opus.bin", .loop_end = 0.0 }, // 114 leona/c28.ogg
-  { .path = "audio/leona/c29.opus.bin", .loop_end = 0.0 }, // 115 leona/c29.ogg
-  { .path = "audio/eily/e48.opus.bin", .loop_end = 0.0 }, // 116 eily/e48.ogg
-  { .path = "audio/leona/c30.opus.bin", .loop_end = 0.0 }, // 117 leona/c30.ogg
-  { .path = "audio/alice/a30.opus.bin", .loop_end = 0.0 }, // 118 alice/a30.ogg
-  { .path = "audio/eily/e49.opus.bin", .loop_end = 0.0 }, // 119 eily/e49.ogg
-  { .path = "audio/eily/e50.opus.bin", .loop_end = 0.0 }, // 120 eily/e50.ogg
-  { .path = "audio/eily/e51.opus.bin", .loop_end = 0.0 }, // 121 eily/e51.ogg
-  { .path = "audio/eily/e52.opus.bin", .loop_end = 0.0 }, // 122 eily/e52.ogg
-  { .path = "audio/eily/e53.opus.bin", .loop_end = 0.0 }, // 123 eily/e53.ogg
-  { .path = "audio/eily/e54.opus.bin", .loop_end = 0.0 }, // 124 eily/e54.ogg
-  { .path = "audio/alice/a31.opus.bin", .loop_end = 0.0 }, // 125 alice/a31.ogg
-  { .path = "audio/leona/c31.opus.bin", .loop_end = 0.0 }, // 126 leona/c31.ogg
-  { .path = "audio/leona/c32.opus.bin", .loop_end = 0.0 }, // 127 leona/c32.ogg
-  { .path = "audio/alice/a32.opus.bin", .loop_end = 0.0 }, // 128 alice/a32.ogg
-  { .path = "audio/leona/c33.opus.bin", .loop_end = 0.0 }, // 129 leona/c33.ogg
-  { .path = "audio/mousegirls/mg2.opus.bin", .loop_end = 0.0 }, // 130 mousegirls/mg2.ogg
-  { .path = "audio/leona/c34.opus.bin", .loop_end = 0.0 }, // 131 leona/c34.ogg
-  { .path = "audio/leona/c35.opus.bin", .loop_end = 0.0 }, // 132 leona/c35.ogg
-  { .path = "audio/alice/a33.opus.bin", .loop_end = 0.0 }, // 133 alice/a33.ogg
-  { .path = "audio/eily/e55.opus.bin", .loop_end = 0.0 }, // 134 eily/e55.ogg
-  { .path = "audio/leona/c36.opus.bin", .loop_end = 0.0 }, // 135 leona/c36.ogg
-  { .path = "audio/alice/a34.opus.bin", .loop_end = 0.0 }, // 136 alice/a34.ogg
-  { .path = "audio/eily/e56.opus.bin", .loop_end = 0.0 }, // 137 eily/e56.ogg
-  { .path = "audio/nara/n7.opus.bin", .loop_end = 0.0 }, // 138 nara/n7.ogg
-  { .path = "audio/music/WheatFields.opus.bin", .loop_end = 34.0 }, // 139 music/WheatFields.ogg
-  { .path = "audio/leona/c37.opus.bin", .loop_end = 0.0 }, // 140 leona/c37.ogg
-  { .path = "audio/alice/a35.opus.bin", .loop_end = 0.0 }, // 141 alice/a35.ogg
-  { .path = "audio/eily/e57.opus.bin", .loop_end = 0.0 }, // 142 eily/e57.ogg
-  { .path = "audio/leona/c38.opus.bin", .loop_end = 0.0 }, // 143 leona/c38.ogg
-  { .path = "audio/leona/c39.opus.bin", .loop_end = 0.0 }, // 144 leona/c39.ogg
-  { .path = "audio/eily/e58.opus.bin", .loop_end = 0.0 }, // 145 eily/e58.ogg
-  { .path = "audio/alice/a36.opus.bin", .loop_end = 0.0 }, // 146 alice/a36.ogg
-  { .path = "audio/eily/e59.opus.bin", .loop_end = 0.0 }, // 147 eily/e59.ogg
-  { .path = "audio/eily/e60.opus.bin", .loop_end = 0.0 }, // 148 eily/e60.ogg
-  { .path = "audio/leona/c40.opus.bin", .loop_end = 0.0 }, // 149 leona/c40.ogg
-  { .path = "audio/eily/e61.opus.bin", .loop_end = 0.0 }, // 150 eily/e61.ogg
-  { .path = "audio/leona/c41.opus.bin", .loop_end = 0.0 }, // 151 leona/c41.ogg
-  { .path = "audio/leona/c42.opus.bin", .loop_end = 0.0 }, // 152 leona/c42.ogg
-  { .path = "audio/alice/a37.opus.bin", .loop_end = 0.0 }, // 153 alice/a37.ogg
-  { .path = "audio/eily/e62.opus.bin", .loop_end = 0.0 }, // 154 eily/e62.ogg
-  { .path = "audio/leona/c43.opus.bin", .loop_end = 0.0 }, // 155 leona/c43.ogg
-  { .path = "audio/eily/e63.opus.bin", .loop_end = 0.0 }, // 156 eily/e63.ogg
-  { .path = "audio/leona/c44.opus.bin", .loop_end = 0.0 }, // 157 leona/c44.ogg
-  { .path = "audio/leona/c45.opus.bin", .loop_end = 0.0 }, // 158 leona/c45.ogg
-  { .path = "audio/leona/c46.opus.bin", .loop_end = 0.0 }, // 159 leona/c46.ogg
-  { .path = "audio/eily/e64.opus.bin", .loop_end = 0.0 }, // 160 eily/e64.ogg
-  { .path = "audio/leona/c47.opus.bin", .loop_end = 0.0 }, // 161 leona/c47.ogg
-  { .path = "audio/eily/e65.opus.bin", .loop_end = 0.0 }, // 162 eily/e65.ogg
-  { .path = "audio/leona/c48.opus.bin", .loop_end = 0.0 }, // 163 leona/c48.ogg
-  { .path = "audio/leona/c49.opus.bin", .loop_end = 0.0 }, // 164 leona/c49.ogg
-  { .path = "audio/leona/c50.opus.bin", .loop_end = 0.0 }, // 165 leona/c50.ogg
-  { .path = "audio/mousegirls/mg3.opus.bin", .loop_end = 0.0 }, // 166 mousegirls/mg3.ogg
-  { .path = "audio/leona/c51.opus.bin", .loop_end = 0.0 }, // 167 leona/c51.ogg
-  { .path = "audio/leona/c52.opus.bin", .loop_end = 0.0 }, // 168 leona/c52.ogg
-  { .path = "audio/leona/c53.opus.bin", .loop_end = 0.0 }, // 169 leona/c53.ogg
-  { .path = "audio/leona/c54.opus.bin", .loop_end = 0.0 }, // 170 leona/c54.ogg
-  { .path = "audio/leona/c55.opus.bin", .loop_end = 0.0 }, // 171 leona/c55.ogg
-  { .path = "audio/alice/a39.opus.bin", .loop_end = 0.0 }, // 172 alice/a39.ogg
-  { .path = "audio/eily/e67.opus.bin", .loop_end = 0.0 }, // 173 eily/e67.ogg
-  { .path = "audio/eily/e68.opus.bin", .loop_end = 0.0 }, // 174 eily/e68.ogg
-  { .path = "audio/leona/c56.opus.bin", .loop_end = 0.0 }, // 175 leona/c56.ogg
-  { .path = "audio/nara/n8.opus.bin", .loop_end = 0.0 }, // 176 nara/n8.ogg
-  { .path = "audio/nara/n9.opus.bin", .loop_end = 0.0 }, // 177 nara/n9.ogg
-  { .path = "audio/nara/n10.opus.bin", .loop_end = 0.0 }, // 178 nara/n10.ogg
-  { .path = "audio/hera/h1.opus.bin", .loop_end = 0.0 }, // 179 hera/h1.ogg
-  { .path = "audio/hera/h2.opus.bin", .loop_end = 0.0 }, // 180 hera/h2.ogg
-  { .path = "audio/leona/c57.opus.bin", .loop_end = 0.0 }, // 181 leona/c57.ogg
-  { .path = "audio/hera/h3.opus.bin", .loop_end = 0.0 }, // 182 hera/h3.ogg
-  { .path = "audio/eily/e69.opus.bin", .loop_end = 0.0 }, // 183 eily/e69.ogg
-  { .path = "audio/hera/h4.opus.bin", .loop_end = 0.0 }, // 184 hera/h4.ogg
-  { .path = "audio/sfx/Glass.opus.bin", .loop_end = 0.0 }, // 185 sfx/Glass.ogg
-  { .path = "audio/alice/a40.opus.bin", .loop_end = 0.0 }, // 186 alice/a40.ogg
-  { .path = "audio/alice/a41.opus.bin", .loop_end = 0.0 }, // 187 alice/a41.ogg
-  { .path = "audio/leona/c58.opus.bin", .loop_end = 0.0 }, // 188 leona/c58.ogg
-  { .path = "audio/bird/b1.opus.bin", .loop_end = 0.0 }, // 189 bird/b1.ogg
-  { .path = "audio/bird/b2.opus.bin", .loop_end = 0.0 }, // 190 bird/b2.ogg
-  { .path = "audio/bird/b3.opus.bin", .loop_end = 0.0 }, // 191 bird/b3.ogg
-  { .path = "audio/leona/c59.opus.bin", .loop_end = 0.0 }, // 192 leona/c59.ogg
-  { .path = "audio/eily/e70.opus.bin", .loop_end = 0.0 }, // 193 eily/e70.ogg
-  { .path = "audio/bird/b4.opus.bin", .loop_end = 0.0 }, // 194 bird/b4.ogg
-  { .path = "audio/bird/b5.opus.bin", .loop_end = 0.0 }, // 195 bird/b5.ogg
-  { .path = "audio/leona/c60.opus.bin", .loop_end = 0.0 }, // 196 leona/c60.ogg
-  { .path = "audio/leona/c61.opus.bin", .loop_end = 0.0 }, // 197 leona/c61.ogg
-  { .path = "audio/bird/b6.opus.bin", .loop_end = 0.0 }, // 198 bird/b6.ogg
-  { .path = "audio/bird/b7.opus.bin", .loop_end = 0.0 }, // 199 bird/b7.ogg
-  { .path = "audio/leona/c0.opus.bin", .loop_end = 0.0 }, // 200 leona/c0.ogg
-  { .path = "audio/bird/b8.opus.bin", .loop_end = 0.0 }, // 201 bird/b8.ogg
-  { .path = "audio/bird/b9.opus.bin", .loop_end = 0.0 }, // 202 bird/b9.ogg
-  { .path = "audio/bird/b10.opus.bin", .loop_end = 0.0 }, // 203 bird/b10.ogg
-  { .path = "audio/leona/c62.opus.bin", .loop_end = 0.0 }, // 204 leona/c62.ogg
-  { .path = "audio/bird/b11.opus.bin", .loop_end = 0.0 }, // 205 bird/b11.ogg
-  { .path = "audio/bird/b12.opus.bin", .loop_end = 0.0 }, // 206 bird/b12.ogg
-  { .path = "audio/bird/b13.opus.bin", .loop_end = 0.0 }, // 207 bird/b13.ogg
-  { .path = "audio/leona/c63.opus.bin", .loop_end = 0.0 }, // 208 leona/c63.ogg
-  { .path = "audio/bird/b14.opus.bin", .loop_end = 0.0 }, // 209 bird/b14.ogg
-  { .path = "audio/leona/c64.opus.bin", .loop_end = 0.0 }, // 210 leona/c64.ogg
-  { .path = "audio/bird/b15.opus.bin", .loop_end = 0.0 }, // 211 bird/b15.ogg
-  { .path = "audio/leona/c65.opus.bin", .loop_end = 0.0 }, // 212 leona/c65.ogg
-  { .path = "audio/leona/c66.opus.bin", .loop_end = 0.0 }, // 213 leona/c66.ogg
-  { .path = "audio/bird/b16.opus.bin", .loop_end = 0.0 }, // 214 bird/b16.ogg
-  { .path = "audio/bird/b17.opus.bin", .loop_end = 0.0 }, // 215 bird/b17.ogg
-  { .path = "audio/alice/a42.opus.bin", .loop_end = 0.0 }, // 216 alice/a42.ogg
-  { .path = "audio/eily/e71.opus.bin", .loop_end = 0.0 }, // 217 eily/e71.ogg
-  { .path = "audio/eily/e72.opus.bin", .loop_end = 0.0 }, // 218 eily/e72.ogg
-  { .path = "audio/eily/e73.opus.bin", .loop_end = 0.0 }, // 219 eily/e73.ogg
-  { .path = "audio/eily/e74.opus.bin", .loop_end = 0.0 }, // 220 eily/e74.ogg
-  { .path = "audio/eily/e75.opus.bin", .loop_end = 0.0 }, // 221 eily/e75.ogg
-  { .path = "audio/eily/e76.opus.bin", .loop_end = 0.0 }, // 222 eily/e76.ogg
-  { .path = "audio/bird/b18.opus.bin", .loop_end = 0.0 }, // 223 bird/b18.ogg
-  { .path = "audio/leona/c67.opus.bin", .loop_end = 0.0 }, // 224 leona/c67.ogg
-  { .path = "audio/alice/a43.opus.bin", .loop_end = 0.0 }, // 225 alice/a43.ogg
-  { .path = "audio/eily/e77.opus.bin", .loop_end = 0.0 }, // 226 eily/e77.ogg
-  { .path = "audio/bird/b19.opus.bin", .loop_end = 0.0 }, // 227 bird/b19.ogg
-  { .path = "audio/bird/b20.opus.bin", .loop_end = 0.0 }, // 228 bird/b20.ogg
-  { .path = "audio/nara/n11.opus.bin", .loop_end = 0.0 }, // 229 nara/n11.ogg
-  { .path = "audio/nara/n12.opus.bin", .loop_end = 0.0 }, // 230 nara/n12.ogg
-  { .path = "audio/nara/n13.opus.bin", .loop_end = 0.0 }, // 231 nara/n13.ogg
+  { .path = "audio/sfx/Chime.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 0 sfx/Chime.ogg
+  { .path = "audio/music/MistAmbience.opus.bin", .loop_end = 22.0, .audio_flags = audio::music, .attenuation = 1.0 }, // 1 music/MistAmbience.ogg
+  { .path = "audio/nara/n1.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 2 nara/n1.ogg
+  { .path = "audio/nara/n2.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 3 nara/n2.ogg
+  { .path = "audio/nara/n3.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 4 nara/n3.ogg
+  { .path = "audio/music/TinyForestMinstrels.opus.bin", .loop_end = 44.0, .audio_flags = audio::music, .attenuation = 0.45 }, // 5 music/TinyForestMinstrels.ogg
+  { .path = "audio/nara/n4.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 6 nara/n4.ogg
+  { .path = "audio/alice/a1.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 7 alice/a1.ogg
+  { .path = "audio/eily/e1.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 8 eily/e1.ogg
+  { .path = "audio/alice/a2.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 9 alice/a2.ogg
+  { .path = "audio/eily/e2.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 10 eily/e2.ogg
+  { .path = "audio/alice/a3.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 11 alice/a3.ogg
+  { .path = "audio/eily/e3.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 12 eily/e3.ogg
+  { .path = "audio/alice/a4.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 13 alice/a4.ogg
+  { .path = "audio/alice/a5.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 14 alice/a5.ogg
+  { .path = "audio/eily/e4.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 15 eily/e4.ogg
+  { .path = "audio/eily/e5.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 16 eily/e5.ogg
+  { .path = "audio/alice/a6.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 17 alice/a6.ogg
+  { .path = "audio/eily/e6.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 18 eily/e6.ogg
+  { .path = "audio/alice/a7.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 19 alice/a7.ogg
+  { .path = "audio/eily/e7.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 20 eily/e7.ogg
+  { .path = "audio/nara/n5.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 21 nara/n5.ogg
+  { .path = "audio/music/PhrygianButterflies.opus.bin", .loop_end = 40.2, .audio_flags = audio::music, .attenuation = 0.5 }, // 22 music/PhrygianButterflies.ogg
+  { .path = "audio/eily/e8.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 23 eily/e8.ogg
+  { .path = "audio/alice/a8.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 24 alice/a8.ogg
+  { .path = "audio/eily/e9.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 25 eily/e9.ogg
+  { .path = "audio/eily/e10.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 26 eily/e10.ogg
+  { .path = "audio/alice/a9.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 27 alice/a9.ogg
+  { .path = "audio/eily/e11.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 28 eily/e11.ogg
+  { .path = "audio/eily/e12.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 29 eily/e12.ogg
+  { .path = "audio/alice/a10.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 30 alice/a10.ogg
+  { .path = "audio/eily/e13.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 31 eily/e13.ogg
+  { .path = "audio/eily/e14.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 32 eily/e14.ogg
+  { .path = "audio/alice/a11.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 33 alice/a11.ogg
+  { .path = "audio/eily/e15.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 34 eily/e15.ogg
+  { .path = "audio/poem/Poem1.opus.bin", .loop_end = 0.0, .audio_flags = audio::poem, .attenuation = 1.0 }, // 35 poem/Poem1.ogg
+  { .path = "audio/eily/e16.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 36 eily/e16.ogg
+  { .path = "audio/alice/a12.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 37 alice/a12.ogg
+  { .path = "audio/leona/c1.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 38 leona/c1.ogg
+  { .path = "audio/music/ScaredMice.opus.bin", .loop_end = 8.0, .audio_flags = audio::music, .attenuation = 1.0 }, // 39 music/ScaredMice.ogg
+  { .path = "audio/mousegirls/mg1.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 40 mousegirls/mg1.ogg
+  { .path = "audio/leona/c2.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 41 leona/c2.ogg
+  { .path = "audio/leona/c3.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 42 leona/c3.ogg
+  { .path = "audio/alice/a14.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 43 alice/a14.ogg
+  { .path = "audio/eily/e18.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 44 eily/e18.ogg
+  { .path = "audio/eily/e19.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 45 eily/e19.ogg
+  { .path = "audio/leona/c4.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 46 leona/c4.ogg
+  { .path = "audio/leona/c5.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 47 leona/c5.ogg
+  { .path = "audio/leona/c6.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 48 leona/c6.ogg
+  { .path = "audio/eily/e20.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 49 eily/e20.ogg
+  { .path = "audio/alice/a15.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 50 alice/a15.ogg
+  { .path = "audio/eily/e21.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 51 eily/e21.ogg
+  { .path = "audio/leona/c7.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 52 leona/c7.ogg
+  { .path = "audio/leona/c8.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 53 leona/c8.ogg
+  { .path = "audio/eily/e22.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 54 eily/e22.ogg
+  { .path = "audio/leona/c9.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 55 leona/c9.ogg
+  { .path = "audio/eily/e23.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 56 eily/e23.ogg
+  { .path = "audio/leona/c10.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 57 leona/c10.ogg
+  { .path = "audio/eily/e24.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 58 eily/e24.ogg
+  { .path = "audio/leona/c11.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 59 leona/c11.ogg
+  { .path = "audio/eily/e25.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 60 eily/e25.ogg
+  { .path = "audio/leona/c12.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 61 leona/c12.ogg
+  { .path = "audio/leona/c13.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 62 leona/c13.ogg
+  { .path = "audio/eily/e26.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 63 eily/e26.ogg
+  { .path = "audio/eily/e27.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 64 eily/e27.ogg
+  { .path = "audio/leona/c14.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 65 leona/c14.ogg
+  { .path = "audio/alice/a16.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 66 alice/a16.ogg
+  { .path = "audio/leona/c15.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 67 leona/c15.ogg
+  { .path = "audio/leona/c16.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 68 leona/c16.ogg
+  { .path = "audio/leona/c17.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 69 leona/c17.ogg
+  { .path = "audio/alice/a17.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 70 alice/a17.ogg
+  { .path = "audio/eily/e28.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 71 eily/e28.ogg
+  { .path = "audio/alice/a18.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 72 alice/a18.ogg
+  { .path = "audio/eily/e29.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 73 eily/e29.ogg
+  { .path = "audio/nara/n6.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 74 nara/n6.ogg
+  { .path = "audio/eily/e30.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 75 eily/e30.ogg
+  { .path = "audio/alice/a19.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 76 alice/a19.ogg
+  { .path = "audio/eily/e31.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 77 eily/e31.ogg
+  { .path = "audio/alice/a20.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 78 alice/a20.ogg
+  { .path = "audio/leona/c18.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 79 leona/c18.ogg
+  { .path = "audio/eily/e32.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 80 eily/e32.ogg
+  { .path = "audio/alice/a21.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 81 alice/a21.ogg
+  { .path = "audio/eily/e33.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 82 eily/e33.ogg
+  { .path = "audio/leona/c19.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 83 leona/c19.ogg
+  { .path = "audio/leona/c20.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 84 leona/c20.ogg
+  { .path = "audio/leona/c21.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 85 leona/c21.ogg
+  { .path = "audio/alice/a22.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 86 alice/a22.ogg
+  { .path = "audio/leona/c22.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 87 leona/c22.ogg
+  { .path = "audio/leona/c23.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 88 leona/c23.ogg
+  { .path = "audio/alice/a23.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 89 alice/a23.ogg
+  { .path = "audio/eily/e34.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 90 eily/e34.ogg
+  { .path = "audio/alice/a24.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 91 alice/a24.ogg
+  { .path = "audio/eily/e35.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 92 eily/e35.ogg
+  { .path = "audio/leona/c24.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 93 leona/c24.ogg
+  { .path = "audio/leona/c25.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 94 leona/c25.ogg
+  { .path = "audio/leona/c26.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 95 leona/c26.ogg
+  { .path = "audio/eily/e36.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 96 eily/e36.ogg
+  { .path = "audio/eily/e37.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 97 eily/e37.ogg
+  { .path = "audio/eily/e38.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 98 eily/e38.ogg
+  { .path = "audio/eily/e39.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 99 eily/e39.ogg
+  { .path = "audio/eily/e40.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 100 eily/e40.ogg
+  { .path = "audio/eily/e41.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 101 eily/e41.ogg
+  { .path = "audio/eily/e42.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 102 eily/e42.ogg
+  { .path = "audio/alice/a25.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 103 alice/a25.ogg
+  { .path = "audio/eily/e43.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 104 eily/e43.ogg
+  { .path = "audio/alice/a26.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 105 alice/a26.ogg
+  { .path = "audio/eily/e44.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 106 eily/e44.ogg
+  { .path = "audio/eily/e45.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 107 eily/e45.ogg
+  { .path = "audio/alice/a27.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 108 alice/a27.ogg
+  { .path = "audio/eily/e46.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 109 eily/e46.ogg
+  { .path = "audio/alice/a28.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 110 alice/a28.ogg
+  { .path = "audio/leona/c27.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 111 leona/c27.ogg
+  { .path = "audio/eily/e47.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 112 eily/e47.ogg
+  { .path = "audio/alice/a29.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 113 alice/a29.ogg
+  { .path = "audio/leona/c28.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 114 leona/c28.ogg
+  { .path = "audio/leona/c29.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 115 leona/c29.ogg
+  { .path = "audio/eily/e48.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 116 eily/e48.ogg
+  { .path = "audio/leona/c30.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 117 leona/c30.ogg
+  { .path = "audio/alice/a30.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 118 alice/a30.ogg
+  { .path = "audio/eily/e49.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 119 eily/e49.ogg
+  { .path = "audio/eily/e50.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 120 eily/e50.ogg
+  { .path = "audio/eily/e51.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 121 eily/e51.ogg
+  { .path = "audio/eily/e52.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 122 eily/e52.ogg
+  { .path = "audio/eily/e53.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 123 eily/e53.ogg
+  { .path = "audio/eily/e54.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 124 eily/e54.ogg
+  { .path = "audio/alice/a31.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 125 alice/a31.ogg
+  { .path = "audio/leona/c31.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 126 leona/c31.ogg
+  { .path = "audio/leona/c32.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 127 leona/c32.ogg
+  { .path = "audio/alice/a32.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 128 alice/a32.ogg
+  { .path = "audio/leona/c33.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 129 leona/c33.ogg
+  { .path = "audio/mousegirls/mg2.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 130 mousegirls/mg2.ogg
+  { .path = "audio/leona/c34.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 131 leona/c34.ogg
+  { .path = "audio/leona/c35.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 132 leona/c35.ogg
+  { .path = "audio/alice/a33.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 133 alice/a33.ogg
+  { .path = "audio/eily/e55.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 134 eily/e55.ogg
+  { .path = "audio/leona/c36.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 135 leona/c36.ogg
+  { .path = "audio/alice/a34.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 136 alice/a34.ogg
+  { .path = "audio/eily/e56.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 137 eily/e56.ogg
+  { .path = "audio/nara/n7.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 138 nara/n7.ogg
+  { .path = "audio/music/WheatFields.opus.bin", .loop_end = 34.0, .audio_flags = audio::music, .attenuation = 1.0 }, // 139 music/WheatFields.ogg
+  { .path = "audio/leona/c37.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 140 leona/c37.ogg
+  { .path = "audio/alice/a35.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 141 alice/a35.ogg
+  { .path = "audio/eily/e57.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 142 eily/e57.ogg
+  { .path = "audio/leona/c38.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 143 leona/c38.ogg
+  { .path = "audio/leona/c39.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 144 leona/c39.ogg
+  { .path = "audio/eily/e58.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 145 eily/e58.ogg
+  { .path = "audio/alice/a36.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 146 alice/a36.ogg
+  { .path = "audio/eily/e59.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 147 eily/e59.ogg
+  { .path = "audio/eily/e60.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 148 eily/e60.ogg
+  { .path = "audio/leona/c40.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 149 leona/c40.ogg
+  { .path = "audio/eily/e61.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 150 eily/e61.ogg
+  { .path = "audio/leona/c41.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 151 leona/c41.ogg
+  { .path = "audio/leona/c42.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 152 leona/c42.ogg
+  { .path = "audio/alice/a37.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 153 alice/a37.ogg
+  { .path = "audio/eily/e62.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 154 eily/e62.ogg
+  { .path = "audio/leona/c43.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 155 leona/c43.ogg
+  { .path = "audio/eily/e63.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 156 eily/e63.ogg
+  { .path = "audio/leona/c44.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 157 leona/c44.ogg
+  { .path = "audio/leona/c45.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 158 leona/c45.ogg
+  { .path = "audio/leona/c46.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 159 leona/c46.ogg
+  { .path = "audio/eily/e64.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 160 eily/e64.ogg
+  { .path = "audio/leona/c47.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 161 leona/c47.ogg
+  { .path = "audio/eily/e65.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 162 eily/e65.ogg
+  { .path = "audio/leona/c48.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 163 leona/c48.ogg
+  { .path = "audio/leona/c49.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 164 leona/c49.ogg
+  { .path = "audio/leona/c50.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 165 leona/c50.ogg
+  { .path = "audio/mousegirls/mg3.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 166 mousegirls/mg3.ogg
+  { .path = "audio/leona/c51.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 167 leona/c51.ogg
+  { .path = "audio/leona/c52.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 168 leona/c52.ogg
+  { .path = "audio/leona/c53.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 169 leona/c53.ogg
+  { .path = "audio/leona/c54.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 170 leona/c54.ogg
+  { .path = "audio/leona/c55.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 171 leona/c55.ogg
+  { .path = "audio/alice/a39.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 172 alice/a39.ogg
+  { .path = "audio/eily/e67.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 173 eily/e67.ogg
+  { .path = "audio/eily/e68.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 174 eily/e68.ogg
+  { .path = "audio/leona/c56.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 175 leona/c56.ogg
+  { .path = "audio/nara/n8.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 176 nara/n8.ogg
+  { .path = "audio/nara/n9.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 177 nara/n9.ogg
+  { .path = "audio/nara/n10.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 178 nara/n10.ogg
+  { .path = "audio/hera/h1.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 179 hera/h1.ogg
+  { .path = "audio/hera/h2.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 180 hera/h2.ogg
+  { .path = "audio/leona/c57.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 181 leona/c57.ogg
+  { .path = "audio/hera/h3.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 182 hera/h3.ogg
+  { .path = "audio/eily/e69.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 183 eily/e69.ogg
+  { .path = "audio/hera/h4.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 184 hera/h4.ogg
+  { .path = "audio/sfx/Glass.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 185 sfx/Glass.ogg
+  { .path = "audio/alice/a40.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 186 alice/a40.ogg
+  { .path = "audio/alice/a41.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 187 alice/a41.ogg
+  { .path = "audio/leona/c58.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 188 leona/c58.ogg
+  { .path = "audio/bird/b1.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 189 bird/b1.ogg
+  { .path = "audio/bird/b2.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 190 bird/b2.ogg
+  { .path = "audio/bird/b3.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 191 bird/b3.ogg
+  { .path = "audio/leona/c59.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 192 leona/c59.ogg
+  { .path = "audio/eily/e70.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 193 eily/e70.ogg
+  { .path = "audio/bird/b4.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 194 bird/b4.ogg
+  { .path = "audio/bird/b5.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 195 bird/b5.ogg
+  { .path = "audio/leona/c60.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 196 leona/c60.ogg
+  { .path = "audio/leona/c61.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 197 leona/c61.ogg
+  { .path = "audio/bird/b6.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 198 bird/b6.ogg
+  { .path = "audio/bird/b7.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 199 bird/b7.ogg
+  { .path = "audio/leona/c0.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 200 leona/c0.ogg
+  { .path = "audio/bird/b8.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 201 bird/b8.ogg
+  { .path = "audio/bird/b9.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 202 bird/b9.ogg
+  { .path = "audio/bird/b10.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 203 bird/b10.ogg
+  { .path = "audio/leona/c62.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 204 leona/c62.ogg
+  { .path = "audio/bird/b11.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 205 bird/b11.ogg
+  { .path = "audio/bird/b12.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 206 bird/b12.ogg
+  { .path = "audio/bird/b13.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 207 bird/b13.ogg
+  { .path = "audio/leona/c63.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 208 leona/c63.ogg
+  { .path = "audio/bird/b14.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 209 bird/b14.ogg
+  { .path = "audio/leona/c64.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 210 leona/c64.ogg
+  { .path = "audio/bird/b15.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 211 bird/b15.ogg
+  { .path = "audio/leona/c65.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 212 leona/c65.ogg
+  { .path = "audio/leona/c66.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 213 leona/c66.ogg
+  { .path = "audio/bird/b16.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 214 bird/b16.ogg
+  { .path = "audio/bird/b17.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 215 bird/b17.ogg
+  { .path = "audio/alice/a42.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 216 alice/a42.ogg
+  { .path = "audio/eily/e71.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 217 eily/e71.ogg
+  { .path = "audio/eily/e72.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 218 eily/e72.ogg
+  { .path = "audio/eily/e73.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 219 eily/e73.ogg
+  { .path = "audio/eily/e74.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 220 eily/e74.ogg
+  { .path = "audio/eily/e75.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 221 eily/e75.ogg
+  { .path = "audio/eily/e76.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 222 eily/e76.ogg
+  { .path = "audio/bird/b18.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 223 bird/b18.ogg
+  { .path = "audio/leona/c67.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 224 leona/c67.ogg
+  { .path = "audio/alice/a43.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 225 alice/a43.ogg
+  { .path = "audio/eily/e77.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 226 eily/e77.ogg
+  { .path = "audio/bird/b19.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 227 bird/b19.ogg
+  { .path = "audio/bird/b20.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 228 bird/b20.ogg
+  { .path = "audio/nara/n11.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 229 nara/n11.ogg
+  { .path = "audio/nara/n12.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 230 nara/n12.ogg
+  { .path = "audio/nara/n13.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 231 nara/n13.ogg
 };
 
 const int audio_length = (sizeof (audio)) / (sizeof (audio[0]));
 
 const language::image images[] = {
-  { .path = "data/renpy/images/flowers.dds", .isCharacterImage = false }, // 0 flowers.png
-  { .path = "data/renpy/images/bg/forest1.dds", .isCharacterImage = false }, // 1 bg/forest1.png
-  { .path = "data/renpy/images/bg/forest2.dds", .isCharacterImage = false }, // 2 bg/forest2.png
-  { .path = "data/renpy/images/bg/flowerfield1.dds", .isCharacterImage = false }, // 3 bg/flowerfield1.png
-  { .path = "data/renpy/images/bg/wheatfield1.dds", .isCharacterImage = false }, // 4 bg/wheatfield1.png
-  { .path = "data/renpy/images/bg/castle1.dds", .isCharacterImage = false }, // 5 bg/castle1.png
-  { .path = "data/renpy/images/bg/castle2.dds", .isCharacterImage = false }, // 6 bg/castle2.png
-  { .path = "data/renpy/images/bg/castle3.dds", .isCharacterImage = false }, // 7 bg/castle3.png
-  { .path = "data/renpy/images/bg/castle4.dds", .isCharacterImage = false }, // 8 bg/castle4.png
-  { .path = "data/renpy/images/ch/ialice/Alice.dds", .isCharacterImage = true }, // 9 ch/ialice/Alice.png
-  { .path = "data/renpy/images/ch/ialice/Salice.dds", .isCharacterImage = true }, // 10 ch/ialice/Salice.png
-  { .path = "data/renpy/images/ch/ialice/Walice.dds", .isCharacterImage = true }, // 11 ch/ialice/Walice.png
-  { .path = "data/renpy/images/ch/ibird/Bird.dds", .isCharacterImage = true }, // 12 ch/ibird/Bird.png
-  { .path = "data/renpy/images/ch/icat/Cat.dds", .isCharacterImage = true }, // 13 ch/icat/Cat.png
-  { .path = "data/renpy/images/ch/icat/Catw.dds", .isCharacterImage = true }, // 14 ch/icat/Catw.png
-  { .path = "data/renpy/images/ch/ieily/Eily.dds", .isCharacterImage = true }, // 15 ch/ieily/Eily.png
-  { .path = "data/renpy/images/ch/ieily/Seily.dds", .isCharacterImage = true }, // 16 ch/ieily/Seily.png
+  { .path = "data/renpy/images/flowers.dds", .is_character_image = false }, // 0 flowers.png
+  { .path = "data/renpy/images/bg/forest1.dds", .is_character_image = false }, // 1 bg/forest1.png
+  { .path = "data/renpy/images/bg/forest2.dds", .is_character_image = false }, // 2 bg/forest2.png
+  { .path = "data/renpy/images/bg/flowerfield1.dds", .is_character_image = false }, // 3 bg/flowerfield1.png
+  { .path = "data/renpy/images/bg/wheatfield1.dds", .is_character_image = false }, // 4 bg/wheatfield1.png
+  { .path = "data/renpy/images/bg/castle1.dds", .is_character_image = false }, // 5 bg/castle1.png
+  { .path = "data/renpy/images/bg/castle2.dds", .is_character_image = false }, // 6 bg/castle2.png
+  { .path = "data/renpy/images/bg/castle3.dds", .is_character_image = false }, // 7 bg/castle3.png
+  { .path = "data/renpy/images/bg/castle4.dds", .is_character_image = false }, // 8 bg/castle4.png
+  { .path = "data/renpy/images/ch/ialice/Alice.dds", .is_character_image = true }, // 9 ch/ialice/Alice.png
+  { .path = "data/renpy/images/ch/ialice/Salice.dds", .is_character_image = true }, // 10 ch/ialice/Salice.png
+  { .path = "data/renpy/images/ch/ialice/Walice.dds", .is_character_image = true }, // 11 ch/ialice/Walice.png
+  { .path = "data/renpy/images/ch/ibird/Bird.dds", .is_character_image = true }, // 12 ch/ibird/Bird.png
+  { .path = "data/renpy/images/ch/icat/Cat.dds", .is_character_image = true }, // 13 ch/icat/Cat.png
+  { .path = "data/renpy/images/ch/icat/Catw.dds", .is_character_image = true }, // 14 ch/icat/Catw.png
+  { .path = "data/renpy/images/ch/ieily/Eily.dds", .is_character_image = true }, // 15 ch/ieily/Eily.png
+  { .path = "data/renpy/images/ch/ieily/Seily.dds", .is_character_image = true }, // 16 ch/ieily/Seily.png
 };
 
 const int images_length = (sizeof (images)) / (sizeof (images[0]));
@@ -665,8 +665,8 @@ const language::statement statements[] = {
   { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 29 } }, // 85 a "Why dont you sing the story of Eleanor the Hero!"
   { .type = type::voice, .voice = { .audioIndex = 34 } }, // 86 eily/e15.ogg
   { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 30 } }, // 87 e "Sure"
-  { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 31 } }, // 88 a "..."
-  { .type = type::play, .play = { .audioIndex = 35 } }, // 89 music/Poem1.ogg
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 31 } }, // 88 e "..."
+  { .type = type::play, .play = { .audioIndex = 35 } }, // 89 poem/Poem1.ogg
   { .type = type::pause, .pause = { .duration = 40 } }, // 90
   { .type = type::jump, .jump = { .statementIndex = 98 } }, // 91 internal jump (b'__menu_end', 1)
   { .type = type::voice, .voice = { .audioIndex = 36 } }, // 92 eily/e16.ogg
@@ -981,7 +981,7 @@ const language::statement statements[] = {
   { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 162 } }, // 401 c "Sing me a song little minstrels!"
   { .type = type::voice, .voice = { .audioIndex = 130 } }, // 402 mousegirls/mg2.ogg
   { .type = type::say, .say = { .characterIndex = 4, .stringIndex = 31 } }, // 403 mg "..."
-  { .type = type::play, .play = { .audioIndex = 35 } }, // 404 music/Poem1.ogg
+  { .type = type::play, .play = { .audioIndex = 35 } }, // 404 poem/Poem1.ogg
   { .type = type::pause, .pause = { .duration = 40 } }, // 405
   { .type = type::voice, .voice = { .audioIndex = 170 } }, // 406 leona/c54.ogg
   { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 163 } }, // 407 c "Very Nyice!"

@@ -22,17 +22,24 @@ namespace renpy::language {
     char const * const characterName;
     uint32_t color;
     uint32_t const * const images;
-    uint32_t imagesLength;
+    uint32_t images_length;
   };
 
   struct audio {
+    enum {
+      music = (1 << 0),
+      poem = (1 << 1),
+    };
+
     char const * const path;
     double loop_end;
+    uint32_t audio_flags;
+    double attenuation;
   };
 
   struct image {
     char const * const path;
-    bool isCharacterImage;
+    bool is_character_image;
   };
 
   // statement

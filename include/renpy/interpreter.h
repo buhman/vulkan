@@ -57,7 +57,7 @@ namespace renpy {
     void showImage(uint32_t imageIndex, uint32_t transformIndex);
     void highlightImages(uint32_t const * const imageIndices, uint32_t count);
     void hideImage(uint32_t imageIndex);
-    void reset();
+    void reset(uint32_t pc);
     void interpret_one();
     void interpret();
 

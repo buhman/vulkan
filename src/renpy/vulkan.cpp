@@ -595,7 +595,7 @@ namespace renpy {
       renpy::top_left const& tl = renpy::transforms[shownImage.transformIndex];
       Image const& image = images[shownImage.imageIndex];
       renpy::language::image const& rImage = script::images[shownImage.imageIndex];
-      bool dim = (!shownImage.highlighted) && (rImage.isCharacterImage);
+      bool dim = (!shownImage.highlighted) && (rImage.is_character_image);
       instanceMappedData[maximumImageCount * frameIndex + outputIndex++] = {
         .size = {(int16_t)image.width, (int16_t)image.height},
         .topLeft = {(int16_t)tl.left, (int16_t)tl.top},

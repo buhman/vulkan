@@ -204,6 +204,7 @@ namespace audio {
     int16_t const * const buf = instance.audio_buffer->buf;
     uint32_t const sample_count = instance.audio_buffer->sample_count;
     uint32_t const loop_end = instance.audio_buffer->audio->loop_end * (double)sample_rate;
+    bool is_music = (instance.audio_buffer->audio->audio_flags & renpy::language::audio::music) != 0;
 
     uint32_t mix_index = 0;
     for (int i = 0; i < half_period_samples; i++) {
@@ -226,6 +227,10 @@ namespace audio {
 
 
       double fadeout = 1.0;
+      double attenuation = instance.audio_buffer->audio->attenuation;
+      assert(attenuation != 0.0);
+      if (is_music)
+        fprintf(stderr, "attenuation %f\n", attenuation);
       if (instance.fadeout_end != 0) {
         fadeout = 1.0 - ((double)instance.fadeout_index / (double)instance.fadeout_end);
       }
@@ -235,7 +240,7 @@ namespace audio {
         if (instance.tail_index != sample_count) {
           value += buf[instance.tail_index * channels + ch];
         }
-        saturation_add(&mix_buffer[mix_index * channels + ch], (double)value * fadeout);
+        saturation_add(&mix_buffer[mix_index * channels + ch], (double)value * fadeout * attenuation);
       }
       instance.sample_index += 1;
       instance.fadeout_index += 1;

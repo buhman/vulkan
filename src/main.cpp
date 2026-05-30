@@ -954,10 +954,7 @@ int main()
   //////////////////////////////////////////////////////////////////////
 
   renpy::interpreter interpreter_state;
-  interpreter_state.reset();
-  interpreter_state.pc = 15;
-  while (renpy::script::dissolves[interpreter_state.dissolveIndex].first_statement < interpreter_state.pc)
-    interpreter_state.dissolveIndex++;
+  interpreter_state.reset(12);
 
   //////////////////////////////////////////////////////////////////////
   // renpy composite

@@ -66,6 +66,14 @@ loops = {
     "WheatFields": 34.0,
 }
 
+attenuations = {
+    "ScaredMice": 1.0,
+    "PhrygianButterflies": 0.5,
+    "MistAmbience": 1.0,
+    "TinyForestMinstrels": 0.45,
+    "WheatFields": 1.0,
+}
+
 character_images = {
     b"a": [b"al", b"sal", b"wal"],
     b"b": [b"bi"],
@@ -282,7 +290,7 @@ def pass2_characters(state):
         character_name, = character.value.args
         color, = (value.lexeme for key, value in character.value.kwargs if key.lexeme == b'color')
         color = int(color.decode('utf-8'), 16)
-        yield f"{{ .characterName = \"{character_name.lexeme.decode('utf-8')}\", .color = 0x{color:06x}, .images = character_images_{i}, .imagesLength = character_images_{i}_length }}, // {i}"
+        yield f"{{ .characterName = \"{character_name.lexeme.decode('utf-8')}\", .color = 0x{color:06x}, .images = character_images_{i}, .images_length = character_images_{i}_length }}, // {i}"
     yield "};"
     yield "const int characters_length = (sizeof (characters)) / (sizeof (characters[0]));"
 
@@ -302,8 +310,18 @@ def pass2_audio(state):
         channel_name = reverse_channel[i].decode('utf-8') if i in reverse_channel else None
         name = f"\"{channel_name}\"" if channel_name is not None else "nullptr"
         loop = loops[channel_name] if channel_name in loops else 0
+        attenuation = attenuations[channel_name] if channel_name in loops else 1.0
         assert loop < 20_000, loop
-        yield f"{{ .path = \"audio/{path}.opus.bin\", .loop_end = {float(loop)} }}, // {i} {orig_path}"
+
+        audio_type = None
+        if "music/" in path:
+            audio_type = "audio::music"
+        elif "poem/" in path:
+            audio_type = "audio::poem"
+        else:
+            audio_type = "0"
+
+        yield f"{{ .path = \"audio/{path}.opus.bin\", .loop_end = {float(loop)}, .audio_flags = {audio_type}, .attenuation = {attenuation} }}, // {i} {orig_path}"
     yield "};"
     yield "const int audio_length = (sizeof (audio)) / (sizeof (audio[0]));"
 
@@ -316,13 +334,13 @@ def pass2_images(state):
             path = path.removesuffix(".png")
         else:
             assert False, path
-        isCharacterImage = "ch/" in path
-        if isCharacterImage:
+        is_character_image = "ch/" in path
+        if is_character_image:
             key = lhs_key(image.name)
             string_key = b'.'.join(key)
             assert string_key in character_images_values, string_key
 
-        yield f"{{ .path = \"data/renpy/images/{path}.dds\", .isCharacterImage = {str(isCharacterImage).lower()} }}, // {i} {orig_path}"
+        yield f"{{ .path = \"data/renpy/images/{path}.dds\", .is_character_image = {str(is_character_image).lower()} }}, // {i} {orig_path}"
     yield "};"
     yield "const int images_length = (sizeof (images)) / (sizeof (images[0]));"
 

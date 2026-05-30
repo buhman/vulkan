@@ -7,9 +7,9 @@
 #include "audio.h"
 
 namespace renpy {
-  void interpreter::reset()
+  void interpreter::reset(uint32_t _pc)
   {
-    pc = 0;
+    this->pc = _pc;
     backgroundIndex = ~0u;
     backgroundColor = 0;
     shownImagesCount = 0;
@@ -22,6 +22,10 @@ namespace renpy {
     pause.menu = false;
     pause.dissolve = false;
     pause.pause = false;
+
+    while (script::dissolves[dissolveIndex].first_statement < pc) {
+      dissolveIndex++;
+    }
   }
 
   uint32_t interpreter::findImage(uint32_t imageIndex)
@@ -139,7 +143,7 @@ namespace renpy {
         say.stringIndex = statement.say.stringIndex;
         say.characterIndex = statement.say.characterIndex;
         language::character const & character = script::characters[statement.say.characterIndex];
-        highlightImages(character.images, character.imagesLength);
+        highlightImages(character.images, character.images_length);
         pc += 1;
       }
       break;
