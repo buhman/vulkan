@@ -527,13 +527,14 @@ namespace renpy {
                                uint32_t frameIndex,
                                renpy::interpreter const& state,
                                int & outputIndex,
-                               int mx, int my) const
+                               int mx, int my,
+                               int windowWidth, int windowHeight) const
   {
     assert(state.menu.count != 0);
     for (uint32_t i = 0; i < state.menu.count; i++) {
       int y = menu::yStride * i + menu::y;
 
-      bool overlap = renpy::overlap(menu::width, menu::height, menu::x, y, mx, my);
+      bool overlap = renpy::overlap(menu::width, menu::height, menu::x, y, mx, my, windowWidth, windowHeight);
       instanceMappedData[maximumImageCount * frameIndex + outputIndex++] = {
         .size = {menu::width, menu::height},
         .topLeft = {menu::x, (int16_t)(y)},
@@ -579,7 +580,9 @@ namespace renpy {
                     uint32_t frameIndex,
                     renpy::interpreter const& state,
                     int mx, int my,
-                    bool drawText) const
+                    bool drawText,
+                    int windowWidth,
+                    int windowHeight) const
   {
     int outputIndex = 0;
     // update
@@ -607,7 +610,7 @@ namespace renpy {
 
     if (drawText) {
       if (state.pause.menu) {
-        draw_menu_frame(commandBuffer, frameIndex, state, outputIndex, mx, my);
+        draw_menu_frame(commandBuffer, frameIndex, state, outputIndex, mx, my, windowWidth, windowHeight);
       } else if (state.say.stringIndex != ~0u) {
         draw_say_frame(commandBuffer, frameIndex, state, outputIndex);
       }

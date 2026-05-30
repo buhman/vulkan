@@ -368,7 +368,8 @@ void offscreenRender(VkCommandBuffer commandBuffer, int frameIndex,
                      int mx, int my, int colorIndex, bool drawText,
                      renpy::vulkan const & renpy_state,
                      renpy::interpreter const & interpreter_state,
-                     font::outline::font const & font_state)
+                     font::outline::font const & font_state,
+                     VkSurfaceCapabilitiesKHR const & surfaceCapabilities)
 {
   // barrier
   constexpr int colorBarriersCount = 2;
@@ -466,7 +467,9 @@ void offscreenRender(VkCommandBuffer commandBuffer, int frameIndex,
   //collada_state.vulkan.pipelineIndex = 0; // shadow pipeline
   //collada_state.draw();
 
-  renpy_state.draw(commandBuffer, frameIndex, interpreter_state, mx, my, drawText);
+  renpy_state.draw(commandBuffer, frameIndex, interpreter_state,
+                   mx, my, drawText,
+                   surfaceCapabilities.currentExtent.width, surfaceCapabilities.currentExtent.height);
   if (drawText) {
     font_state.draw(commandBuffer, frameIndex, interpreter_state);
   }
@@ -954,7 +957,7 @@ int main()
   //////////////////////////////////////////////////////////////////////
 
   renpy::interpreter interpreter_state;
-  interpreter_state.reset(99);
+  interpreter_state.reset(27);
 
   //////////////////////////////////////////////////////////////////////
   // renpy composite
@@ -1086,7 +1089,9 @@ int main()
     float my;
     uint32_t mouseFlags = SDL_GetMouseState(&mx, &my);
     bool mLeft = (mouseFlags & SDL_BUTTON_LMASK) != 0;
-    renpy::update(interpreter_state, mx, my, mLeft);
+    renpy::update(interpreter_state, mx, my, mLeft,
+                  surfaceCapabilities.currentExtent.width,
+                  surfaceCapabilities.currentExtent.height);
 
     //////////////////////////////////////////////////////////////////////
     // gamepad update
@@ -1272,10 +1277,10 @@ int main()
     //////////////////////////////////////////////////////////////////////
 
     if (interpreter_state.pause.dissolve) {
-      offscreenRender(commandBuffer, frameIndex, mx, my, 2, true, renpy_state, interpreter_state, font_state);
+      offscreenRender(commandBuffer, frameIndex, mx, my, 2, true, renpy_state, interpreter_state, font_state, surfaceCapabilities);
     } else {
-      offscreenRender(commandBuffer, frameIndex, mx, my, 0, true, renpy_state, interpreter_state, font_state);
-      offscreenRender(commandBuffer, frameIndex, mx, my, 1, false, renpy_state, interpreter_state, font_state);
+      offscreenRender(commandBuffer, frameIndex, mx, my, 0, true, renpy_state, interpreter_state, font_state, surfaceCapabilities);
+      offscreenRender(commandBuffer, frameIndex, mx, my, 1, false, renpy_state, interpreter_state, font_state, surfaceCapabilities);
     }
 
     //////////////////////////////////////////////////////////////////////

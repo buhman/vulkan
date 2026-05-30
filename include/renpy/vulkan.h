@@ -87,7 +87,9 @@ namespace renpy {
                          uint32_t frameIndex,
                          renpy::interpreter const& state,
                          int & outputIndex,
-                         int mx, int my) const;
+                         int mx, int my,
+                         int windowWidth,
+                         int windowHeight) const;
     void draw_say_frame(VkCommandBuffer commandBuffer,
                         uint32_t frameIndex,
                         renpy::interpreter const& state,
@@ -96,7 +98,9 @@ namespace renpy {
               uint32_t frameIndex,
               renpy::interpreter const& state,
               int mx, int my,
-              bool drawText) const;
+              bool drawText,
+              int windowWidth,
+              int windowHeight) const;
 
   };
 }

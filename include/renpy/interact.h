@@ -12,6 +12,11 @@ namespace renpy {
     constexpr int yStride = 100;
   };
 
-  bool overlap(int width, int height, int x, int y, int mx, int my);
-  void update(interpreter & state, int mx, int my, bool mLeft);
+  bool overlap(int menuWidth, int menuHeight,
+               int x, int y,
+               int mx, int my,
+               int windowWidth, int windowHeight);
+  void update(interpreter & state,
+              int mx, int my, bool mLeft,
+              int windowWidth, int windowHeight);
 }

@@ -36,12 +36,13 @@ VSOutput VSMain(VSInput input)
 
   float2 canonicalSize = float2(1280, 720);
   float2 size = float2(PushConstant.Width, PushConstant.Height);
-  while (canonicalSize.x * 2 <= size.x && canonicalSize.y * 2 <= size.y) {
-    canonicalSize *= 2;
+  int scaleFactor = 1;
+  while (canonicalSize.x * (scaleFactor + 1) <= size.x && canonicalSize.y * (scaleFactor + 1) <= size.y) {
+    scaleFactor += 1;
   }
 
   float2 inverseSize = 1.0 / size;
-  float2 scale = canonicalSize * inverseSize;
+  float2 scale = canonicalSize * scaleFactor * inverseSize;
 
   output.Position = float4(input.Position * scale, 0, 1);
   output.Texture = input.Texture;
