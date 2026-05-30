@@ -12,11 +12,16 @@ namespace renpy {
     constexpr int yStride = 100;
   };
 
+  extern int lastGamepadItem;
+  extern bool lastUseGamepad;
+
   bool overlap(int menuWidth, int menuHeight,
                int x, int y,
                int mx, int my,
                int windowWidth, int windowHeight);
   void update(interpreter & state,
               int mx, int my, bool mLeft,
+              bool gUp, bool gDown, bool gAccept,
+              bool useGamepad,
               int windowWidth, int windowHeight);
 }

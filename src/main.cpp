@@ -1023,6 +1023,9 @@ int main()
   audio::init();
   audio::load(renpy::script::audio, renpy::script::audio_length);
 
+  bool useGamepad = false;
+  uint32_t whichGamepad = 0;
+
   while (quit == false) {
     audio::update();
 
@@ -1063,6 +1066,7 @@ int main()
         }
       }
       if (event.type == SDL_EVENT_MOUSE_MOTION) {
+        useGamepad = false;
         if (event.motion.state & SDL_BUTTON_LMASK) {
           //collada_state.mouse_motion(cameraIndex, cameraTargetIndex, event.motion.xrel, event.motion.yrel, 0);
         }
@@ -1079,6 +1083,11 @@ int main()
       if (event.type == SDL_EVENT_GAMEPAD_REMOVED) {
         remove_gamepad(event.gdevice.which);
       }
+      if (event.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN) {
+        whichGamepad = event.gbutton.which;
+        useGamepad = true;
+        fprintf(stderr, "use gamepad: which %d\n", whichGamepad);
+      }
     }
 
     //////////////////////////////////////////////////////////////////////
@@ -1089,7 +1098,22 @@ int main()
     float my;
     uint32_t mouseFlags = SDL_GetMouseState(&mx, &my);
     bool mLeft = (mouseFlags & SDL_BUTTON_LMASK) != 0;
+    bool gUp = false;
+    bool gDown = false;
+    bool gAccept = false;
+    if (useGamepad) {
+      for (int i = 0; i < gamepad_count; i++) {
+        if (SDL_GetGamepadID(gamepads[i]) == whichGamepad) {
+          gUp = SDL_GetGamepadButton(gamepads[i], SDL_GAMEPAD_BUTTON_DPAD_UP);
+          gDown = SDL_GetGamepadButton(gamepads[i], SDL_GAMEPAD_BUTTON_DPAD_DOWN);
+          gAccept = SDL_GetGamepadButton(gamepads[i], SDL_GAMEPAD_BUTTON_SOUTH) || SDL_GetGamepadButton(gamepads[i], SDL_GAMEPAD_BUTTON_EAST);
+          break;
+        }
+      }
+    }
+
     renpy::update(interpreter_state, mx, my, mLeft,
+                  gUp, gDown, gAccept, useGamepad,
                   surfaceCapabilities.currentExtent.width,
                   surfaceCapabilities.currentExtent.height);
 

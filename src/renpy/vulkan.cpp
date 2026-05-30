@@ -534,7 +534,12 @@ namespace renpy {
     for (uint32_t i = 0; i < state.menu.count; i++) {
       int y = menu::yStride * i + menu::y;
 
-      bool overlap = renpy::overlap(menu::width, menu::height, menu::x, y, mx, my, windowWidth, windowHeight);
+      bool overlap = false;
+      if (renpy::lastUseGamepad) {
+        overlap = (i == (uint32_t)lastGamepadItem);
+      } else {
+        overlap = renpy::overlap(menu::width, menu::height, menu::x, y, mx, my, windowWidth, windowHeight);
+      }
       instanceMappedData[maximumImageCount * frameIndex + outputIndex++] = {
         .size = {menu::width, menu::height},
         .topLeft = {menu::x, (int16_t)(y)},
