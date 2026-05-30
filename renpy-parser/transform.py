@@ -64,6 +64,7 @@ loops = {
     "MistAmbience": 22.0,
     "TinyForestMinstrels": 44.0,
     "WheatFields": 34.0,
+    "Preludium": 58.2,
 }
 
 attenuations = {
