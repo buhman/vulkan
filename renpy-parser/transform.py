@@ -232,7 +232,16 @@ def pass2_statement(state, pc, statement):
         assert transform in transforms_set
         transform = transform.decode('utf-8')
         comment = ".".join(k.decode('utf-8') for k in key)
-        yield f"{{ .type = type::show, .show = {{ .imageIndex = {image_index}, .transformIndex = transform::{transform} }} }}, // {pc} {comment}"
+        xflip = False
+        for k, v in statement.properties:
+            if k.lexeme == b"xzoom":
+                assert v.lexeme == -1, v
+                assert xflip is False, (k, v)
+                xflip = True
+            else:
+                assert False in k
+        xflip = "xflip | " if xflip else ""
+        yield f"{{ .type = type::show, .show = {{ .imageIndex = {image_index}, .transformIndex = {xflip}transform::{transform}, }} }}, // {pc} {comment}"
     elif type(statement) is InternalMenu:
         count = len(statement.menu.entries)
         option_index = statement.entry_index

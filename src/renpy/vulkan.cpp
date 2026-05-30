@@ -592,12 +592,13 @@ namespace renpy {
 
     for (uint32_t i = 0; i < state.shownImagesCount; i++) {
       renpy::shownImage const& shownImage = state.shownImages[i];
-      renpy::top_left const& tl = renpy::transforms[shownImage.transformIndex];
+      renpy::top_left const& tl = renpy::transforms[renpy::language::getTransformIndex(shownImage.transformIndex)];
+      int sign = renpy::language::getXflip(shownImage.transformIndex) ? -1 : 1;
       Image const& image = images[shownImage.imageIndex];
       renpy::language::image const& rImage = script::images[shownImage.imageIndex];
       bool dim = (!shownImage.highlighted) && (rImage.is_character_image);
       instanceMappedData[maximumImageCount * frameIndex + outputIndex++] = {
-        .size = {(int16_t)image.width, (int16_t)image.height},
+        .size = {(int16_t)(sign * image.width), (int16_t)image.height},
         .topLeft = {(int16_t)tl.left, (int16_t)tl.top},
         .imageIndex = (int16_t)shownImage.imageIndex,
         .dim = dim,

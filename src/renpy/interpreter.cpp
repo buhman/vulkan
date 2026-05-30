@@ -150,14 +150,13 @@ namespace renpy {
     case language::type::hide:
       fprintf(stderr, "interpret_one[%d]: hide\n", pc);
       assert(statement.show.imageIndex < (uint32_t)script::images_length);
-      assert(statement.show.transformIndex < transformsCount);
       hideImage(statement.show.imageIndex);
       pc += 1;
       break;
     case language::type::show:
       fprintf(stderr, "interpret_one[%d]: show\n", pc);
       assert(statement.show.imageIndex < (uint32_t)script::images_length);
-      assert(statement.show.transformIndex < transformsCount);
+      assert(language::getTransformIndex(statement.show.transformIndex) < transformsCount);
       showImage(statement.show.imageIndex, statement.show.transformIndex);
       pc += 1;
       break;

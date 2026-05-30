@@ -13,6 +13,19 @@ namespace renpy::language {
     };
   };
 
+  static constexpr uint32_t xflip = (1u << 31);
+  static constexpr uint32_t transform_mask = ~(xflip);
+
+  static inline uint32_t getTransformIndex(uint32_t transformIndex)
+  {
+    return transformIndex & transform_mask;
+  }
+
+  static inline bool getXflip(uint32_t transformIndex)
+  {
+    return (transformIndex & xflip) != 0;
+  }
+
   struct option {
     char const * const string;
     uint32_t statementIndex;

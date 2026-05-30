@@ -229,8 +229,8 @@ namespace audio {
       double fadeout = 1.0;
       double attenuation = instance.audio_buffer->audio->attenuation;
       assert(attenuation != 0.0);
-      if (is_music)
-        fprintf(stderr, "attenuation %f\n", attenuation);
+      //if (is_music)
+      //fprintf(stderr, "attenuation %f\n", attenuation);
       if (instance.fadeout_end != 0) {
         fadeout = 1.0 - ((double)instance.fadeout_index / (double)instance.fadeout_end);
       }
