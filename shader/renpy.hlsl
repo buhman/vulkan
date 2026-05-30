@@ -10,6 +10,7 @@ struct VSInput
   int2 TopLeft : TopLeft;
   float4 Color : Color;
   int TextureIndex : TextureIndex;
+  int Dim : Dim;
 };
 
 struct VSOutput
@@ -18,6 +19,7 @@ struct VSOutput
   float2 Texture : NORMAL0;
   float4 Color : Color;
   int TextureIndex : TextureIndex;
+  int Dim : Dim;
 };
 
 [shader("vertex")]
@@ -35,6 +37,7 @@ VSOutput VSMain(VSInput input)
   output.Texture = texture;
   output.TextureIndex = input.TextureIndex;
   output.Color = input.Color.zyxw;
+  output.Dim = input.Dim;
 
   return output;
 }
@@ -87,6 +90,9 @@ float4 PSMain(VSOutput input) : SV_TARGET
 
   if (color.w == 0.0)
     discard;
+
+  if (input.Dim)
+    color.xyz *= 0.5;
 
   //float gamma = 2.2;
   //color.xyz = pow(color.xyz, float3(gamma.xxx));

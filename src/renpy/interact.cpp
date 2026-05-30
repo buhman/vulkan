@@ -21,11 +21,11 @@ namespace renpy {
   {
     bool mDown = mLeft && (!lastmLeft);
     lastmLeft = mLeft;
-    if (mDown) {
-      state.pause.voice = false;
-    }
+    //if (mDown) {
+    //state.pause.voice = false;
+    //}
 
-    if (state.menu.count == 0 || !mDown)
+    if (!state.pause.menu || !mDown)
       return;
 
     for (uint32_t i = 0; i < state.menu.count; i++) {
@@ -39,7 +39,7 @@ namespace renpy {
         uint32_t next_pc = script::options[optionIndex].statementIndex;
         fprintf(stderr, "interact[%d]: menu jump %d\n", state.pc, next_pc);
         state.pc = next_pc;
-        state.menu.count = 0;
+        state.pause.menu = false;
         break;
       }
     }

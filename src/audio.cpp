@@ -21,7 +21,7 @@ namespace audio {
   static int const max_frame_size = 960 * 3; // 20ms at 48kHz
   static int const max_packet_size = 1275;
 
-  static int const half_period_samples = sample_rate / 2;
+  static int const half_period_samples = sample_rate / 30;
   static int const half_period_size = half_period_samples * sample_size * channels;
 
   //
@@ -150,6 +150,17 @@ namespace audio {
     instance.fadeout_index = 0;
   }
 
+  bool exists(int audio_index)
+  {
+    assert(audio_index >= 0 && audio_index < audio_buffers_count);
+    for (int i = 0; i < audio_instances_count; i++) {
+      if (audio_instances[i].audio_index == audio_index) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   void stop(int audio_index, double fadeout)
   {
     assert(audio_index >= 0 && audio_index < audio_buffers_count);
@@ -196,12 +207,13 @@ namespace audio {
 
     uint32_t mix_index = 0;
     for (int i = 0; i < half_period_samples; i++) {
-      if (loop_end != 0) {
+      if (loop_end != 0.0) {
         if (instance.sample_index >= loop_end) {
           instance.sample_index = 0;
           instance.tail_index = loop_end;
         }
       } else if (instance.sample_index >= sample_count) {
+        // non-looping at the end of the loop, do not play
         return;
       }
 
@@ -237,7 +249,7 @@ namespace audio {
 
   static inline bool should_cull_instance(AudioInstance & instance)
   {
-    if (instance.audio_buffer->audio->loop_end != 0.0 && instance.sample_index >= instance.audio_buffer->sample_count) {
+    if (instance.audio_buffer->audio->loop_end == 0.0 && instance.sample_index >= instance.audio_buffer->sample_count) {
       return true;
     }
     if (instance.fadeout_end != 0 && instance.fadeout_index >= instance.fadeout_end) {

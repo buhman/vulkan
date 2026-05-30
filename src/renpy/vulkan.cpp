@@ -1,4 +1,5 @@
 #include <string.h>
+#include <signal.h>
 
 #ifdef __APPLE__
 #include "vulkan/vulkan.h"
@@ -228,7 +229,9 @@ namespace renpy {
                                  filename,
                                  &images[i].image,
                                  &images[i].memory,
-                                 &images[i].imageView);
+                                 &images[i].imageView,
+                                 &images[i].width,
+                                 &images[i].height);
     } else {
       fprintf(stderr, "filename: %s\n", filename);
       ASSERT(false, "invalid image filename extension");
@@ -439,7 +442,7 @@ namespace renpy {
       },
     };
 
-    constexpr int vertexAttributeDescriptionsCount = 6;
+    constexpr int vertexAttributeDescriptionsCount = 7;
     VkVertexInputAttributeDescription vertexAttributeDescriptions[vertexAttributeDescriptionsCount]{
       // per-vertex
       { // position
@@ -478,6 +481,12 @@ namespace renpy {
         .binding = 1,
         .format = VK_FORMAT_R16_SINT,
         .offset = 12,
+      },
+      {
+        .location = 6,
+        .binding = 1,
+        .format = VK_FORMAT_R16_SINT,
+        .offset = 14,
       },
     };
 
@@ -520,6 +529,7 @@ namespace renpy {
                                int & outputIndex,
                                int mx, int my) const
   {
+    assert(state.menu.count != 0);
     for (uint32_t i = 0; i < state.menu.count; i++) {
       int y = menu::yStride * i + menu::y;
 
@@ -581,16 +591,21 @@ namespace renpy {
     };
 
     for (uint32_t i = 0; i < state.shownImagesCount; i++) {
-      renpy::top_left const& tl = renpy::transforms[state.shownImages[i].transformIndex];
+      renpy::shownImage const& shownImage = state.shownImages[i];
+      renpy::top_left const& tl = renpy::transforms[shownImage.transformIndex];
+      Image const& image = images[shownImage.imageIndex];
+      renpy::language::image const& rImage = script::images[shownImage.imageIndex];
+      bool dim = (!shownImage.highlighted) && (rImage.isCharacterImage);
       instanceMappedData[maximumImageCount * frameIndex + outputIndex++] = {
-        .size = {452, 528},
+        .size = {(int16_t)image.width, (int16_t)image.height},
         .topLeft = {(int16_t)tl.left, (int16_t)tl.top},
-        .imageIndex = (int16_t)state.shownImages[i].imageIndex,
+        .imageIndex = (int16_t)shownImage.imageIndex,
+        .dim = dim,
       };
     }
 
     if (drawText) {
-      if (state.menu.count != 0) {
+      if (state.pause.menu) {
         draw_menu_frame(commandBuffer, frameIndex, state, outputIndex, mx, my);
       } else if (state.say.stringIndex != ~0u) {
         draw_say_frame(commandBuffer, frameIndex, state, outputIndex);

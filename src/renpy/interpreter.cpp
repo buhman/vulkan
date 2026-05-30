@@ -17,6 +17,7 @@ namespace renpy {
     say.characterIndex = ~0u;
     menu.count = 0;
     dissolveIndex = 0;
+    voiceAudioIndex = ~0u;
     pause.voice = false;
     pause.menu = false;
     pause.dissolve = false;
@@ -43,22 +44,53 @@ namespace renpy {
 
     shownImages[shownImageIndex].imageIndex = imageIndex;
     shownImages[shownImageIndex].transformIndex = transformIndex;
+    shownImages[shownImageIndex].highlighted = false;
 
     assert(shownImagesCount <= maximumShownImagesCount);
-    printf("shownImagesCount: %d\n", shownImagesCount);
+    fprintf(stderr, "shownImagesCount: %d\n", shownImagesCount);
+  }
+
+  static inline uint32_t countMask(uint32_t count)
+  {
+    assert(count <= 32);
+    uint32_t mask = 0;
+    for (uint32_t i = 0; i < count; i++) {
+      mask |= (1u << i);
+    }
+    return mask;
+  }
+
+  void interpreter::highlightImages(uint32_t const * const imageIndices, uint32_t count)
+  {
+    assert(count <= 32);
+    uint32_t foundMask = 0;
+    for (uint32_t shownImageIndex = 0; shownImageIndex < shownImagesCount; shownImageIndex++) {
+      shownImages[shownImageIndex].highlighted = false;
+      for (uint32_t i = 0; i < count; i++) {
+        bool highlight = shownImages[shownImageIndex].imageIndex == imageIndices[i];
+        shownImages[shownImageIndex].highlighted |= highlight;
+        foundMask |= (((uint32_t)highlight) << i);
+      }
+    }
+    //uint32_t expectedMask = countMask(count);
+    //if (foundMask != expectedMask) {
+    //fprintf(stderr, "warning: highlightImages foundMask mismatch: pc %d found %08x expected %08x\n", pc, foundMask, expectedMask);
+    //}
+    if (count > 0 && foundMask == 0)
+      fprintf(stderr, "warning: highlightImages zero images found: pc %d\n", pc);
   }
 
   void interpreter::hideImage(uint32_t imageIndex)
   {
     uint32_t shownImageIndex = findImage(imageIndex);
-    if (shownImageIndex == ~0u)
+    if (shownImageIndex == ~0u) {
+      fprintf(stderr, "warning: attempt to hide non-shown image index %d at pc %d\n", imageIndex, pc);
       return;
+    }
 
     for (uint32_t i = shownImageIndex; i < (shownImagesCount - 1); i++) {
       shownImages[i] = shownImages[i+1];
-      printf("here\n");
     }
-    printf("return\n");
     shownImagesCount -= 1;
   }
 
@@ -101,12 +133,15 @@ namespace renpy {
       pc += 1;
       break;
     case language::type::say:
-      fprintf(stderr, "interpret_one[%d]: say\n", pc);
-      assert(statement.say.stringIndex < (uint32_t)script::strings_length);
-      say.stringIndex = statement.say.stringIndex;
-      say.characterIndex = statement.say.characterIndex;
-      pause.voice = true;
-      pc += 1;
+      {
+        fprintf(stderr, "interpret_one[%d]: say\n", pc);
+        assert(statement.say.stringIndex < (uint32_t)script::strings_length);
+        say.stringIndex = statement.say.stringIndex;
+        say.characterIndex = statement.say.characterIndex;
+        language::character const & character = script::characters[statement.say.characterIndex];
+        highlightImages(character.images, character.imagesLength);
+        pc += 1;
+      }
       break;
     case language::type::hide:
       fprintf(stderr, "interpret_one[%d]: hide\n", pc);
@@ -128,6 +163,7 @@ namespace renpy {
       assert(statement.menu.count > 0);
       menu.count = statement.menu.count;
       menu.optionIndex = statement.menu.optionIndex;
+      pause.menu = true;
       pc += 1;
       break;
     case language::type::jump:
@@ -140,6 +176,16 @@ namespace renpy {
       pauseDuration = statement.pause.duration;
       pause.pause = true;
       pc += 1;
+      break;
+    case language::type::voice:
+      fprintf(stderr, "interpret_one[%d]: voice %d\n", pc, statement.voice.audioIndex);
+      audio::play(statement.voice.audioIndex);
+      voiceAudioIndex = statement.voice.audioIndex;
+      pause.voice = true;
+      pc += 1;
+      printf("pause next_pc %d type %d\n", pc, script::statements[pc].type);
+      assert(script::statements[pc].type == language::type::say);
+      interpret_one();
       break;
     default:
       fprintf(stderr, "unknown statement type at pc %d\n", pc);
@@ -155,7 +201,7 @@ namespace renpy {
   {
     while (!interactionWait()) {
       if (dissolvePC()) {
-        fprintf(stderr, "dissolve pc %d\n", pc);
+        fprintf(stderr, "dissolvePC %d\n", pc);
         language::dissolve const & dissolve = script::dissolves[dissolveIndex];
         for (uint32_t i = 0; i < dissolve.count; i++) {
           interpret_one();

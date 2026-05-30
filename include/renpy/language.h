@@ -21,6 +21,8 @@ namespace renpy::language {
   struct character {
     char const * const characterName;
     uint32_t color;
+    uint32_t const * const images;
+    uint32_t imagesLength;
   };
 
   struct audio {
@@ -30,6 +32,7 @@ namespace renpy::language {
 
   struct image {
     char const * const path;
+    bool isCharacterImage;
   };
 
   // statement

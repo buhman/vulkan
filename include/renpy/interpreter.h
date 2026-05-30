@@ -23,6 +23,7 @@ namespace renpy {
   struct shownImage {
     uint32_t imageIndex;
     uint32_t transformIndex;
+    bool highlighted;
   };
 
   static constexpr int maximumShownImagesCount = 16;
@@ -42,6 +43,7 @@ namespace renpy {
       uint32_t optionIndex;
     } menu;
     uint32_t dissolveIndex;
+    uint32_t voiceAudioIndex;
     struct {
       bool voice;
       bool menu;
@@ -53,6 +55,7 @@ namespace renpy {
 
     uint32_t findImage(uint32_t imageIndex);
     void showImage(uint32_t imageIndex, uint32_t transformIndex);
+    void highlightImages(uint32_t const * const imageIndices, uint32_t count);
     void hideImage(uint32_t imageIndex);
     void reset();
     void interpret_one();

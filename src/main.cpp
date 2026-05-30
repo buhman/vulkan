@@ -509,6 +509,42 @@ static inline double clamp01(double a)
   return a;
 }
 
+void handlePause(renpy::interpreter & interpreter_state,
+                 int64_t const start_time,
+                 double & pause_start,
+                 double & dissolve_start)
+{
+  if (interpreter_state.pause.pause) {
+    if (pause_start == 0.0) {
+      fprintf(stderr, "pause %f\n", interpreter_state.pauseDuration);
+      pause_start = getTime(start_time);
+    } else if (getTime(start_time) - pause_start >= interpreter_state.pauseDuration) {
+      fprintf(stderr, "unpause %f\n", interpreter_state.pauseDuration);
+      pause_start = 0.0;
+      interpreter_state.pause.pause = false;
+    }
+  }
+
+  if (interpreter_state.pause.dissolve) {
+    if (dissolve_start == 0.0) {
+      fprintf(stderr, "dissolve %f\n", interpreter_state.dissolveDuration);
+      dissolve_start = getTime(start_time);
+    } else if (getTime(start_time) - dissolve_start >= interpreter_state.dissolveDuration) {
+      fprintf(stderr, "undissolve %f\n", interpreter_state.dissolveDuration);
+      dissolve_start = 0.0;
+      interpreter_state.pause.dissolve = false;
+    }
+  }
+
+  if (interpreter_state.pause.voice) {
+    if (!audio::exists(interpreter_state.voiceAudioIndex)) {
+      fprintf(stderr, "voice unpause %d\n", interpreter_state.voiceAudioIndex);
+      interpreter_state.pause.voice = false;
+      interpreter_state.highlightImages(nullptr, 0);
+    }
+  }
+}
+
 int main()
 {
   file::init();
@@ -919,7 +955,9 @@ int main()
 
   renpy::interpreter interpreter_state;
   interpreter_state.reset();
-  interpreter_state.pc = 11;
+  interpreter_state.pc = 15;
+  while (renpy::script::dissolves[interpreter_state.dissolveIndex].first_statement < interpreter_state.pc)
+    interpreter_state.dissolveIndex++;
 
   //////////////////////////////////////////////////////////////////////
   // renpy composite
@@ -992,29 +1030,9 @@ int main()
     // interpreter update
     //////////////////////////////////////////////////////////////////////
 
+    handlePause(interpreter_state, start_time, pause_start, dissolve_start);
     interpreter_state.interpret();
-
-    if (interpreter_state.pause.pause) {
-      if (pause_start == 0.0) {
-        fprintf(stderr, "pause %f\n", interpreter_state.pauseDuration);
-        pause_start = getTime(start_time);
-      } else if (getTime(start_time) - pause_start >= interpreter_state.pauseDuration) {
-        fprintf(stderr, "unpause %f\n", interpreter_state.pauseDuration);
-        pause_start = 0.0;
-        interpreter_state.pause.pause = false;
-      }
-    }
-
-    if (interpreter_state.pause.dissolve) {
-      if (dissolve_start == 0.0) {
-        fprintf(stderr, "dissolve %f\n", interpreter_state.dissolveDuration);
-        dissolve_start = getTime(start_time);
-      } else if (getTime(start_time) - dissolve_start >= interpreter_state.dissolveDuration) {
-        fprintf(stderr, "undissolve %f\n", interpreter_state.dissolveDuration);
-        dissolve_start = 0.0;
-        interpreter_state.pause.dissolve = false;
-      }
-    }
+    handlePause(interpreter_state, start_time, pause_start, dissolve_start);
 
     //////////////////////////////////////////////////////////////////////
     // sdl
@@ -1371,7 +1389,10 @@ int main()
     float text_lerp = -1.0;
     constexpr double textDissolveDuration = 0.3;
     if (interpreter_state.pause.dissolve) {
-      double delta = getTime(start_time) - dissolve_start;
+      double current_time = getTime(start_time);
+      if (current_time < dissolve_start)
+        current_time = dissolve_start;
+      double delta = current_time - dissolve_start;
       assert(interpreter_state.dissolveDuration > 0.0000001);
       dissolve_lerp = clamp01(delta / interpreter_state.dissolveDuration);
       text_lerp = clamp01(delta / textDissolveDuration);

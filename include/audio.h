@@ -8,4 +8,5 @@ namespace audio {
   void update();
   void play(int audio_index);
   void stop(int audio_index, double fadeout);
+  bool exists(int audio_index);
 }

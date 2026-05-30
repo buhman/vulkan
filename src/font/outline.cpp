@@ -705,7 +705,7 @@ namespace font::outline {
     // transfer
     int outputIndex = 0;
 
-    if (state.menu.count == 0) {
+    if (!state.pause.menu) {
       if (state.say.stringIndex != -1u) {
         char const * const string = renpy::script::strings[state.say.stringIndex];
         uint32_t x = textboxLeft << 6;
@@ -729,6 +729,7 @@ namespace font::outline {
                  character.color);
       }
     } else {
+      assert(state.menu.count != 0);
       for (uint32_t i = 0; i < state.menu.count; i++) {
         uint32_t x = 400 << 6;
         uint32_t y = (100 * i + 130) << 6;

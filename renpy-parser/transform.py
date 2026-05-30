@@ -60,11 +60,23 @@ simple_statement_types = {
 
 loops = {
     "ScaredMice": 8.0,
-    "PhrygianButterflies": 40.125,
+    "PhrygianButterflies": 40.2,
     "MistAmbience": 22.0,
     "TinyForestMinstrels": 44.0,
     "WheatFields": 34.0,
 }
+
+character_images = {
+    b"a": [b"al", b"sal", b"wal"],
+    b"b": [b"bi"],
+    b"c": [b"cat", b"catw"],
+    b"e": [b"ei", b"sei"],
+    b"mg": (b"a", b"e"),
+    b"n": [],
+    b"l": (b"c",),
+    b"h": [],
+}
+character_images_values = set(chain.from_iterable(character_images.values()))
 
 def pass1(state, ast):
     if type(ast) is parse.Image:
@@ -141,15 +153,15 @@ def pass1(state, ast):
                 scene_index = i
                 break
         for i in range(scene_index + 1, len(state.statements)):
-            ast = state.statements[i]
-            if type(ast) is parse.Voice:
-                assert False, ast
-            elif type(ast) is parse.Menu:
-                assert False, ast
-            elif type(ast) is parse.Pause:
-                assert False, ast
+            b_ast = state.statements[i]
+            if type(b_ast) is parse.Voice:
+                assert False, b_ast
+            elif type(b_ast) is parse.Menu:
+                assert False, b_ast
+            elif type(b_ast) is parse.Pause:
+                assert False, b_ast
             else:
-                assert type(ast) in simple_statement_types, ast
+                assert type(b_ast) in simple_statement_types, b_ast
 
         assert scene_index is not None
         state.dissolves.append(InternalDissolve(
@@ -240,6 +252,8 @@ def pass2_statement(state, pc, statement):
         yield f"{{ .type = type::pause, .pause = {{ .duration = {duration} }} }}, // {pc}"
     elif type(statement) is parse.Hide:
         key = lhs_key(statement.what)
+        if key not in state.images_lookup:
+            assert False, statement.what
         image_index = state.images_lookup[key]
         comment = ".".join(k.decode('utf-8') for k in key)
         yield f"{{ .type = type::hide, .hide = {{ .imageIndex = {image_index} }} }}, // {pc} {comment}"
@@ -249,7 +263,8 @@ def pass2_statement(state, pc, statement):
 def pass2_statements(state):
     yield "const language::statement statements[] = {"
     for pc, statement in enumerate(state.statements):
-        print(pc, statement, file=sys.stderr)
+        if type(statement) is parse.Voice:
+            assert type(state.statements[pc+1]) is parse.Say, (pc, statement)
         yield from pass2_statement(state, pc, statement)
     yield "};"
     yield "const int statements_length = (sizeof (statements)) / (sizeof (statements[0]));"
@@ -267,7 +282,7 @@ def pass2_characters(state):
         character_name, = character.value.args
         color, = (value.lexeme for key, value in character.value.kwargs if key.lexeme == b'color')
         color = int(color.decode('utf-8'), 16)
-        yield f"{{ .characterName = \"{character_name.lexeme.decode('utf-8')}\", .color = 0x{color:06x} }}, // {i}"
+        yield f"{{ .characterName = \"{character_name.lexeme.decode('utf-8')}\", .color = 0x{color:06x}, .images = character_images_{i}, .imagesLength = character_images_{i}_length }}, // {i}"
     yield "};"
     yield "const int characters_length = (sizeof (characters)) / (sizeof (characters[0]));"
 
@@ -301,7 +316,13 @@ def pass2_images(state):
             path = path.removesuffix(".png")
         else:
             assert False, path
-        yield f"{{ .path = \"data/renpy/images/{path}.dds\" }}, // {i} {orig_path}"
+        isCharacterImage = "ch/" in path
+        if isCharacterImage:
+            key = lhs_key(image.name)
+            string_key = b'.'.join(key)
+            assert string_key in character_images_values, string_key
+
+        yield f"{{ .path = \"data/renpy/images/{path}.dds\", .isCharacterImage = {str(isCharacterImage).lower()} }}, // {i} {orig_path}"
     yield "};"
     yield "const int images_length = (sizeof (images)) / (sizeof (images[0]));"
 
@@ -319,6 +340,26 @@ def pass2_dissolves(state):
     yield "};"
     yield "const int dissolves_length = (sizeof (dissolves)) / (sizeof (dissolves[0]));"
 
+def pass2_character_images(state):
+    for i, character in enumerate(state.characters):
+        key = lhs_key(character.name)
+        string_key = b'.'.join(key)
+        assert string_key in character_images, string_key
+
+        images_list = character_images[string_key]
+        if type(images_list) == tuple:
+            images_list = list(chain.from_iterable(character_images[k] for k in images_list))
+        assert type(images_list) is list
+        def get_image_indices():
+            for image_identifier in images_list:
+                image_index = state.images_lookup[(image_identifier,)]
+                yield image_index
+
+        image_indices = list(get_image_indices())
+        yield f"// {string_key}"
+        yield f"static const uint32_t character_images_{i}[] = {{ {', '.join(map(str, image_indices))} }};"
+        yield f"static constexpr uint32_t character_images_{i}_length = {len(image_indices)};"
+
 def pass2(state):
     yield "#include \"renpy/language.h\""
     yield "#include \"renpy/script.h\""
@@ -326,6 +367,7 @@ def pass2(state):
     yield "namespace renpy::script {"
     yield "using namespace renpy::language;"
     yield from pass2_strings(state)
+    yield from pass2_character_images(state)
     yield from pass2_characters(state)
     yield from pass2_audio(state)
     yield from pass2_images(state)

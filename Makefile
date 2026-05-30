@@ -7,7 +7,7 @@ OBJARCH = elf64-x86-64
 
 UNAME := $(shell uname -s)
 
-OPT += -Os
+OPT += -O0
 OPT += -march=core-avx2
 
 DEBUG = -g
@@ -113,20 +113,20 @@ all: main
 %.o: %.s
 	$(AS) $< -o $@
 
-%.dds: %.png
-	WINEDEBUG=-all wine $(HOME)/Texconv.exe -y -nogpu -nowic -dx10 --format BC7_UNORM_SRGB -m 1 $< -o $(dir $@)
+#%.dds: %.png
+#	WINEDEBUG=-all wine $(HOME)/Texconv.exe -y -nogpu -nowic -dx10 --format BC7_UNORM_SRGB -m 1 $< -o $(dir $@)
 
-%.pcm: %.wav
-	ffmpeg -loglevel quiet -y -i $< -c:a pcm_s16le -ar 48000 -ac 2 -f s16le $@
+#%.pcm: %.wav
+#	ffmpeg -loglevel quiet -y -i $< -c:a pcm_s16le -ar 48000 -ac 2 -f s16le $@
 
-%.pcm: %.ogg
-	ffmpeg -loglevel quiet -y -i $< -c:a pcm_s16le -ar 48000 -ac 2 -f s16le $@
+#%.pcm: %.ogg
+#	ffmpeg -loglevel quiet -y -i $< -c:a pcm_s16le -ar 48000 -ac 2 -f s16le $@
 
-%.pcm: %.mp3
-	ffmpeg -loglevel quiet -y -i $< -c:a pcm_s16le -ar 48000 -ac 2 -f s16le $@
+#%.pcm: %.mp3
+#	ffmpeg -loglevel quiet -y -i $< -c:a pcm_s16le -ar 48000 -ac 2 -f s16le $@
 
-%.opus.bin: %.pcm
-	./tools/opus_encode $< $@
+#%.opus.bin: %.pcm
+#	./tools/opus_encode $< $@
 
 main: $(OBJS) $(LIBS)
 	$(CC) $(ARCH) $(LDFLAGS) $(FLAGS) $(OPT) $(DEBUG) $^ -o $@
@@ -142,8 +142,8 @@ tool/pack_file: tool/pack_file.cpp
 
 src/pack.o: files.pack.zlib
 
-#src/renpy/script.cpp: data/renpy/script.rpy
-#	PYTHONPATH=renpy-parser python -m transform $< > $@
+src/renpy/script.cpp: data/renpy/script.rpy
+	PYTHONPATH=renpy-parser python -m transform $< > $@
 
 PACK_FILENAMES = $(shell cat filenames.txt)
 files.pack: tool/pack_file $(PACK_FILENAMES) filenames.txt

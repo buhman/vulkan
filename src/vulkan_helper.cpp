@@ -330,7 +330,9 @@ void createImageFromFilenameDDS(VkDevice device,
                                 char const * const filename,
                                 VkImage * outImage,
                                 VkDeviceMemory * outMemory,
-                                VkImageView * outImageView)
+                                VkImageView * outImageView,
+                                int * outWidth,
+                                int * outHeight)
 {
   uint32_t imageSize;
   void const * imageStart = file::open(filename, &imageSize);
@@ -371,6 +373,9 @@ void createImageFromFilenameDDS(VkDevice device,
 
   free(levelOffsets);
   // imageData is not malloc'ed, it is a pointer to file:: data, which is also not malloc'ed
+
+  *outWidth = width;
+  *outHeight = height;
 }
 
 void createImageFromFilenameTGA(VkDevice device,

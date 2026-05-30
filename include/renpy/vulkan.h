@@ -7,6 +7,8 @@ namespace renpy {
     VkImage image;
     VkDeviceMemory memory;
     VkImageView imageView;
+    int width;
+    int height;
   };
 
   struct ImageInstance {
@@ -20,7 +22,7 @@ namespace renpy {
     } topLeft;
     uint32_t color;
     int16_t imageIndex;
-    int16_t _padding;
+    int16_t dim;
   };
 
   static_assert((sizeof (ImageInstance)) == 16);
