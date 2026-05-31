@@ -573,7 +573,7 @@ const language::dissolve dissolves[] = {
   { .duration = 1.3, .first_statement = 347, .count = 3 },
   { .duration = 3.0, .first_statement = 428, .count = 1 },
   { .duration = 2.0, .first_statement = 437, .count = 2 },
-  { .duration = 3.0, .first_statement = 550, .count = 1 },
+  { .duration = 14.0, .first_statement = 548, .count = 1 },
 };
 
 const int dissolves_length = (sizeof (dissolves)) / (sizeof (dissolves[0]));
@@ -1126,21 +1126,19 @@ const language::statement statements[] = {
   { .type = type::play, .play = { .audioIndex = 231 } }, // 544 poem/BirdSong.ogg
   { .type = type::scene, .scene = { .imageIndex = 5 } }, // 545 bgcastle1
   { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 31 } }, // 546 e "..."
-  { .type = type::pause, .pause = { .duration = 62 } }, // 547
+  { .type = type::pause, .pause = { .duration = 73.5 } }, // 547
   { .type = type::scene_color, .scene_color = { .color = 0xffffff } }, // 548 bgwhite
-  { .type = type::pause, .pause = { .duration = 36 } }, // 549
-  { .type = type::scene_color, .scene_color = { .color = 0xffffff } }, // 550 bgwhite
-  { .type = type::voice, .voice = { .audioIndex = 232 } }, // 551 nara/n11.ogg
-  { .type = type::say, .say = { .characterIndex = 5, .stringIndex = 217 } }, // 552 n "In the end, Leona managed to stay out of the dungeon"
-  { .type = type::voice, .voice = { .audioIndex = 233 } }, // 553 nara/n12.ogg
-  { .type = type::say, .say = { .characterIndex = 5, .stringIndex = 218 } }, // 554 n "Eily and Alice both stayed in service of the queen for 7 harvests"
-  { .type = type::voice, .voice = { .audioIndex = 234 } }, // 555 nara/n13.ogg
-  { .type = type::say, .say = { .characterIndex = 5, .stringIndex = 219 } }, // 556 n "before returning to their small nameless town, near the Keep of Musia"
-  { .type = type::scene_color, .scene_color = { .color = 0xffffff } }, // 557 bgwhite
-  { .type = type::show, .show = { .imageIndex = 9, .transformIndex = transform::center, } }, // 558 bgend
-  { .type = type::pause, .pause = { .duration = 1.0 } }, // 559
-  { .type = type::jump, .jump = { .statementIndex = 559 } }, // 560 end
-  { .type = type::_return }, // 561
+  { .type = type::voice, .voice = { .audioIndex = 232 } }, // 549 nara/n11.ogg
+  { .type = type::say, .say = { .characterIndex = 5, .stringIndex = 217 } }, // 550 n "In the end, Leona managed to stay out of the dungeon"
+  { .type = type::voice, .voice = { .audioIndex = 233 } }, // 551 nara/n12.ogg
+  { .type = type::say, .say = { .characterIndex = 5, .stringIndex = 218 } }, // 552 n "Eily and Alice both stayed in service of the queen for 7 harvests"
+  { .type = type::voice, .voice = { .audioIndex = 234 } }, // 553 nara/n13.ogg
+  { .type = type::say, .say = { .characterIndex = 5, .stringIndex = 219 } }, // 554 n "before returning to their small nameless town, near the Keep of Musia"
+  { .type = type::scene_color, .scene_color = { .color = 0xffffff } }, // 555 bgwhite
+  { .type = type::show, .show = { .imageIndex = 9, .transformIndex = transform::center, } }, // 556 bgend
+  { .type = type::pause, .pause = { .duration = 1.0 } }, // 557
+  { .type = type::jump, .jump = { .statementIndex = 557 } }, // 558 end
+  { .type = type::_return }, // 559
 };
 
 const int statements_length = (sizeof (statements)) / (sizeof (statements[0]));

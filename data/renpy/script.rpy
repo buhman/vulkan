@@ -923,7 +923,7 @@ label start:
         scene bgcastle1
         e "..."
 
-        pause 62
+        pause 73.5
 
 
         #scene bgcastle2
@@ -951,10 +951,10 @@ label start:
 
         #pause 3
         scene bgwhite
-        #with Dissolve(13.0)
-        pause 36
-        scene bgwhite
-        with Dissolve(3.0)
+        with Dissolve(14.0)
+        #pause 0.25
+        #scene bgwhite
+        #with Dissolve(3.0)
 
         voice "nara/n11.ogg"
         n "In the end, Leona managed to stay out of the dungeon"
