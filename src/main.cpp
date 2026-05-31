@@ -1319,7 +1319,7 @@ int main()
       offscreenRender(commandBuffer, frameIndex, mx, my, 2, true, renpy_state, interpreter_state, font_state, surfaceCapabilities);
     } else {
       offscreenRender(commandBuffer, frameIndex, mx, my, 0, true, renpy_state, interpreter_state, font_state, surfaceCapabilities);
-      offscreenRender(commandBuffer, frameIndex, mx, my, 1, drawText, renpy_state, interpreter_state, font_state, surfaceCapabilities);
+      offscreenRender(commandBuffer, frameIndex, mx, my, 1, false, renpy_state, interpreter_state, font_state, surfaceCapabilities);
     }
 
     //////////////////////////////////////////////////////////////////////

@@ -232,27 +232,27 @@ const int strings_length = (sizeof (strings)) / (sizeof (strings[0]));
 const int strings_say_poem_index = 31;
 
 // b'a'
-static const uint32_t character_images_0[] = { 13, 15, 16 };
+static const uint32_t character_images_0[] = { 14, 16, 17 };
 
 static constexpr uint32_t character_images_0_length = 3;
 
 // b'b'
-static const uint32_t character_images_1[] = { 9 };
+static const uint32_t character_images_1[] = { 10 };
 
 static constexpr uint32_t character_images_1_length = 1;
 
 // b'c'
-static const uint32_t character_images_2[] = { 10, 11 };
+static const uint32_t character_images_2[] = { 11, 12 };
 
 static constexpr uint32_t character_images_2_length = 2;
 
 // b'e'
-static const uint32_t character_images_3[] = { 12, 14 };
+static const uint32_t character_images_3[] = { 13, 15 };
 
 static constexpr uint32_t character_images_3_length = 2;
 
 // b'mg'
-static const uint32_t character_images_4[] = { 13, 15, 16, 12, 14 };
+static const uint32_t character_images_4[] = { 14, 16, 17, 13, 15 };
 
 static constexpr uint32_t character_images_4_length = 5;
 
@@ -262,7 +262,7 @@ static const uint32_t character_images_5[] = {  };
 static constexpr uint32_t character_images_5_length = 0;
 
 // b'l'
-static const uint32_t character_images_6[] = { 10, 11 };
+static const uint32_t character_images_6[] = { 11, 12 };
 
 static constexpr uint32_t character_images_6_length = 2;
 
@@ -534,14 +534,15 @@ const language::image images[] = {
   { .path = "data/renpy/images/bg/castle2.dds", .is_character_image = false }, // 6 bg/castle2.png
   { .path = "data/renpy/images/bg/castle3.dds", .is_character_image = false }, // 7 bg/castle3.png
   { .path = "data/renpy/images/bg/castle4.dds", .is_character_image = false }, // 8 bg/castle4.png
-  { .path = "data/renpy/images/ch/ibird/Bird.dds", .is_character_image = true }, // 9 ch/ibird/Bird.png
-  { .path = "data/renpy/images/ch/icat/Cat.dds", .is_character_image = true }, // 10 ch/icat/Cat.png
-  { .path = "data/renpy/images/ch/icat/Catw.dds", .is_character_image = true }, // 11 ch/icat/Catw.png
-  { .path = "data/renpy/images/ch/ieily/Eily.dds", .is_character_image = true }, // 12 ch/ieily/Eily.png
-  { .path = "data/renpy/images/ch/ialice/Alice.dds", .is_character_image = true }, // 13 ch/ialice/Alice.png
-  { .path = "data/renpy/images/ch/ieily/Seily.dds", .is_character_image = true }, // 14 ch/ieily/Seily.png
-  { .path = "data/renpy/images/ch/ialice/Salice.dds", .is_character_image = true }, // 15 ch/ialice/Salice.png
-  { .path = "data/renpy/images/ch/ialice/Walice.dds", .is_character_image = true }, // 16 ch/ialice/Walice.png
+  { .path = "data/renpy/images/end.dds", .is_character_image = false }, // 9 end.png
+  { .path = "data/renpy/images/ch/ibird/Bird.dds", .is_character_image = true }, // 10 ch/ibird/Bird.png
+  { .path = "data/renpy/images/ch/icat/Cat.dds", .is_character_image = true }, // 11 ch/icat/Cat.png
+  { .path = "data/renpy/images/ch/icat/Catw.dds", .is_character_image = true }, // 12 ch/icat/Catw.png
+  { .path = "data/renpy/images/ch/ieily/Eily.dds", .is_character_image = true }, // 13 ch/ieily/Eily.png
+  { .path = "data/renpy/images/ch/ialice/Alice.dds", .is_character_image = true }, // 14 ch/ialice/Alice.png
+  { .path = "data/renpy/images/ch/ieily/Seily.dds", .is_character_image = true }, // 15 ch/ieily/Seily.png
+  { .path = "data/renpy/images/ch/ialice/Salice.dds", .is_character_image = true }, // 16 ch/ialice/Salice.png
+  { .path = "data/renpy/images/ch/ialice/Walice.dds", .is_character_image = true }, // 17 ch/ialice/Walice.png
 };
 
 const int images_length = (sizeof (images)) / (sizeof (images[0]));
@@ -553,6 +554,10 @@ const language::option options[] = {
   { .string = "I am too tired", .statementIndex = 92 }, // 3
   { .string = "Beg for mercy", .statementIndex = 119 }, // 4
   { .string = "Run", .statementIndex = 122 }, // 5
+  { .string = "Sarcasm", .statementIndex = 290 }, // 6
+  { .string = "Nod", .statementIndex = 293 }, // 7
+  { .string = "Agree", .statementIndex = 325 }, // 8
+  { .string = "Stay Silent", .statementIndex = 328 }, // 9
 };
 
 const int options_length = (sizeof (options)) / (sizeof (options[0]));
@@ -564,19 +569,11 @@ const language::dissolve dissolves[] = {
   { .duration = 1.0, .first_statement = 59, .count = 1 },
   { .duration = 3.0, .first_statement = 193, .count = 2 },
   { .duration = 3.0, .first_statement = 197, .count = 1 },
-  { .duration = 2.0, .first_statement = 333, .count = 2 },
-  { .duration = 1.3, .first_statement = 337, .count = 3 },
-  { .duration = 3.0, .first_statement = 418, .count = 1 },
-  { .duration = 2.0, .first_statement = 427, .count = 2 },
-  { .duration = 7.0, .first_statement = 538, .count = 2 },
-  { .duration = 7.0, .first_statement = 541, .count = 2 },
-  { .duration = 7.0, .first_statement = 544, .count = 2 },
-  { .duration = 7.0, .first_statement = 547, .count = 2 },
-  { .duration = 7.0, .first_statement = 550, .count = 2 },
-  { .duration = 7.0, .first_statement = 553, .count = 2 },
-  { .duration = 7.0, .first_statement = 556, .count = 2 },
-  { .duration = 10.0, .first_statement = 559, .count = 2 },
-  { .duration = 13.0, .first_statement = 563, .count = 2 },
+  { .duration = 2.0, .first_statement = 343, .count = 2 },
+  { .duration = 1.3, .first_statement = 347, .count = 3 },
+  { .duration = 3.0, .first_statement = 428, .count = 1 },
+  { .duration = 2.0, .first_statement = 437, .count = 2 },
+  { .duration = 13.0, .first_statement = 571, .count = 1 },
 };
 
 const int dissolves_length = (sizeof (dissolves)) / (sizeof (dissolves[0]));
@@ -599,10 +596,10 @@ const language::statement statements[] = {
   { .type = type::say, .say = { .characterIndex = 5, .stringIndex = 3 } }, // 14 n "Tiny minstrels can be heard amongst the trees"
   { .type = type::scene, .scene = { .imageIndex = 1 } }, // 15 bgforest1
   { .type = type::play, .play = { .audioIndex = 1 } }, // 16 sfx/Chime.ogg
-  { .type = type::show, .show = { .imageIndex = 13, .transformIndex = transform::left, } }, // 17 al
+  { .type = type::show, .show = { .imageIndex = 14, .transformIndex = transform::left, } }, // 17 al
   { .type = type::voice, .voice = { .audioIndex = 7 } }, // 18 alice/a1.ogg
   { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 4 } }, // 19 a "Are we almost there?"
-  { .type = type::show, .show = { .imageIndex = 12, .transformIndex = transform::right, } }, // 20 ei
+  { .type = type::show, .show = { .imageIndex = 13, .transformIndex = transform::right, } }, // 20 ei
   { .type = type::voice, .voice = { .audioIndex = 8 } }, // 21 eily/e1.ogg
   { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 5 } }, // 22 e "Hmmm... Not really"
   { .type = type::voice, .voice = { .audioIndex = 9 } }, // 23 alice/a2.ogg
@@ -642,10 +639,10 @@ const language::statement statements[] = {
   { .type = type::say, .say = { .characterIndex = 5, .stringIndex = 18 } }, // 57 n "As the minstrel mice girls continue along the path, the forest opens up into a beautiful field of flowers"
   { .type = type::play, .play = { .audioIndex = 22 } }, // 58 music/PhrygianButterflies.ogg
   { .type = type::scene, .scene = { .imageIndex = 3 } }, // 59 bgflower1
-  { .type = type::show, .show = { .imageIndex = 12, .transformIndex = transform::right, } }, // 60 ei
+  { .type = type::show, .show = { .imageIndex = 13, .transformIndex = transform::right, } }, // 60 ei
   { .type = type::voice, .voice = { .audioIndex = 23 } }, // 61 eily/e8.ogg
   { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 19 } }, // 62 e "Look at all the butterflies! They are all so pretty!"
-  { .type = type::show, .show = { .imageIndex = 13, .transformIndex = transform::left, } }, // 63 al
+  { .type = type::show, .show = { .imageIndex = 14, .transformIndex = transform::left, } }, // 63 al
   { .type = type::voice, .voice = { .audioIndex = 24 } }, // 64 alice/a8.ogg
   { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 20 } }, // 65 a "This place is like a dream..."
   { .type = type::voice, .voice = { .audioIndex = 25 } }, // 66 eily/e9.ogg
@@ -672,7 +669,7 @@ const language::statement statements[] = {
   { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 30 } }, // 87 e "Sure"
   { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 31 } }, // 88 e "..."
   { .type = type::play, .play = { .audioIndex = 35 } }, // 89 poem/EleanorTheHero.ogg
-  { .type = type::pause, .pause = { .duration = 40 } }, // 90
+  { .type = type::pause, .pause = { .duration = 38.8875 } }, // 90
   { .type = type::jump, .jump = { .statementIndex = 98 } }, // 91 internal jump (b'__menu_end', 1)
   { .type = type::voice, .voice = { .audioIndex = 36 } }, // 92 eily/e16.ogg
   { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 32 } }, // 93 e "Serves you right for scaring those elephant-dogs"
@@ -681,19 +678,19 @@ const language::statement statements[] = {
   { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 33 } }, // 96 a "They were asking for it, you know"
   { .type = type::jump, .jump = { .statementIndex = 98 } }, // 97 internal jump (b'__menu_end', 1)
   { .type = type::jump, .jump = { .statementIndex = 99 } }, // 98 mainbranch2
-  { .type = type::hide, .hide = { .imageIndex = 12 } }, // 99 ei
-  { .type = type::show, .show = { .imageIndex = 11, .transformIndex = transform::right, } }, // 100 catw
-  { .type = type::show, .show = { .imageIndex = 12, .transformIndex = xflip | transform::centerleft, } }, // 101 ei
+  { .type = type::hide, .hide = { .imageIndex = 13 } }, // 99 ei
+  { .type = type::show, .show = { .imageIndex = 12, .transformIndex = transform::right, } }, // 100 catw
+  { .type = type::show, .show = { .imageIndex = 13, .transformIndex = xflip | transform::centerleft, } }, // 101 ei
   { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 34 } }, // 102 c "Rawrrrr"
   { .type = type::play, .play = { .audioIndex = 38 } }, // 103 leona/c1.ogg
   { .type = type::pause, .pause = { .duration = 0.7 } }, // 104
-  { .type = type::hide, .hide = { .imageIndex = 11 } }, // 105 catw
-  { .type = type::show, .show = { .imageIndex = 10, .transformIndex = transform::right, } }, // 106 cat
+  { .type = type::hide, .hide = { .imageIndex = 12 } }, // 105 catw
+  { .type = type::show, .show = { .imageIndex = 11, .transformIndex = transform::right, } }, // 106 cat
   { .type = type::play, .play = { .audioIndex = 39 } }, // 107 music/ScaredMice.ogg
-  { .type = type::hide, .hide = { .imageIndex = 12 } }, // 108 ei
-  { .type = type::hide, .hide = { .imageIndex = 13 } }, // 109 al
-  { .type = type::show, .show = { .imageIndex = 14, .transformIndex = xflip | transform::centerleft, } }, // 110 sei
-  { .type = type::show, .show = { .imageIndex = 15, .transformIndex = transform::left, } }, // 111 sal
+  { .type = type::hide, .hide = { .imageIndex = 13 } }, // 108 ei
+  { .type = type::hide, .hide = { .imageIndex = 14 } }, // 109 al
+  { .type = type::show, .show = { .imageIndex = 15, .transformIndex = xflip | transform::centerleft, } }, // 110 sei
+  { .type = type::show, .show = { .imageIndex = 16, .transformIndex = transform::left, } }, // 111 sal
   { .type = type::voice, .voice = { .audioIndex = 40 } }, // 112 mousegirls/mg1.ogg
   { .type = type::say, .say = { .characterIndex = 4, .stringIndex = 35 } }, // 113 mg "AHHHHHHHHHH!!!!!"
   { .type = type::voice, .voice = { .audioIndex = 41 } }, // 114 leona/c2.ogg
@@ -713,13 +710,13 @@ const language::statement statements[] = {
   { .type = type::stop, .stop = { .audioIndex = 39, .fadeout = 2.0 } }, // 128 ScaredMice
   { .type = type::voice, .voice = { .audioIndex = 46 } }, // 129 leona/c4.ogg
   { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 41 } }, // 130 c "I'm not gonna eat you nyanyanya"
-  { .type = type::hide, .hide = { .imageIndex = 15 } }, // 131 sal
-  { .type = type::show, .show = { .imageIndex = 13, .transformIndex = transform::left, } }, // 132 al
+  { .type = type::hide, .hide = { .imageIndex = 16 } }, // 131 sal
+  { .type = type::show, .show = { .imageIndex = 14, .transformIndex = transform::left, } }, // 132 al
   { .type = type::play, .play = { .audioIndex = 5 } }, // 133 music/TinyForestMinstrels.ogg
   { .type = type::voice, .voice = { .audioIndex = 47 } }, // 134 leona/c5.ogg
   { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 42 } }, // 135 c "I just want to know what two little meowses are doing so very far away from home"
-  { .type = type::hide, .hide = { .imageIndex = 14 } }, // 136 sei
-  { .type = type::show, .show = { .imageIndex = 12, .transformIndex = xflip | transform::centerleft, } }, // 137 ei
+  { .type = type::hide, .hide = { .imageIndex = 15 } }, // 136 sei
+  { .type = type::show, .show = { .imageIndex = 13, .transformIndex = xflip | transform::centerleft, } }, // 137 ei
   { .type = type::voice, .voice = { .audioIndex = 48 } }, // 138 leona/c6.ogg
   { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 43 } }, // 139 c "Also, are you minstrels?"
   { .type = type::voice, .voice = { .audioIndex = 49 } }, // 140 eily/e20.ogg
@@ -766,7 +763,7 @@ const language::statement statements[] = {
   { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 63 } }, // 181 c "I DONT NEED TO BE PRESSURED BY LITTLE MICE TO SAY ANYTHING!!!!"
   { .type = type::voice, .voice = { .audioIndex = 69 } }, // 182 leona/c17.ogg
   { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 64 } }, // 183 c "GOOD DAY!"
-  { .type = type::hide, .hide = { .imageIndex = 10 } }, // 184 cat
+  { .type = type::hide, .hide = { .imageIndex = 11 } }, // 184 cat
   { .type = type::voice, .voice = { .audioIndex = 70 } }, // 185 alice/a17.ogg
   { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 65 } }, // 186 a "Wha..."
   { .type = type::voice, .voice = { .audioIndex = 71 } }, // 187 eily/e28.ogg
@@ -780,18 +777,18 @@ const language::statement statements[] = {
   { .type = type::voice, .voice = { .audioIndex = 74 } }, // 195 nara/n6.ogg
   { .type = type::say, .say = { .characterIndex = 5, .stringIndex = 69 } }, // 196 n "After their encounter with the weird cat, the mice scurry out of the flower field and into the nearby meadow"
   { .type = type::scene, .scene = { .imageIndex = 2 } }, // 197 bgforest2
-  { .type = type::show, .show = { .imageIndex = 12, .transformIndex = transform::right, } }, // 198 ei
+  { .type = type::show, .show = { .imageIndex = 13, .transformIndex = transform::right, } }, // 198 ei
   { .type = type::voice, .voice = { .audioIndex = 75 } }, // 199 eily/e30.ogg
   { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 70 } }, // 200 e "I think this is the right way..."
-  { .type = type::show, .show = { .imageIndex = 13, .transformIndex = transform::left, } }, // 201 al
+  { .type = type::show, .show = { .imageIndex = 14, .transformIndex = transform::left, } }, // 201 al
   { .type = type::voice, .voice = { .audioIndex = 76 } }, // 202 alice/a19.ogg
   { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 71 } }, // 203 a "Then where did the path go?"
   { .type = type::voice, .voice = { .audioIndex = 77 } }, // 204 eily/e31.ogg
   { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 72 } }, // 205 e "How am I supposed to know?"
   { .type = type::voice, .voice = { .audioIndex = 78 } }, // 206 alice/a20.ogg
   { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 73 } }, // 207 a "Did you hear that?!?!"
-  { .type = type::show, .show = { .imageIndex = 12, .transformIndex = xflip | transform::centerleft, } }, // 208 ei
-  { .type = type::show, .show = { .imageIndex = 10, .transformIndex = transform::right, } }, // 209 cat
+  { .type = type::show, .show = { .imageIndex = 13, .transformIndex = xflip | transform::centerleft, } }, // 208 ei
+  { .type = type::show, .show = { .imageIndex = 11, .transformIndex = transform::right, } }, // 209 cat
   { .type = type::play, .play = { .audioIndex = 22 } }, // 210 music/PhrygianButterflies.ogg
   { .type = type::voice, .voice = { .audioIndex = 79 } }, // 211 leona/c18.ogg
   { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 74 } }, // 212 c "Hey there... I apologize, I didn't mean to storm off like that"
@@ -871,290 +868,301 @@ const language::statement statements[] = {
   { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 111 } }, // 286 e "What do you mean?"
   { .type = type::voice, .voice = { .audioIndex = 117 } }, // 287 leona/c30.ogg
   { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 112 } }, // 288 c "I mean, the two of you probably look like walking dinner to most creatures"
-  { .type = type::voice, .voice = { .audioIndex = 118 } }, // 289 alice/a30.ogg
-  { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 113 } }, // 290 a "I could go for some dinner..."
-  { .type = type::voice, .voice = { .audioIndex = 119 } }, // 291 eily/e49.ogg
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 114 } }, // 292 e "Anyways..."
-  { .type = type::voice, .voice = { .audioIndex = 120 } }, // 293 eily/e50.ogg
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 115 } }, // 294 e "To answer your question, upon returning to the village, the feather was taken from my brother by the needle guild"
-  { .type = type::voice, .voice = { .audioIndex = 121 } }, // 295 eily/e51.ogg
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 116 } }, // 296 e "So... Yesterday, after sundown"
-  { .type = type::voice, .voice = { .audioIndex = 122 } }, // 297 eily/e52.ogg
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 117 } }, // 298 e "We stole the feather from the guild hall before vanishing into the night"
-  { .type = type::voice, .voice = { .audioIndex = 123 } }, // 299 eily/e53.ogg
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 118 } }, // 300 e "Can you imagine the look on their stupid faces, when they woke up, and not only is the feather missing"
-  { .type = type::voice, .voice = { .audioIndex = 124 } }, // 301 eily/e54.ogg
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 119 } }, // 302 e "But so are we!"
-  { .type = type::voice, .voice = { .audioIndex = 125 } }, // 303 alice/a31.ogg
-  { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 120 } }, // 304 a "Hahahaha"
-  { .type = type::voice, .voice = { .audioIndex = 126 } }, // 305 leona/c31.ogg
-  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 121 } }, // 306 c "Are the two of you mad?"
-  { .type = type::voice, .voice = { .audioIndex = 127 } }, // 307 leona/c32.ogg
-  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 122 } }, // 308 c "I assume you are attempting to return the Queens feather?"
-  { .type = type::voice, .voice = { .audioIndex = 128 } }, // 309 alice/a32.ogg
-  { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 123 } }, // 310 a "Yes, we intend to deliver the feather to its rightful owner"
-  { .type = type::voice, .voice = { .audioIndex = 129 } }, // 311 leona/c33.ogg
-  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 124 } }, // 312 c "Absolute madness!"
-  { .type = type::voice, .voice = { .audioIndex = 130 } }, // 313 mousegirls/mg2.ogg
-  { .type = type::say, .say = { .characterIndex = 4, .stringIndex = 31 } }, // 314 mg "..."
-  { .type = type::voice, .voice = { .audioIndex = 131 } }, // 315 leona/c34.ogg
-  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 125 } }, // 316 c "I will follow the two of you"
-  { .type = type::voice, .voice = { .audioIndex = 132 } }, // 317 leona/c35.ogg
-  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 126 } }, // 318 c "To keep you safe, that is"
-  { .type = type::voice, .voice = { .audioIndex = 133 } }, // 319 alice/a33.ogg
-  { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 127 } }, // 320 a "Alright!"
-  { .type = type::voice, .voice = { .audioIndex = 134 } }, // 321 eily/e55.ogg
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 128 } }, // 322 e "Ha ha... Okay..."
-  { .type = type::voice, .voice = { .audioIndex = 135 } }, // 323 leona/c36.ogg
-  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 129 } }, // 324 c "Great! Follow me, I know a shortcut! :3"
-  { .type = type::hide, .hide = { .imageIndex = 10 } }, // 325 cat
-  { .type = type::voice, .voice = { .audioIndex = 136 } }, // 326 alice/a34.ogg
-  { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 130 } }, // 327 a "Sounds good!"
-  { .type = type::hide, .hide = { .imageIndex = 13 } }, // 328 al
-  { .type = type::stop, .stop = { .audioIndex = 22, .fadeout = 2.0 } }, // 329 PhrygianButterflies
-  { .type = type::voice, .voice = { .audioIndex = 137 } }, // 330 eily/e56.ogg
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 131 } }, // 331 e "Oh dear!"
-  { .type = type::hide, .hide = { .imageIndex = 12 } }, // 332 ei
-  { .type = type::scene_color, .scene_color = { .color = 0xffffff } }, // 333 bgwhite
-  { .type = type::play, .play = { .audioIndex = 1 } }, // 334 sfx/Chime.ogg
-  { .type = type::voice, .voice = { .audioIndex = 138 } }, // 335 nara/n7.ogg
-  { .type = type::say, .say = { .characterIndex = 5, .stringIndex = 132 } }, // 336 n "And so the mice girls follow the noble cat further towards their destination"
-  { .type = type::scene, .scene = { .imageIndex = 4 } }, // 337 bgwheatfield1
-  { .type = type::play, .play = { .audioIndex = 139 } }, // 338 music/WheatFields.ogg
-  { .type = type::show, .show = { .imageIndex = 10, .transformIndex = transform::right, } }, // 339 cat
-  { .type = type::voice, .voice = { .audioIndex = 140 } }, // 340 leona/c37.ogg
-  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 133 } }, // 341 c "Nya"
-  { .type = type::show, .show = { .imageIndex = 16, .transformIndex = transform::left, } }, // 342 wal
-  { .type = type::voice, .voice = { .audioIndex = 141 } }, // 343 alice/a35.ogg
-  { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 134 } }, // 344 a "Look, your right, the castle is just up ahead!"
-  { .type = type::show, .show = { .imageIndex = 12, .transformIndex = xflip | transform::centerleft, } }, // 345 ei
-  { .type = type::voice, .voice = { .audioIndex = 142 } }, // 346 eily/e57.ogg
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 135 } }, // 347 e "Wait up"
-  { .type = type::voice, .voice = { .audioIndex = 143 } }, // 348 leona/c38.ogg
-  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 136 } }, // 349 c "I told you I knew a shortcut!"
-  { .type = type::voice, .voice = { .audioIndex = 144 } }, // 350 leona/c39.ogg
-  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 137 } }, // 351 c "Most people take the long way around"
-  { .type = type::voice, .voice = { .audioIndex = 145 } }, // 352 eily/e58.ogg
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 138 } }, // 353 e "Yah because those are royal wheatfields!"
-  { .type = type::voice, .voice = { .audioIndex = 146 } }, // 354 alice/a36.ogg
-  { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 139 } }, // 355 a "Who cares?"
-  { .type = type::voice, .voice = { .audioIndex = 147 } }, // 356 eily/e59.ogg
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 140 } }, // 357 e "Are you trying to get us killed?"
-  { .type = type::voice, .voice = { .audioIndex = 148 } }, // 358 eily/e60.ogg
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 141 } }, // 359 e "Its trespassing on royal land!"
-  { .type = type::voice, .voice = { .audioIndex = 149 } }, // 360 leona/c40.ogg
-  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 142 } }, // 361 c "Calm down, I have done this like a million times"
-  { .type = type::voice, .voice = { .audioIndex = 150 } }, // 362 eily/e61.ogg
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 143 } }, // 363 e "That doesnt make me calm!"
-  { .type = type::voice, .voice = { .audioIndex = 151 } }, // 364 leona/c41.ogg
-  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 144 } }, // 365 c "How can the rolling fields of wheat not calm your spirit?"
-  { .type = type::voice, .voice = { .audioIndex = 152 } }, // 366 leona/c42.ogg
-  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 145 } }, // 367 c "You little mice truly are mad!"
-  { .type = type::voice, .voice = { .audioIndex = 153 } }, // 368 alice/a37.ogg
-  { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 146 } }, // 369 a "I like the wheat!"
-  { .type = type::voice, .voice = { .audioIndex = 154 } }, // 370 eily/e62.ogg
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 147 } }, // 371 e "Shut up!"
-  { .type = type::voice, .voice = { .audioIndex = 155 } }, // 372 leona/c43.ogg
-  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 148 } }, // 373 c "Sounds like someone needs a nap!"
-  { .type = type::voice, .voice = { .audioIndex = 156 } }, // 374 eily/e63.ogg
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 149 } }, // 375 e "Why? because I'm not insane like you?"
-  { .type = type::voice, .voice = { .audioIndex = 157 } }, // 376 leona/c44.ogg
-  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 150 } }, // 377 c "Yah, your so sane, that you decided to steal from your town and then run off alone to the country of birds"
-  { .type = type::voice, .voice = { .audioIndex = 158 } }, // 378 leona/c45.ogg
-  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 151 } }, // 379 c "The power of friendship wont protect the two of you from becoming dinner"
-  { .type = type::voice, .voice = { .audioIndex = 159 } }, // 380 leona/c46.ogg
-  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 152 } }, // 381 c "And that, is why I feel obligated to accompany you!"
-  { .type = type::voice, .voice = { .audioIndex = 160 } }, // 382 eily/e64.ogg
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 153 } }, // 383 e "Hey, we have a good reason!"
-  { .type = type::voice, .voice = { .audioIndex = 161 } }, // 384 leona/c47.ogg
-  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 154 } }, // 385 c "And what might that be?"
-  { .type = type::voice, .voice = { .audioIndex = 162 } }, // 386 eily/e65.ogg
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 155 } }, // 387 e "My brother found the feather, not the town guild, its a matter of family pride!"
-  { .type = type::voice, .voice = { .audioIndex = 163 } }, // 388 leona/c48.ogg
-  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 156 } }, // 389 c "Pride has touched the chosen meouse"
-  { .type = type::voice, .voice = { .audioIndex = 164 } }, // 390 leona/c49.ogg
-  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 157 } }, // 391 c "Flies she towards the Castle"
-  { .type = type::voice, .voice = { .audioIndex = 165 } }, // 392 leona/c50.ogg
-  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 158 } }, // 393 c "But her ambition burns far too bright, and silly mice dont have any wings to melt"
-  { .type = type::voice, .voice = { .audioIndex = 166 } }, // 394 mousegirls/mg3.ogg
-  { .type = type::say, .say = { .characterIndex = 4, .stringIndex = 159 } }, // 395 mg "What?"
-  { .type = type::voice, .voice = { .audioIndex = 167 } }, // 396 leona/c51.ogg
-  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 160 } }, // 397 c "Nyanyanya"
-  { .type = type::voice, .voice = { .audioIndex = 168 } }, // 398 leona/c52.ogg
-  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 161 } }, // 399 c "Nyevermind"
-  { .type = type::stop, .stop = { .audioIndex = 139, .fadeout = 3.0 } }, // 400 WheatFields
-  { .type = type::voice, .voice = { .audioIndex = 169 } }, // 401 leona/c53.ogg
-  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 162 } }, // 402 c "Sing me a song little minstrels!"
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 31 } }, // 403 e "..."
-  { .type = type::play, .play = { .audioIndex = 170 } }, // 404 poem/KiriStella.ogg
-  { .type = type::pause, .pause = { .duration = 67 } }, // 405
-  { .type = type::voice, .voice = { .audioIndex = 171 } }, // 406 leona/c54.ogg
-  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 163 } }, // 407 c "Very Nyice!"
-  { .type = type::voice, .voice = { .audioIndex = 172 } }, // 408 leona/c55.ogg
-  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 164 } }, // 409 c "Now tell me little minstrels, what are your names?"
-  { .type = type::voice, .voice = { .audioIndex = 173 } }, // 410 alice/a39.ogg
-  { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 165 } }, // 411 a "My name is Alice"
-  { .type = type::voice, .voice = { .audioIndex = 174 } }, // 412 eily/e67.ogg
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 166 } }, // 413 e "And my name is Eily"
-  { .type = type::voice, .voice = { .audioIndex = 175 } }, // 414 eily/e68.ogg
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 167 } }, // 415 e "What is your name?"
-  { .type = type::voice, .voice = { .audioIndex = 176 } }, // 416 leona/c56.ogg
-  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 168 } }, // 417 l "My name is Leona!"
-  { .type = type::scene_color, .scene_color = { .color = 0xffffff } }, // 418 bgwhite
-  { .type = type::voice, .voice = { .audioIndex = 177 } }, // 419 nara/n8.ogg
-  { .type = type::say, .say = { .characterIndex = 5, .stringIndex = 169 } }, // 420 n "And so, the odd trio walked through the wheatfields and towards the castle"
-  { .type = type::voice, .voice = { .audioIndex = 178 } }, // 421 nara/n9.ogg
-  { .type = type::say, .say = { .characterIndex = 5, .stringIndex = 170 } }, // 422 n "Upon approaching the gates, the three were escorted to a large room"
-  { .type = type::voice, .voice = { .audioIndex = 179 } }, // 423 nara/n10.ogg
-  { .type = type::say, .say = { .characterIndex = 5, .stringIndex = 171 } }, // 424 n "They were then instructed to wait for an audience with the Queen"
-  { .type = type::voice, .voice = { .audioIndex = 180 } }, // 425 hera/h1.ogg
-  { .type = type::say, .say = { .characterIndex = 7, .stringIndex = 172 } }, // 426 h "You may now present yourselves before her Majesty, Queen Alary of Alysen"
-  { .type = type::scene, .scene = { .imageIndex = 5 } }, // 427 bgcastle1
-  { .type = type::play, .play = { .audioIndex = 181 } }, // 428 music/Preludium.ogg
-  { .type = type::show, .show = { .imageIndex = 9, .transformIndex = transform::right, } }, // 429 bi
-  { .type = type::pause, .pause = { .duration = 1.0 } }, // 430
-  { .type = type::voice, .voice = { .audioIndex = 182 } }, // 431 hera/h2.ogg
-  { .type = type::say, .say = { .characterIndex = 7, .stringIndex = 173 } }, // 432 h "Leona Agrepen of Elmindeer"
-  { .type = type::show, .show = { .imageIndex = 10, .transformIndex = xflip | transform::center, } }, // 433 cat
-  { .type = type::voice, .voice = { .audioIndex = 183 } }, // 434 leona/c57.ogg
-  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 174 } }, // 435 l "Hail, your Majesty"
-  { .type = type::voice, .voice = { .audioIndex = 184 } }, // 436 hera/h3.ogg
-  { .type = type::say, .say = { .characterIndex = 7, .stringIndex = 175 } }, // 437 h "Eily VeraWheat of the Western Principalities"
-  { .type = type::show, .show = { .imageIndex = 12, .transformIndex = transform::centerleft, } }, // 438 ei
-  { .type = type::voice, .voice = { .audioIndex = 185 } }, // 439 eily/e69.ogg
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 174 } }, // 440 e "Hail, your Majesty"
-  { .type = type::voice, .voice = { .audioIndex = 186 } }, // 441 hera/h4.ogg
-  { .type = type::say, .say = { .characterIndex = 7, .stringIndex = 176 } }, // 442 h "Alice SeraWheat of the Western Principalities"
-  { .type = type::play, .play = { .audioIndex = 187 } }, // 443 sfx/Glass.ogg
-  { .type = type::pause, .pause = { .duration = 1.0 } }, // 444
-  { .type = type::voice, .voice = { .audioIndex = 188 } }, // 445 alice/a40.ogg
-  { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 177 } }, // 446 a "I'm alright!"
-  { .type = type::show, .show = { .imageIndex = 16, .transformIndex = transform::left, } }, // 447 wal
-  { .type = type::voice, .voice = { .audioIndex = 189 } }, // 448 alice/a41.ogg
-  { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 178 } }, // 449 a "H-Hail, your majesty"
-  { .type = type::voice, .voice = { .audioIndex = 190 } }, // 450 leona/c58.ogg
-  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 160 } }, // 451 l "Nyanyanya"
-  { .type = type::voice, .voice = { .audioIndex = 191 } }, // 452 bird/b1.ogg
-  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 179 } }, // 453 b "And what is this?"
-  { .type = type::voice, .voice = { .audioIndex = 192 } }, // 454 bird/b2.ogg
-  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 180 } }, // 455 b "A cat and two mice in my court?"
-  { .type = type::voice, .voice = { .audioIndex = 193 } }, // 456 bird/b3.ogg
-  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 181 } }, // 457 b "Is this some kind of joke?"
-  { .type = type::voice, .voice = { .audioIndex = 194 } }, // 458 leona/c59.ogg
-  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 182 } }, // 459 l "Not a joke Your Majesty, these are my friends"
-  { .type = type::voice, .voice = { .audioIndex = 195 } }, // 460 eily/e70.ogg
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 183 } }, // 461 e "Friends?"
-  { .type = type::voice, .voice = { .audioIndex = 196 } }, // 462 bird/b4.ogg
-  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 184 } }, // 463 b "Miss Agrepen, your reputation is far from acceptable"
-  { .type = type::voice, .voice = { .audioIndex = 197 } }, // 464 bird/b5.ogg
-  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 185 } }, // 465 b "And I can imagine, you already know why I have summoned you here today"
-  { .type = type::voice, .voice = { .audioIndex = 198 } }, // 466 leona/c60.ogg
-  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 186 } }, // 467 l "Uhhmmmm...."
-  { .type = type::voice, .voice = { .audioIndex = 199 } }, // 468 leona/c61.ogg
-  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 187 } }, // 469 l "Does it have anything to do with Eastern Nidus?"
-  { .type = type::voice, .voice = { .audioIndex = 200 } }, // 470 bird/b6.ogg
-  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 188 } }, // 471 b "I think you already know the answer to that"
-  { .type = type::voice, .voice = { .audioIndex = 201 } }, // 472 bird/b7.ogg
-  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 189 } }, // 473 b "Your father would be rather dissapointed if he were still alive"
-  { .type = type::voice, .voice = { .audioIndex = 202 } }, // 474 leona/c0.ogg
-  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 31 } }, // 475 l "..."
-  { .type = type::voice, .voice = { .audioIndex = 203 } }, // 476 bird/b8.ogg
-  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 190 } }, // 477 b "Leona Agrepen, the court has found you guilty of two cases of larceny and seven cases of petty pilfering"
-  { .type = type::voice, .voice = { .audioIndex = 204 } }, // 478 bird/b9.ogg
-  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 191 } }, // 479 b "Miss Agrepen, you are hereby banned from stepping foot in Eastern Nidus"
-  { .type = type::voice, .voice = { .audioIndex = 205 } }, // 480 bird/b10.ogg
-  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 192 } }, // 481 b "From here on out, you shall be restricted to the central principalities of Avia"
-  { .type = type::voice, .voice = { .audioIndex = 206 } }, // 482 leona/c62.ogg
-  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 193 } }, // 483 l "Owww c'mon! There is nothing to do around here!"
-  { .type = type::voice, .voice = { .audioIndex = 207 } }, // 484 bird/b11.ogg
-  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 194 } }, // 485 b "Silence!"
-  { .type = type::voice, .voice = { .audioIndex = 208 } }, // 486 bird/b12.ogg
-  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 195 } }, // 487 b "It is here, in the Central city of Alysen that you shall remain, where I can keep a watchful eye on you"
-  { .type = type::voice, .voice = { .audioIndex = 209 } }, // 488 bird/b13.ogg
-  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 196 } }, // 489 b "Or would you prefer that I permit the request of the lesser courts to have you declawed?"
-  { .type = type::voice, .voice = { .audioIndex = 210 } }, // 490 leona/c63.ogg
-  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 197 } }, // 491 l "No ><"
-  { .type = type::voice, .voice = { .audioIndex = 211 } }, // 492 bird/b14.ogg
-  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 198 } }, // 493 b "Take my leniency as a display of gratitude for the services rendered by your father"
-  { .type = type::voice, .voice = { .audioIndex = 212 } }, // 494 leona/c64.ogg
-  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 199 } }, // 495 l "Yes Your Majesty... Forgive me for speaking out of turn"
-  { .type = type::voice, .voice = { .audioIndex = 213 } }, // 496 bird/b15.ogg
-  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 200 } }, // 497 b "Now, why have you brought these little mice before me?"
-  { .type = type::voice, .voice = { .audioIndex = 214 } }, // 498 leona/c65.ogg
-  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 201 } }, // 499 l "Alary, Your Majesty, these are minstrels I met on the road to Alysen"
-  { .type = type::voice, .voice = { .audioIndex = 215 } }, // 500 leona/c66.ogg
-  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 202 } }, // 501 l "They lay claim to a feather, said to be one of Your Majesty's own"
-  { .type = type::voice, .voice = { .audioIndex = 216 } }, // 502 bird/b16.ogg
-  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 203 } }, // 503 b "Really?"
-  { .type = type::voice, .voice = { .audioIndex = 217 } }, // 504 bird/b17.ogg
-  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 204 } }, // 505 b "And what else might the two of you claim? Alice and Eily of the West"
-  { .type = type::voice, .voice = { .audioIndex = 218 } }, // 506 alice/a42.ogg
-  { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 205 } }, // 507 a "I u-uhh..."
-  { .type = type::voice, .voice = { .audioIndex = 219 } }, // 508 eily/e71.ogg
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 206 } }, // 509 e "Your Majesty, this feather was found by my brother in a castle to the north"
-  { .type = type::voice, .voice = { .audioIndex = 220 } }, // 510 eily/e72.ogg
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 207 } }, // 511 e "So very far my cousin and I have journeyed"
-  { .type = type::voice, .voice = { .audioIndex = 221 } }, // 512 eily/e73.ogg
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 208 } }, // 513 e "Over the mountains of Almystice"
-  { .type = type::voice, .voice = { .audioIndex = 222 } }, // 514 eily/e74.ogg
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 209 } }, // 515 e "Beyond the deep blue waters of the Lilac bay"
-  { .type = type::voice, .voice = { .audioIndex = 223 } }, // 516 eily/e75.ogg
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 2 } }, // 517 e "And across the vast fields of Alysen"
-  { .type = type::voice, .voice = { .audioIndex = 224 } }, // 518 eily/e76.ogg
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 210 } }, // 519 e "All in hopes that we might return Your Majesty's feather"
-  { .type = type::voice, .voice = { .audioIndex = 225 } }, // 520 bird/b18.ogg
-  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 211 } }, // 521 b "What splendid and courageous little mice the two of you are"
-  { .type = type::voice, .voice = { .audioIndex = 226 } }, // 522 leona/c67.ogg
-  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 212 } }, // 523 l "Nyanyanyanyanya"
-  { .type = type::voice, .voice = { .audioIndex = 227 } }, // 524 alice/a43.ogg
-  { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 213 } }, // 525 a "We also wanted to show our profound gratitude for the aid provided by Your Majesty just four moons ago"
-  { .type = type::voice, .voice = { .audioIndex = 228 } }, // 526 eily/e77.ogg
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 214 } }, // 527 e "Please allow us to perform a song for Your Majesty and Your Majesty's court"
-  { .type = type::stop, .stop = { .audioIndex = 181, .fadeout = 4.2 } }, // 528 Preludium
-  { .type = type::voice, .voice = { .audioIndex = 229 } }, // 529 bird/b19.ogg
-  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 215 } }, // 530 b "I appreciate your loyalty to the crown of Corvidae little mice"
-  { .type = type::stop, .stop = { .audioIndex = 0, .fadeout = 4.2 } }, // 531 MistAmbience
-  { .type = type::voice, .voice = { .audioIndex = 230 } }, // 532 bird/b20.ogg
-  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 216 } }, // 533 b "You are most welcome to proceed with your little song"
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 31 } }, // 534 e "..."
-  { .type = type::play, .play = { .audioIndex = 231 } }, // 535 poem/BirdSong.ogg
-  { .type = type::scene, .scene = { .imageIndex = 6 } }, // 536 bgcastle2
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 31 } }, // 537 e "..."
-  { .type = type::scene, .scene = { .imageIndex = 6 } }, // 538 bgcastle2
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 31 } }, // 539 e "..."
-  { .type = type::pause, .pause = { .duration = 0.0 } }, // 540
-  { .type = type::scene, .scene = { .imageIndex = 7 } }, // 541 bgcastle3
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 31 } }, // 542 e "..."
-  { .type = type::pause, .pause = { .duration = 0.0 } }, // 543
-  { .type = type::scene, .scene = { .imageIndex = 8 } }, // 544 bgcastle4
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 31 } }, // 545 e "..."
-  { .type = type::pause, .pause = { .duration = 0.0 } }, // 546
-  { .type = type::scene, .scene = { .imageIndex = 7 } }, // 547 bgcastle3
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 31 } }, // 548 e "..."
-  { .type = type::pause, .pause = { .duration = 0.0 } }, // 549
-  { .type = type::scene, .scene = { .imageIndex = 6 } }, // 550 bgcastle2
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 31 } }, // 551 e "..."
-  { .type = type::pause, .pause = { .duration = 0.0 } }, // 552
-  { .type = type::scene, .scene = { .imageIndex = 7 } }, // 553 bgcastle3
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 31 } }, // 554 e "..."
-  { .type = type::pause, .pause = { .duration = 0.0 } }, // 555
-  { .type = type::scene, .scene = { .imageIndex = 6 } }, // 556 bgcastle2
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 31 } }, // 557 e "..."
-  { .type = type::pause, .pause = { .duration = 0.0 } }, // 558
-  { .type = type::scene, .scene = { .imageIndex = 5 } }, // 559 bgcastle1
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 31 } }, // 560 e "..."
-  { .type = type::pause, .pause = { .duration = 0.0 } }, // 561
-  { .type = type::pause, .pause = { .duration = 3 } }, // 562
-  { .type = type::scene_color, .scene_color = { .color = 0xffffff } }, // 563 bgwhite
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 31 } }, // 564 e "..."
-  { .type = type::pause, .pause = { .duration = 33 } }, // 565
-  { .type = type::voice, .voice = { .audioIndex = 232 } }, // 566 nara/n11.ogg
-  { .type = type::say, .say = { .characterIndex = 5, .stringIndex = 217 } }, // 567 n "In the end, Leona managed to stay out of the dungeon"
-  { .type = type::voice, .voice = { .audioIndex = 233 } }, // 568 nara/n12.ogg
-  { .type = type::say, .say = { .characterIndex = 5, .stringIndex = 218 } }, // 569 n "Eily and Alice both stayed in service of the queen for 7 harvests"
-  { .type = type::voice, .voice = { .audioIndex = 234 } }, // 570 nara/n13.ogg
-  { .type = type::say, .say = { .characterIndex = 5, .stringIndex = 219 } }, // 571 n "before returning to their small nameless town, near the Keep of Musia"
-  { .type = type::_return }, // 572
+  { .type = type::menu, .menu = { .count = 2, .optionIndex = 6 } }, // 289 "Sarcasm", "Nod"
+  { .type = type::voice, .voice = { .audioIndex = 118 } }, // 290 alice/a30.ogg
+  { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 113 } }, // 291 a "I could go for some dinner..."
+  { .type = type::jump, .jump = { .statementIndex = 295 } }, // 292 internal jump (b'__menu_end', 3)
+  { .type = type::jump, .jump = { .statementIndex = 296 } }, // 293 mainbranch4
+  { .type = type::jump, .jump = { .statementIndex = 295 } }, // 294 internal jump (b'__menu_end', 3)
+  { .type = type::jump, .jump = { .statementIndex = 296 } }, // 295 mainbranch4
+  { .type = type::voice, .voice = { .audioIndex = 119 } }, // 296 eily/e49.ogg
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 114 } }, // 297 e "Anyways..."
+  { .type = type::voice, .voice = { .audioIndex = 120 } }, // 298 eily/e50.ogg
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 115 } }, // 299 e "To answer your question, upon returning to the village, the feather was taken from my brother by the needle guild"
+  { .type = type::voice, .voice = { .audioIndex = 121 } }, // 300 eily/e51.ogg
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 116 } }, // 301 e "So... Yesterday, after sundown"
+  { .type = type::voice, .voice = { .audioIndex = 122 } }, // 302 eily/e52.ogg
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 117 } }, // 303 e "We stole the feather from the guild hall before vanishing into the night"
+  { .type = type::voice, .voice = { .audioIndex = 123 } }, // 304 eily/e53.ogg
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 118 } }, // 305 e "Can you imagine the look on their stupid faces, when they woke up, and not only is the feather missing"
+  { .type = type::voice, .voice = { .audioIndex = 124 } }, // 306 eily/e54.ogg
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 119 } }, // 307 e "But so are we!"
+  { .type = type::voice, .voice = { .audioIndex = 125 } }, // 308 alice/a31.ogg
+  { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 120 } }, // 309 a "Hahahaha"
+  { .type = type::voice, .voice = { .audioIndex = 126 } }, // 310 leona/c31.ogg
+  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 121 } }, // 311 c "Are the two of you mad?"
+  { .type = type::voice, .voice = { .audioIndex = 127 } }, // 312 leona/c32.ogg
+  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 122 } }, // 313 c "I assume you are attempting to return the Queens feather?"
+  { .type = type::voice, .voice = { .audioIndex = 128 } }, // 314 alice/a32.ogg
+  { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 123 } }, // 315 a "Yes, we intend to deliver the feather to its rightful owner"
+  { .type = type::voice, .voice = { .audioIndex = 129 } }, // 316 leona/c33.ogg
+  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 124 } }, // 317 c "Absolute madness!"
+  { .type = type::voice, .voice = { .audioIndex = 130 } }, // 318 mousegirls/mg2.ogg
+  { .type = type::say, .say = { .characterIndex = 4, .stringIndex = 31 } }, // 319 mg "..."
+  { .type = type::voice, .voice = { .audioIndex = 131 } }, // 320 leona/c34.ogg
+  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 125 } }, // 321 c "I will follow the two of you"
+  { .type = type::voice, .voice = { .audioIndex = 132 } }, // 322 leona/c35.ogg
+  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 126 } }, // 323 c "To keep you safe, that is"
+  { .type = type::menu, .menu = { .count = 2, .optionIndex = 8 } }, // 324 "Agree", "Stay Silent"
+  { .type = type::voice, .voice = { .audioIndex = 133 } }, // 325 alice/a33.ogg
+  { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 127 } }, // 326 a "Alright!"
+  { .type = type::jump, .jump = { .statementIndex = 330 } }, // 327 internal jump (b'__menu_end', 4)
+  { .type = type::jump, .jump = { .statementIndex = 296 } }, // 328 mainbranch4
+  { .type = type::jump, .jump = { .statementIndex = 330 } }, // 329 internal jump (b'__menu_end', 4)
+  { .type = type::jump, .jump = { .statementIndex = 331 } }, // 330 mainbranch5
+  { .type = type::voice, .voice = { .audioIndex = 134 } }, // 331 eily/e55.ogg
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 128 } }, // 332 e "Ha ha... Okay..."
+  { .type = type::voice, .voice = { .audioIndex = 135 } }, // 333 leona/c36.ogg
+  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 129 } }, // 334 c "Great! Follow me, I know a shortcut! :3"
+  { .type = type::hide, .hide = { .imageIndex = 11 } }, // 335 cat
+  { .type = type::voice, .voice = { .audioIndex = 136 } }, // 336 alice/a34.ogg
+  { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 130 } }, // 337 a "Sounds good!"
+  { .type = type::hide, .hide = { .imageIndex = 14 } }, // 338 al
+  { .type = type::stop, .stop = { .audioIndex = 22, .fadeout = 2.0 } }, // 339 PhrygianButterflies
+  { .type = type::voice, .voice = { .audioIndex = 137 } }, // 340 eily/e56.ogg
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 131 } }, // 341 e "Oh dear!"
+  { .type = type::hide, .hide = { .imageIndex = 13 } }, // 342 ei
+  { .type = type::scene_color, .scene_color = { .color = 0xffffff } }, // 343 bgwhite
+  { .type = type::play, .play = { .audioIndex = 1 } }, // 344 sfx/Chime.ogg
+  { .type = type::voice, .voice = { .audioIndex = 138 } }, // 345 nara/n7.ogg
+  { .type = type::say, .say = { .characterIndex = 5, .stringIndex = 132 } }, // 346 n "And so the mice girls follow the noble cat further towards their destination"
+  { .type = type::scene, .scene = { .imageIndex = 4 } }, // 347 bgwheatfield1
+  { .type = type::play, .play = { .audioIndex = 139 } }, // 348 music/WheatFields.ogg
+  { .type = type::show, .show = { .imageIndex = 11, .transformIndex = transform::right, } }, // 349 cat
+  { .type = type::voice, .voice = { .audioIndex = 140 } }, // 350 leona/c37.ogg
+  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 133 } }, // 351 c "Nya"
+  { .type = type::show, .show = { .imageIndex = 17, .transformIndex = transform::left, } }, // 352 wal
+  { .type = type::voice, .voice = { .audioIndex = 141 } }, // 353 alice/a35.ogg
+  { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 134 } }, // 354 a "Look, your right, the castle is just up ahead!"
+  { .type = type::show, .show = { .imageIndex = 13, .transformIndex = xflip | transform::centerleft, } }, // 355 ei
+  { .type = type::voice, .voice = { .audioIndex = 142 } }, // 356 eily/e57.ogg
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 135 } }, // 357 e "Wait up"
+  { .type = type::voice, .voice = { .audioIndex = 143 } }, // 358 leona/c38.ogg
+  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 136 } }, // 359 c "I told you I knew a shortcut!"
+  { .type = type::voice, .voice = { .audioIndex = 144 } }, // 360 leona/c39.ogg
+  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 137 } }, // 361 c "Most people take the long way around"
+  { .type = type::voice, .voice = { .audioIndex = 145 } }, // 362 eily/e58.ogg
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 138 } }, // 363 e "Yah because those are royal wheatfields!"
+  { .type = type::voice, .voice = { .audioIndex = 146 } }, // 364 alice/a36.ogg
+  { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 139 } }, // 365 a "Who cares?"
+  { .type = type::voice, .voice = { .audioIndex = 147 } }, // 366 eily/e59.ogg
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 140 } }, // 367 e "Are you trying to get us killed?"
+  { .type = type::voice, .voice = { .audioIndex = 148 } }, // 368 eily/e60.ogg
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 141 } }, // 369 e "Its trespassing on royal land!"
+  { .type = type::voice, .voice = { .audioIndex = 149 } }, // 370 leona/c40.ogg
+  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 142 } }, // 371 c "Calm down, I have done this like a million times"
+  { .type = type::voice, .voice = { .audioIndex = 150 } }, // 372 eily/e61.ogg
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 143 } }, // 373 e "That doesnt make me calm!"
+  { .type = type::voice, .voice = { .audioIndex = 151 } }, // 374 leona/c41.ogg
+  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 144 } }, // 375 c "How can the rolling fields of wheat not calm your spirit?"
+  { .type = type::voice, .voice = { .audioIndex = 152 } }, // 376 leona/c42.ogg
+  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 145 } }, // 377 c "You little mice truly are mad!"
+  { .type = type::voice, .voice = { .audioIndex = 153 } }, // 378 alice/a37.ogg
+  { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 146 } }, // 379 a "I like the wheat!"
+  { .type = type::voice, .voice = { .audioIndex = 154 } }, // 380 eily/e62.ogg
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 147 } }, // 381 e "Shut up!"
+  { .type = type::voice, .voice = { .audioIndex = 155 } }, // 382 leona/c43.ogg
+  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 148 } }, // 383 c "Sounds like someone needs a nap!"
+  { .type = type::voice, .voice = { .audioIndex = 156 } }, // 384 eily/e63.ogg
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 149 } }, // 385 e "Why? because I'm not insane like you?"
+  { .type = type::voice, .voice = { .audioIndex = 157 } }, // 386 leona/c44.ogg
+  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 150 } }, // 387 c "Yah, your so sane, that you decided to steal from your town and then run off alone to the country of birds"
+  { .type = type::voice, .voice = { .audioIndex = 158 } }, // 388 leona/c45.ogg
+  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 151 } }, // 389 c "The power of friendship wont protect the two of you from becoming dinner"
+  { .type = type::voice, .voice = { .audioIndex = 159 } }, // 390 leona/c46.ogg
+  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 152 } }, // 391 c "And that, is why I feel obligated to accompany you!"
+  { .type = type::voice, .voice = { .audioIndex = 160 } }, // 392 eily/e64.ogg
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 153 } }, // 393 e "Hey, we have a good reason!"
+  { .type = type::voice, .voice = { .audioIndex = 161 } }, // 394 leona/c47.ogg
+  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 154 } }, // 395 c "And what might that be?"
+  { .type = type::voice, .voice = { .audioIndex = 162 } }, // 396 eily/e65.ogg
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 155 } }, // 397 e "My brother found the feather, not the town guild, its a matter of family pride!"
+  { .type = type::voice, .voice = { .audioIndex = 163 } }, // 398 leona/c48.ogg
+  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 156 } }, // 399 c "Pride has touched the chosen meouse"
+  { .type = type::voice, .voice = { .audioIndex = 164 } }, // 400 leona/c49.ogg
+  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 157 } }, // 401 c "Flies she towards the Castle"
+  { .type = type::voice, .voice = { .audioIndex = 165 } }, // 402 leona/c50.ogg
+  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 158 } }, // 403 c "But her ambition burns far too bright, and silly mice dont have any wings to melt"
+  { .type = type::voice, .voice = { .audioIndex = 166 } }, // 404 mousegirls/mg3.ogg
+  { .type = type::say, .say = { .characterIndex = 4, .stringIndex = 159 } }, // 405 mg "What?"
+  { .type = type::voice, .voice = { .audioIndex = 167 } }, // 406 leona/c51.ogg
+  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 160 } }, // 407 c "Nyanyanya"
+  { .type = type::voice, .voice = { .audioIndex = 168 } }, // 408 leona/c52.ogg
+  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 161 } }, // 409 c "Nyevermind"
+  { .type = type::stop, .stop = { .audioIndex = 139, .fadeout = 3.0 } }, // 410 WheatFields
+  { .type = type::voice, .voice = { .audioIndex = 169 } }, // 411 leona/c53.ogg
+  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 162 } }, // 412 c "Sing me a song little minstrels!"
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 31 } }, // 413 e "..."
+  { .type = type::play, .play = { .audioIndex = 170 } }, // 414 poem/KiriStella.ogg
+  { .type = type::pause, .pause = { .duration = 67 } }, // 415
+  { .type = type::voice, .voice = { .audioIndex = 171 } }, // 416 leona/c54.ogg
+  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 163 } }, // 417 c "Very Nyice!"
+  { .type = type::voice, .voice = { .audioIndex = 172 } }, // 418 leona/c55.ogg
+  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 164 } }, // 419 c "Now tell me little minstrels, what are your names?"
+  { .type = type::voice, .voice = { .audioIndex = 173 } }, // 420 alice/a39.ogg
+  { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 165 } }, // 421 a "My name is Alice"
+  { .type = type::voice, .voice = { .audioIndex = 174 } }, // 422 eily/e67.ogg
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 166 } }, // 423 e "And my name is Eily"
+  { .type = type::voice, .voice = { .audioIndex = 175 } }, // 424 eily/e68.ogg
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 167 } }, // 425 e "What is your name?"
+  { .type = type::voice, .voice = { .audioIndex = 176 } }, // 426 leona/c56.ogg
+  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 168 } }, // 427 l "My name is Leona!"
+  { .type = type::scene_color, .scene_color = { .color = 0xffffff } }, // 428 bgwhite
+  { .type = type::voice, .voice = { .audioIndex = 177 } }, // 429 nara/n8.ogg
+  { .type = type::say, .say = { .characterIndex = 5, .stringIndex = 169 } }, // 430 n "And so, the odd trio walked through the wheatfields and towards the castle"
+  { .type = type::voice, .voice = { .audioIndex = 178 } }, // 431 nara/n9.ogg
+  { .type = type::say, .say = { .characterIndex = 5, .stringIndex = 170 } }, // 432 n "Upon approaching the gates, the three were escorted to a large room"
+  { .type = type::voice, .voice = { .audioIndex = 179 } }, // 433 nara/n10.ogg
+  { .type = type::say, .say = { .characterIndex = 5, .stringIndex = 171 } }, // 434 n "They were then instructed to wait for an audience with the Queen"
+  { .type = type::voice, .voice = { .audioIndex = 180 } }, // 435 hera/h1.ogg
+  { .type = type::say, .say = { .characterIndex = 7, .stringIndex = 172 } }, // 436 h "You may now present yourselves before her Majesty, Queen Alary of Alysen"
+  { .type = type::scene, .scene = { .imageIndex = 5 } }, // 437 bgcastle1
+  { .type = type::play, .play = { .audioIndex = 181 } }, // 438 music/Preludium.ogg
+  { .type = type::show, .show = { .imageIndex = 10, .transformIndex = transform::right, } }, // 439 bi
+  { .type = type::pause, .pause = { .duration = 1.0 } }, // 440
+  { .type = type::voice, .voice = { .audioIndex = 182 } }, // 441 hera/h2.ogg
+  { .type = type::say, .say = { .characterIndex = 7, .stringIndex = 173 } }, // 442 h "Leona Agrepen of Elmindeer"
+  { .type = type::show, .show = { .imageIndex = 11, .transformIndex = xflip | transform::center, } }, // 443 cat
+  { .type = type::voice, .voice = { .audioIndex = 183 } }, // 444 leona/c57.ogg
+  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 174 } }, // 445 l "Hail, your Majesty"
+  { .type = type::voice, .voice = { .audioIndex = 184 } }, // 446 hera/h3.ogg
+  { .type = type::say, .say = { .characterIndex = 7, .stringIndex = 175 } }, // 447 h "Eily VeraWheat of the Western Principalities"
+  { .type = type::show, .show = { .imageIndex = 13, .transformIndex = transform::centerleft, } }, // 448 ei
+  { .type = type::voice, .voice = { .audioIndex = 185 } }, // 449 eily/e69.ogg
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 174 } }, // 450 e "Hail, your Majesty"
+  { .type = type::voice, .voice = { .audioIndex = 186 } }, // 451 hera/h4.ogg
+  { .type = type::say, .say = { .characterIndex = 7, .stringIndex = 176 } }, // 452 h "Alice SeraWheat of the Western Principalities"
+  { .type = type::play, .play = { .audioIndex = 187 } }, // 453 sfx/Glass.ogg
+  { .type = type::pause, .pause = { .duration = 1.0 } }, // 454
+  { .type = type::voice, .voice = { .audioIndex = 188 } }, // 455 alice/a40.ogg
+  { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 177 } }, // 456 a "I'm alright!"
+  { .type = type::show, .show = { .imageIndex = 17, .transformIndex = transform::left, } }, // 457 wal
+  { .type = type::voice, .voice = { .audioIndex = 189 } }, // 458 alice/a41.ogg
+  { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 178 } }, // 459 a "H-Hail, your majesty"
+  { .type = type::voice, .voice = { .audioIndex = 190 } }, // 460 leona/c58.ogg
+  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 160 } }, // 461 l "Nyanyanya"
+  { .type = type::voice, .voice = { .audioIndex = 191 } }, // 462 bird/b1.ogg
+  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 179 } }, // 463 b "And what is this?"
+  { .type = type::voice, .voice = { .audioIndex = 192 } }, // 464 bird/b2.ogg
+  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 180 } }, // 465 b "A cat and two mice in my court?"
+  { .type = type::voice, .voice = { .audioIndex = 193 } }, // 466 bird/b3.ogg
+  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 181 } }, // 467 b "Is this some kind of joke?"
+  { .type = type::voice, .voice = { .audioIndex = 194 } }, // 468 leona/c59.ogg
+  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 182 } }, // 469 l "Not a joke Your Majesty, these are my friends"
+  { .type = type::voice, .voice = { .audioIndex = 195 } }, // 470 eily/e70.ogg
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 183 } }, // 471 e "Friends?"
+  { .type = type::voice, .voice = { .audioIndex = 196 } }, // 472 bird/b4.ogg
+  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 184 } }, // 473 b "Miss Agrepen, your reputation is far from acceptable"
+  { .type = type::voice, .voice = { .audioIndex = 197 } }, // 474 bird/b5.ogg
+  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 185 } }, // 475 b "And I can imagine, you already know why I have summoned you here today"
+  { .type = type::voice, .voice = { .audioIndex = 198 } }, // 476 leona/c60.ogg
+  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 186 } }, // 477 l "Uhhmmmm...."
+  { .type = type::voice, .voice = { .audioIndex = 199 } }, // 478 leona/c61.ogg
+  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 187 } }, // 479 l "Does it have anything to do with Eastern Nidus?"
+  { .type = type::voice, .voice = { .audioIndex = 200 } }, // 480 bird/b6.ogg
+  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 188 } }, // 481 b "I think you already know the answer to that"
+  { .type = type::voice, .voice = { .audioIndex = 201 } }, // 482 bird/b7.ogg
+  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 189 } }, // 483 b "Your father would be rather dissapointed if he were still alive"
+  { .type = type::voice, .voice = { .audioIndex = 202 } }, // 484 leona/c0.ogg
+  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 31 } }, // 485 l "..."
+  { .type = type::voice, .voice = { .audioIndex = 203 } }, // 486 bird/b8.ogg
+  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 190 } }, // 487 b "Leona Agrepen, the court has found you guilty of two cases of larceny and seven cases of petty pilfering"
+  { .type = type::voice, .voice = { .audioIndex = 204 } }, // 488 bird/b9.ogg
+  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 191 } }, // 489 b "Miss Agrepen, you are hereby banned from stepping foot in Eastern Nidus"
+  { .type = type::voice, .voice = { .audioIndex = 205 } }, // 490 bird/b10.ogg
+  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 192 } }, // 491 b "From here on out, you shall be restricted to the central principalities of Avia"
+  { .type = type::voice, .voice = { .audioIndex = 206 } }, // 492 leona/c62.ogg
+  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 193 } }, // 493 l "Owww c'mon! There is nothing to do around here!"
+  { .type = type::voice, .voice = { .audioIndex = 207 } }, // 494 bird/b11.ogg
+  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 194 } }, // 495 b "Silence!"
+  { .type = type::voice, .voice = { .audioIndex = 208 } }, // 496 bird/b12.ogg
+  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 195 } }, // 497 b "It is here, in the Central city of Alysen that you shall remain, where I can keep a watchful eye on you"
+  { .type = type::voice, .voice = { .audioIndex = 209 } }, // 498 bird/b13.ogg
+  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 196 } }, // 499 b "Or would you prefer that I permit the request of the lesser courts to have you declawed?"
+  { .type = type::voice, .voice = { .audioIndex = 210 } }, // 500 leona/c63.ogg
+  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 197 } }, // 501 l "No ><"
+  { .type = type::voice, .voice = { .audioIndex = 211 } }, // 502 bird/b14.ogg
+  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 198 } }, // 503 b "Take my leniency as a display of gratitude for the services rendered by your father"
+  { .type = type::voice, .voice = { .audioIndex = 212 } }, // 504 leona/c64.ogg
+  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 199 } }, // 505 l "Yes Your Majesty... Forgive me for speaking out of turn"
+  { .type = type::voice, .voice = { .audioIndex = 213 } }, // 506 bird/b15.ogg
+  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 200 } }, // 507 b "Now, why have you brought these little mice before me?"
+  { .type = type::voice, .voice = { .audioIndex = 214 } }, // 508 leona/c65.ogg
+  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 201 } }, // 509 l "Alary, Your Majesty, these are minstrels I met on the road to Alysen"
+  { .type = type::voice, .voice = { .audioIndex = 215 } }, // 510 leona/c66.ogg
+  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 202 } }, // 511 l "They lay claim to a feather, said to be one of Your Majesty's own"
+  { .type = type::voice, .voice = { .audioIndex = 216 } }, // 512 bird/b16.ogg
+  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 203 } }, // 513 b "Really?"
+  { .type = type::voice, .voice = { .audioIndex = 217 } }, // 514 bird/b17.ogg
+  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 204 } }, // 515 b "And what else might the two of you claim? Alice and Eily of the West"
+  { .type = type::voice, .voice = { .audioIndex = 218 } }, // 516 alice/a42.ogg
+  { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 205 } }, // 517 a "I u-uhh..."
+  { .type = type::voice, .voice = { .audioIndex = 219 } }, // 518 eily/e71.ogg
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 206 } }, // 519 e "Your Majesty, this feather was found by my brother in a castle to the north"
+  { .type = type::voice, .voice = { .audioIndex = 220 } }, // 520 eily/e72.ogg
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 207 } }, // 521 e "So very far my cousin and I have journeyed"
+  { .type = type::voice, .voice = { .audioIndex = 221 } }, // 522 eily/e73.ogg
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 208 } }, // 523 e "Over the mountains of Almystice"
+  { .type = type::voice, .voice = { .audioIndex = 222 } }, // 524 eily/e74.ogg
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 209 } }, // 525 e "Beyond the deep blue waters of the Lilac bay"
+  { .type = type::voice, .voice = { .audioIndex = 223 } }, // 526 eily/e75.ogg
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 2 } }, // 527 e "And across the vast fields of Alysen"
+  { .type = type::voice, .voice = { .audioIndex = 224 } }, // 528 eily/e76.ogg
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 210 } }, // 529 e "All in hopes that we might return Your Majesty's feather"
+  { .type = type::voice, .voice = { .audioIndex = 225 } }, // 530 bird/b18.ogg
+  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 211 } }, // 531 b "What splendid and courageous little mice the two of you are"
+  { .type = type::voice, .voice = { .audioIndex = 226 } }, // 532 leona/c67.ogg
+  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 212 } }, // 533 l "Nyanyanyanyanya"
+  { .type = type::voice, .voice = { .audioIndex = 227 } }, // 534 alice/a43.ogg
+  { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 213 } }, // 535 a "We also wanted to show our profound gratitude for the aid provided by Your Majesty just four moons ago"
+  { .type = type::voice, .voice = { .audioIndex = 228 } }, // 536 eily/e77.ogg
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 214 } }, // 537 e "Please allow us to perform a song for Your Majesty and Your Majesty's court"
+  { .type = type::stop, .stop = { .audioIndex = 181, .fadeout = 4.2 } }, // 538 Preludium
+  { .type = type::voice, .voice = { .audioIndex = 229 } }, // 539 bird/b19.ogg
+  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 215 } }, // 540 b "I appreciate your loyalty to the crown of Corvidae little mice"
+  { .type = type::stop, .stop = { .audioIndex = 0, .fadeout = 4.2 } }, // 541 MistAmbience
+  { .type = type::voice, .voice = { .audioIndex = 230 } }, // 542 bird/b20.ogg
+  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 216 } }, // 543 b "You are most welcome to proceed with your little song"
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 31 } }, // 544 e "..."
+  { .type = type::play, .play = { .audioIndex = 231 } }, // 545 poem/BirdSong.ogg
+  { .type = type::scene, .scene = { .imageIndex = 6 } }, // 546 bgcastle2
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 31 } }, // 547 e "..."
+  { .type = type::pause, .pause = { .duration = 7.0 } }, // 548
+  { .type = type::scene, .scene = { .imageIndex = 7 } }, // 549 bgcastle3
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 31 } }, // 550 e "..."
+  { .type = type::pause, .pause = { .duration = 7.0 } }, // 551
+  { .type = type::scene, .scene = { .imageIndex = 8 } }, // 552 bgcastle4
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 31 } }, // 553 e "..."
+  { .type = type::pause, .pause = { .duration = 7.0 } }, // 554
+  { .type = type::scene, .scene = { .imageIndex = 7 } }, // 555 bgcastle3
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 31 } }, // 556 e "..."
+  { .type = type::pause, .pause = { .duration = 7.0 } }, // 557
+  { .type = type::scene, .scene = { .imageIndex = 6 } }, // 558 bgcastle2
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 31 } }, // 559 e "..."
+  { .type = type::pause, .pause = { .duration = 7.0 } }, // 560
+  { .type = type::scene, .scene = { .imageIndex = 7 } }, // 561 bgcastle3
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 31 } }, // 562 e "..."
+  { .type = type::pause, .pause = { .duration = 7.0 } }, // 563
+  { .type = type::scene, .scene = { .imageIndex = 6 } }, // 564 bgcastle2
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 31 } }, // 565 e "..."
+  { .type = type::pause, .pause = { .duration = 7.0 } }, // 566
+  { .type = type::scene, .scene = { .imageIndex = 5 } }, // 567 bgcastle1
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 31 } }, // 568 e "..."
+  { .type = type::pause, .pause = { .duration = 10.0 } }, // 569
+  { .type = type::pause, .pause = { .duration = 3 } }, // 570
+  { .type = type::scene_color, .scene_color = { .color = 0xffffff } }, // 571 bgwhite
+  { .type = type::pause, .pause = { .duration = 33 } }, // 572
+  { .type = type::voice, .voice = { .audioIndex = 232 } }, // 573 nara/n11.ogg
+  { .type = type::say, .say = { .characterIndex = 5, .stringIndex = 217 } }, // 574 n "In the end, Leona managed to stay out of the dungeon"
+  { .type = type::voice, .voice = { .audioIndex = 233 } }, // 575 nara/n12.ogg
+  { .type = type::say, .say = { .characterIndex = 5, .stringIndex = 218 } }, // 576 n "Eily and Alice both stayed in service of the queen for 7 harvests"
+  { .type = type::voice, .voice = { .audioIndex = 234 } }, // 577 nara/n13.ogg
+  { .type = type::say, .say = { .characterIndex = 5, .stringIndex = 219 } }, // 578 n "before returning to their small nameless town, near the Keep of Musia"
+  { .type = type::scene_color, .scene_color = { .color = 0xffffff } }, // 579 bgwhite
+  { .type = type::show, .show = { .imageIndex = 9, .transformIndex = transform::center, } }, // 580 bgend
+  { .type = type::pause, .pause = { .duration = 1.0 } }, // 581
+  { .type = type::jump, .jump = { .statementIndex = 581 } }, // 582 end
+  { .type = type::_return }, // 583
 };
 
 const int statements_length = (sizeof (statements)) / (sizeof (statements[0]));

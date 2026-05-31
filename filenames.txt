@@ -241,6 +241,7 @@ audio/nara/n11.opus.bin
 audio/nara/n12.opus.bin
 audio/nara/n13.opus.bin
 
+data/renpy/images/end.dds
 data/renpy/images/flowers.dds
 data/renpy/images/bg/forest1.dds
 data/renpy/images/bg/forest2.dds

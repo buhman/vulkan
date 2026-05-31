@@ -13,6 +13,8 @@ image bgcastle2 = "bg/castle2.png"
 image bgcastle3 = "bg/castle3.png"
 image bgcastle4 = "bg/castle4.png"
 
+image bgend = "end.png"
+
 
 image bi = "ch/ibird/Bird.png"
 image cat = "ch/icat/Cat.png"
@@ -209,7 +211,7 @@ label start:
                 #voice "mousegirls/mg2.ogg"
                 e "..."
                 play music "poem/EleanorTheHero.ogg" noloop
-                pause 40
+                pause 38.8875
             "I am too tired" :
                 voice "eily/e16.ogg"
                 e "Serves you right for scaring those elephant-dogs"
@@ -259,7 +261,7 @@ label start:
         #voice "placeholdermeow.mp3"
         #voice "leona/c1.ogg"
         c "Rawrrrr"
-        play music "leona/c1.ogg"
+        play music "leona/c1.ogg" noloop
         pause 0.7
         hide catw
         show cat at right
@@ -534,8 +536,18 @@ label start:
         voice "leona/c30.ogg"
         c "I mean, the two of you probably look like walking dinner to most creatures"
 
-        voice "alice/a30.ogg"
-        a "I could go for some dinner..."
+
+
+        menu:
+            "Sarcasm" :
+                voice "alice/a30.ogg"
+                a "I could go for some dinner..."
+
+            "Nod" :
+                jump mainbranch4
+        jump mainbranch4
+
+    label mainbranch4:
         voice "eily/e49.ogg"
         e "Anyways..."
         voice "eily/e50.ogg"
@@ -576,9 +588,21 @@ label start:
         voice "leona/c35.ogg"
         c "To keep you safe, that is"
 
-        voice "alice/a33.ogg"
-        a "Alright!"
+        menu:
+            "Agree" :
+                voice "alice/a33.ogg"
+                a "Alright!"
+            "Stay Silent" :
+                jump mainbranch4
 
+
+
+                #voice "alice/a33.ogg"
+                #a "Alright!"
+
+        jump mainbranch5
+
+    label mainbranch5:
         voice "eily/e55.ogg"
         e "Ha ha... Okay..."
 
@@ -900,37 +924,44 @@ label start:
 
 
         scene bgcastle2
-
-        scene bgcastle2
-        with Dissolve(7.0)
-        pause 0.0
+        e "..."
+        #with Dissolve(7.0)
+        pause 7.0
 
         scene bgcastle3
-        with Dissolve(7.0)
-        pause 0.0
+        e "..."
+        #with Dissolve(7.0)
+        pause 7.0
 
         scene bgcastle4
-        with Dissolve(7.0)
-        pause 0.0
+        e "..."
+        #with Dissolve(7.0)
+        pause 7.0
 
         scene bgcastle3
-        with Dissolve(7.0)
-        pause 0.0
+        e "..."
+        #with Dissolve(7.0)
+        pause 7.0
 
         scene bgcastle2
-        with Dissolve(7.0)
-        pause 0.0
+        e "..."
+        #with Dissolve(7.0)
+        pause 7.0
 
         scene bgcastle3
-        with Dissolve(7.0)
-        pause 0.0
+        e "..."
+        #with Dissolve(7.0)
+        pause 7.0
 
         scene bgcastle2
-        with Dissolve(7.0)
-        pause 0.0
+        e "..."
+        #with Dissolve(7.0)
+        pause 7.0
 
         scene bgcastle1
-        with Dissolve(10.0)
+        e "..."
+        #with Dissolve(10.0)
+        pause 10.0
 
 
         pause 3
@@ -944,6 +975,13 @@ label start:
         n "Eily and Alice both stayed in service of the queen for 7 harvests"
         voice "nara/n13.ogg"
         n "before returning to their small nameless town, near the Keep of Musia"
+
+
+        scene bgwhite
+        show bgend at center
+    label end:
+        pause 1.0
+        jump end
 
 
 
