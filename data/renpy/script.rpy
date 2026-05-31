@@ -206,12 +206,10 @@ label start:
                 a "Why dont you sing the story of Eleanor the Hero!"
                 voice "eily/e15.ogg"
                 e "Sure"
-                a "..."
-                play music "poem/Poem1.ogg" noloop
-                # rawr 1.375
-                #pause 39.275
-                #pause 37.9
-                pause 38.8875
+                #voice "mousegirls/mg2.ogg"
+                e "..."
+                play music "poem/EleanorTheHero.ogg" noloop
+                pause 40
             "I am too tired" :
                 voice "eily/e16.ogg"
                 e "Serves you right for scaring those elephant-dogs"
@@ -390,7 +388,7 @@ label start:
 
         voice "alice/a18.ogg"
         a "She didn't seem so bad"
-        #play MistAmbience "music/MistAmbience.ogg"
+        #play MistAmbience "sfx/MistAmbience.ogg"
 
         voice "eily/e29.ogg"
         e "Are you kidding? She's a crazy kitty!"
@@ -700,12 +698,16 @@ label start:
 
         voice "leona/c53.ogg"
         c "Sing me a song little minstrels!"
+
+        menu:
+            Estevie Kiri Stella
+            The Hero of Eleanor (again)
         #stop WheatFields fadeout 3.0
 
-        voice "mousegirls/mg2.ogg"
-        mg "..."
-        play music "poem/Poem1.ogg" noloop
-        pause 40
+        #voice "mousegirls/mg2.ogg"
+        e "..."
+        play music "poem/KiriStella.ogg" noloop
+        pause 64
 
 
 
@@ -893,8 +895,11 @@ label start:
         voice "bird/b20.ogg"
         b "You are most welcome to proceed with your little song"
 
-        play music "poem/Poem3.ogg" noloop
+        e "..."
+        play music "poem/BirdSong.ogg" noloop
 
+
+        scene bgcastle2
 
         scene bgcastle2
         with Dissolve(7.0)

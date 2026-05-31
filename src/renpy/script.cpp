@@ -320,7 +320,7 @@ const language::audio audio[] = {
   { .path = "audio/eily/e14.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 32 eily/e14.ogg
   { .path = "audio/alice/a11.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 33 alice/a11.ogg
   { .path = "audio/eily/e15.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 34 eily/e15.ogg
-  { .path = "audio/poem/Poem1.opus.bin", .loop_end = 0.0, .audio_flags = audio::poem, .attenuation = 1.0 }, // 35 poem/Poem1.ogg
+  { .path = "audio/poem/EleanorTheHero.opus.bin", .loop_end = 0.0, .audio_flags = audio::poem, .attenuation = 1.0 }, // 35 poem/EleanorTheHero.ogg
   { .path = "audio/eily/e16.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 36 eily/e16.ogg
   { .path = "audio/alice/a12.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 37 alice/a12.ogg
   { .path = "audio/leona/c1.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 38 leona/c1.ogg
@@ -455,70 +455,71 @@ const language::audio audio[] = {
   { .path = "audio/leona/c51.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 167 leona/c51.ogg
   { .path = "audio/leona/c52.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 168 leona/c52.ogg
   { .path = "audio/leona/c53.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 169 leona/c53.ogg
-  { .path = "audio/leona/c54.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 170 leona/c54.ogg
-  { .path = "audio/leona/c55.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 171 leona/c55.ogg
-  { .path = "audio/alice/a39.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 172 alice/a39.ogg
-  { .path = "audio/eily/e67.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 173 eily/e67.ogg
-  { .path = "audio/eily/e68.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 174 eily/e68.ogg
-  { .path = "audio/leona/c56.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 175 leona/c56.ogg
-  { .path = "audio/nara/n8.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 176 nara/n8.ogg
-  { .path = "audio/nara/n9.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 177 nara/n9.ogg
-  { .path = "audio/nara/n10.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 178 nara/n10.ogg
-  { .path = "audio/hera/h1.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 179 hera/h1.ogg
-  { .path = "audio/music/Preludium.opus.bin", .loop_end = 58.2, .audio_flags = audio::music, .attenuation = 0.45 }, // 180 music/Preludium.ogg
-  { .path = "audio/hera/h2.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 181 hera/h2.ogg
-  { .path = "audio/leona/c57.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 182 leona/c57.ogg
-  { .path = "audio/hera/h3.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 183 hera/h3.ogg
-  { .path = "audio/eily/e69.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 184 eily/e69.ogg
-  { .path = "audio/hera/h4.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 185 hera/h4.ogg
-  { .path = "audio/sfx/Glass.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 186 sfx/Glass.ogg
-  { .path = "audio/alice/a40.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 187 alice/a40.ogg
-  { .path = "audio/alice/a41.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 188 alice/a41.ogg
-  { .path = "audio/leona/c58.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 189 leona/c58.ogg
-  { .path = "audio/bird/b1.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 190 bird/b1.ogg
-  { .path = "audio/bird/b2.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 191 bird/b2.ogg
-  { .path = "audio/bird/b3.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 192 bird/b3.ogg
-  { .path = "audio/leona/c59.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 193 leona/c59.ogg
-  { .path = "audio/eily/e70.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 194 eily/e70.ogg
-  { .path = "audio/bird/b4.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 195 bird/b4.ogg
-  { .path = "audio/bird/b5.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 196 bird/b5.ogg
-  { .path = "audio/leona/c60.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 197 leona/c60.ogg
-  { .path = "audio/leona/c61.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 198 leona/c61.ogg
-  { .path = "audio/bird/b6.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 199 bird/b6.ogg
-  { .path = "audio/bird/b7.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 200 bird/b7.ogg
-  { .path = "audio/leona/c0.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 201 leona/c0.ogg
-  { .path = "audio/bird/b8.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 202 bird/b8.ogg
-  { .path = "audio/bird/b9.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 203 bird/b9.ogg
-  { .path = "audio/bird/b10.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 204 bird/b10.ogg
-  { .path = "audio/leona/c62.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 205 leona/c62.ogg
-  { .path = "audio/bird/b11.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 206 bird/b11.ogg
-  { .path = "audio/bird/b12.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 207 bird/b12.ogg
-  { .path = "audio/bird/b13.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 208 bird/b13.ogg
-  { .path = "audio/leona/c63.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 209 leona/c63.ogg
-  { .path = "audio/bird/b14.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 210 bird/b14.ogg
-  { .path = "audio/leona/c64.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 211 leona/c64.ogg
-  { .path = "audio/bird/b15.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 212 bird/b15.ogg
-  { .path = "audio/leona/c65.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 213 leona/c65.ogg
-  { .path = "audio/leona/c66.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 214 leona/c66.ogg
-  { .path = "audio/bird/b16.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 215 bird/b16.ogg
-  { .path = "audio/bird/b17.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 216 bird/b17.ogg
-  { .path = "audio/alice/a42.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 217 alice/a42.ogg
-  { .path = "audio/eily/e71.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 218 eily/e71.ogg
-  { .path = "audio/eily/e72.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 219 eily/e72.ogg
-  { .path = "audio/eily/e73.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 220 eily/e73.ogg
-  { .path = "audio/eily/e74.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 221 eily/e74.ogg
-  { .path = "audio/eily/e75.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 222 eily/e75.ogg
-  { .path = "audio/eily/e76.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 223 eily/e76.ogg
-  { .path = "audio/bird/b18.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 224 bird/b18.ogg
-  { .path = "audio/leona/c67.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 225 leona/c67.ogg
-  { .path = "audio/alice/a43.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 226 alice/a43.ogg
-  { .path = "audio/eily/e77.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 227 eily/e77.ogg
-  { .path = "audio/bird/b19.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 228 bird/b19.ogg
-  { .path = "audio/bird/b20.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 229 bird/b20.ogg
-  { .path = "audio/poem/Poem3.opus.bin", .loop_end = 0.0, .audio_flags = audio::poem, .attenuation = 1.0 }, // 230 poem/Poem3.ogg
-  { .path = "audio/nara/n11.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 231 nara/n11.ogg
-  { .path = "audio/nara/n12.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 232 nara/n12.ogg
-  { .path = "audio/nara/n13.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 233 nara/n13.ogg
+  { .path = "audio/poem/KiriStella.opus.bin", .loop_end = 0.0, .audio_flags = audio::poem, .attenuation = 1.0 }, // 170 poem/KiriStella.ogg
+  { .path = "audio/leona/c54.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 171 leona/c54.ogg
+  { .path = "audio/leona/c55.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 172 leona/c55.ogg
+  { .path = "audio/alice/a39.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 173 alice/a39.ogg
+  { .path = "audio/eily/e67.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 174 eily/e67.ogg
+  { .path = "audio/eily/e68.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 175 eily/e68.ogg
+  { .path = "audio/leona/c56.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 176 leona/c56.ogg
+  { .path = "audio/nara/n8.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 177 nara/n8.ogg
+  { .path = "audio/nara/n9.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 178 nara/n9.ogg
+  { .path = "audio/nara/n10.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 179 nara/n10.ogg
+  { .path = "audio/hera/h1.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 180 hera/h1.ogg
+  { .path = "audio/music/Preludium.opus.bin", .loop_end = 58.2, .audio_flags = audio::music, .attenuation = 0.45 }, // 181 music/Preludium.ogg
+  { .path = "audio/hera/h2.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 182 hera/h2.ogg
+  { .path = "audio/leona/c57.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 183 leona/c57.ogg
+  { .path = "audio/hera/h3.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 184 hera/h3.ogg
+  { .path = "audio/eily/e69.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 185 eily/e69.ogg
+  { .path = "audio/hera/h4.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 186 hera/h4.ogg
+  { .path = "audio/sfx/Glass.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 187 sfx/Glass.ogg
+  { .path = "audio/alice/a40.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 188 alice/a40.ogg
+  { .path = "audio/alice/a41.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 189 alice/a41.ogg
+  { .path = "audio/leona/c58.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 190 leona/c58.ogg
+  { .path = "audio/bird/b1.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 191 bird/b1.ogg
+  { .path = "audio/bird/b2.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 192 bird/b2.ogg
+  { .path = "audio/bird/b3.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 193 bird/b3.ogg
+  { .path = "audio/leona/c59.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 194 leona/c59.ogg
+  { .path = "audio/eily/e70.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 195 eily/e70.ogg
+  { .path = "audio/bird/b4.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 196 bird/b4.ogg
+  { .path = "audio/bird/b5.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 197 bird/b5.ogg
+  { .path = "audio/leona/c60.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 198 leona/c60.ogg
+  { .path = "audio/leona/c61.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 199 leona/c61.ogg
+  { .path = "audio/bird/b6.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 200 bird/b6.ogg
+  { .path = "audio/bird/b7.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 201 bird/b7.ogg
+  { .path = "audio/leona/c0.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 202 leona/c0.ogg
+  { .path = "audio/bird/b8.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 203 bird/b8.ogg
+  { .path = "audio/bird/b9.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 204 bird/b9.ogg
+  { .path = "audio/bird/b10.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 205 bird/b10.ogg
+  { .path = "audio/leona/c62.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 206 leona/c62.ogg
+  { .path = "audio/bird/b11.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 207 bird/b11.ogg
+  { .path = "audio/bird/b12.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 208 bird/b12.ogg
+  { .path = "audio/bird/b13.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 209 bird/b13.ogg
+  { .path = "audio/leona/c63.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 210 leona/c63.ogg
+  { .path = "audio/bird/b14.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 211 bird/b14.ogg
+  { .path = "audio/leona/c64.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 212 leona/c64.ogg
+  { .path = "audio/bird/b15.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 213 bird/b15.ogg
+  { .path = "audio/leona/c65.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 214 leona/c65.ogg
+  { .path = "audio/leona/c66.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 215 leona/c66.ogg
+  { .path = "audio/bird/b16.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 216 bird/b16.ogg
+  { .path = "audio/bird/b17.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 217 bird/b17.ogg
+  { .path = "audio/alice/a42.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 218 alice/a42.ogg
+  { .path = "audio/eily/e71.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 219 eily/e71.ogg
+  { .path = "audio/eily/e72.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 220 eily/e72.ogg
+  { .path = "audio/eily/e73.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 221 eily/e73.ogg
+  { .path = "audio/eily/e74.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 222 eily/e74.ogg
+  { .path = "audio/eily/e75.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 223 eily/e75.ogg
+  { .path = "audio/eily/e76.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 224 eily/e76.ogg
+  { .path = "audio/bird/b18.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 225 bird/b18.ogg
+  { .path = "audio/leona/c67.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 226 leona/c67.ogg
+  { .path = "audio/alice/a43.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 227 alice/a43.ogg
+  { .path = "audio/eily/e77.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 228 eily/e77.ogg
+  { .path = "audio/bird/b19.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 229 bird/b19.ogg
+  { .path = "audio/bird/b20.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 230 bird/b20.ogg
+  { .path = "audio/poem/BirdSong.opus.bin", .loop_end = 0.0, .audio_flags = audio::poem, .attenuation = 1.0 }, // 231 poem/BirdSong.ogg
+  { .path = "audio/nara/n11.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 232 nara/n11.ogg
+  { .path = "audio/nara/n12.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 233 nara/n12.ogg
+  { .path = "audio/nara/n13.opus.bin", .loop_end = 0.0, .audio_flags = 0, .attenuation = 1.0 }, // 234 nara/n13.ogg
 };
 
 const int audio_length = (sizeof (audio)) / (sizeof (audio[0]));
@@ -565,17 +566,17 @@ const language::dissolve dissolves[] = {
   { .duration = 3.0, .first_statement = 197, .count = 1 },
   { .duration = 2.0, .first_statement = 333, .count = 2 },
   { .duration = 1.3, .first_statement = 337, .count = 3 },
-  { .duration = 3.0, .first_statement = 419, .count = 1 },
-  { .duration = 2.0, .first_statement = 428, .count = 2 },
-  { .duration = 7.0, .first_statement = 536, .count = 1 },
-  { .duration = 7.0, .first_statement = 538, .count = 1 },
-  { .duration = 7.0, .first_statement = 540, .count = 1 },
-  { .duration = 7.0, .first_statement = 542, .count = 1 },
-  { .duration = 7.0, .first_statement = 544, .count = 1 },
-  { .duration = 7.0, .first_statement = 546, .count = 1 },
-  { .duration = 7.0, .first_statement = 548, .count = 1 },
-  { .duration = 10.0, .first_statement = 550, .count = 1 },
-  { .duration = 13.0, .first_statement = 552, .count = 1 },
+  { .duration = 3.0, .first_statement = 418, .count = 1 },
+  { .duration = 2.0, .first_statement = 427, .count = 2 },
+  { .duration = 7.0, .first_statement = 537, .count = 1 },
+  { .duration = 7.0, .first_statement = 539, .count = 1 },
+  { .duration = 7.0, .first_statement = 541, .count = 1 },
+  { .duration = 7.0, .first_statement = 543, .count = 1 },
+  { .duration = 7.0, .first_statement = 545, .count = 1 },
+  { .duration = 7.0, .first_statement = 547, .count = 1 },
+  { .duration = 7.0, .first_statement = 549, .count = 1 },
+  { .duration = 10.0, .first_statement = 551, .count = 1 },
+  { .duration = 13.0, .first_statement = 553, .count = 1 },
 };
 
 const int dissolves_length = (sizeof (dissolves)) / (sizeof (dissolves[0]));
@@ -669,9 +670,9 @@ const language::statement statements[] = {
   { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 29 } }, // 85 a "Why dont you sing the story of Eleanor the Hero!"
   { .type = type::voice, .voice = { .audioIndex = 34 } }, // 86 eily/e15.ogg
   { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 30 } }, // 87 e "Sure"
-  { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 31 } }, // 88 a "..."
-  { .type = type::play, .play = { .audioIndex = 35 } }, // 89 poem/Poem1.ogg
-  { .type = type::pause, .pause = { .duration = 38.8875 } }, // 90
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 31 } }, // 88 e "..."
+  { .type = type::play, .play = { .audioIndex = 35 } }, // 89 poem/EleanorTheHero.ogg
+  { .type = type::pause, .pause = { .duration = 40 } }, // 90
   { .type = type::jump, .jump = { .statementIndex = 98 } }, // 91 internal jump (b'__menu_end', 1)
   { .type = type::voice, .voice = { .audioIndex = 36 } }, // 92 eily/e16.ogg
   { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 32 } }, // 93 e "Serves you right for scaring those elephant-dogs"
@@ -984,164 +985,165 @@ const language::statement statements[] = {
   { .type = type::stop, .stop = { .audioIndex = 139, .fadeout = 3.0 } }, // 400 WheatFields
   { .type = type::voice, .voice = { .audioIndex = 169 } }, // 401 leona/c53.ogg
   { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 162 } }, // 402 c "Sing me a song little minstrels!"
-  { .type = type::voice, .voice = { .audioIndex = 130 } }, // 403 mousegirls/mg2.ogg
-  { .type = type::say, .say = { .characterIndex = 4, .stringIndex = 31 } }, // 404 mg "..."
-  { .type = type::play, .play = { .audioIndex = 35 } }, // 405 poem/Poem1.ogg
-  { .type = type::pause, .pause = { .duration = 40 } }, // 406
-  { .type = type::voice, .voice = { .audioIndex = 170 } }, // 407 leona/c54.ogg
-  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 163 } }, // 408 c "Very Nyice!"
-  { .type = type::voice, .voice = { .audioIndex = 171 } }, // 409 leona/c55.ogg
-  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 164 } }, // 410 c "Now tell me little minstrels, what are your names?"
-  { .type = type::voice, .voice = { .audioIndex = 172 } }, // 411 alice/a39.ogg
-  { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 165 } }, // 412 a "My name is Alice"
-  { .type = type::voice, .voice = { .audioIndex = 173 } }, // 413 eily/e67.ogg
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 166 } }, // 414 e "And my name is Eily"
-  { .type = type::voice, .voice = { .audioIndex = 174 } }, // 415 eily/e68.ogg
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 167 } }, // 416 e "What is your name?"
-  { .type = type::voice, .voice = { .audioIndex = 175 } }, // 417 leona/c56.ogg
-  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 168 } }, // 418 l "My name is Leona!"
-  { .type = type::scene_color, .scene_color = { .color = 0xffffff } }, // 419 bgwhite
-  { .type = type::voice, .voice = { .audioIndex = 176 } }, // 420 nara/n8.ogg
-  { .type = type::say, .say = { .characterIndex = 5, .stringIndex = 169 } }, // 421 n "And so, the odd trio walked through the wheatfields and towards the castle"
-  { .type = type::voice, .voice = { .audioIndex = 177 } }, // 422 nara/n9.ogg
-  { .type = type::say, .say = { .characterIndex = 5, .stringIndex = 170 } }, // 423 n "Upon approaching the gates, the three were escorted to a large room"
-  { .type = type::voice, .voice = { .audioIndex = 178 } }, // 424 nara/n10.ogg
-  { .type = type::say, .say = { .characterIndex = 5, .stringIndex = 171 } }, // 425 n "They were then instructed to wait for an audience with the Queen"
-  { .type = type::voice, .voice = { .audioIndex = 179 } }, // 426 hera/h1.ogg
-  { .type = type::say, .say = { .characterIndex = 7, .stringIndex = 172 } }, // 427 h "You may now present yourselves before her Majesty, Queen Alary of Alysen"
-  { .type = type::scene, .scene = { .imageIndex = 5 } }, // 428 bgcastle1
-  { .type = type::play, .play = { .audioIndex = 180 } }, // 429 music/Preludium.ogg
-  { .type = type::show, .show = { .imageIndex = 9, .transformIndex = transform::right, } }, // 430 bi
-  { .type = type::pause, .pause = { .duration = 1.0 } }, // 431
-  { .type = type::voice, .voice = { .audioIndex = 181 } }, // 432 hera/h2.ogg
-  { .type = type::say, .say = { .characterIndex = 7, .stringIndex = 173 } }, // 433 h "Leona Agrepen of Elmindeer"
-  { .type = type::show, .show = { .imageIndex = 10, .transformIndex = xflip | transform::center, } }, // 434 cat
-  { .type = type::voice, .voice = { .audioIndex = 182 } }, // 435 leona/c57.ogg
-  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 174 } }, // 436 l "Hail, your Majesty"
-  { .type = type::voice, .voice = { .audioIndex = 183 } }, // 437 hera/h3.ogg
-  { .type = type::say, .say = { .characterIndex = 7, .stringIndex = 175 } }, // 438 h "Eily VeraWheat of the Western Principalities"
-  { .type = type::show, .show = { .imageIndex = 12, .transformIndex = transform::centerleft, } }, // 439 ei
-  { .type = type::voice, .voice = { .audioIndex = 184 } }, // 440 eily/e69.ogg
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 174 } }, // 441 e "Hail, your Majesty"
-  { .type = type::voice, .voice = { .audioIndex = 185 } }, // 442 hera/h4.ogg
-  { .type = type::say, .say = { .characterIndex = 7, .stringIndex = 176 } }, // 443 h "Alice SeraWheat of the Western Principalities"
-  { .type = type::play, .play = { .audioIndex = 186 } }, // 444 sfx/Glass.ogg
-  { .type = type::pause, .pause = { .duration = 1.0 } }, // 445
-  { .type = type::voice, .voice = { .audioIndex = 187 } }, // 446 alice/a40.ogg
-  { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 177 } }, // 447 a "I'm alright!"
-  { .type = type::show, .show = { .imageIndex = 16, .transformIndex = transform::left, } }, // 448 wal
-  { .type = type::voice, .voice = { .audioIndex = 188 } }, // 449 alice/a41.ogg
-  { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 178 } }, // 450 a "H-Hail, your majesty"
-  { .type = type::voice, .voice = { .audioIndex = 189 } }, // 451 leona/c58.ogg
-  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 160 } }, // 452 l "Nyanyanya"
-  { .type = type::voice, .voice = { .audioIndex = 190 } }, // 453 bird/b1.ogg
-  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 179 } }, // 454 b "And what is this?"
-  { .type = type::voice, .voice = { .audioIndex = 191 } }, // 455 bird/b2.ogg
-  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 180 } }, // 456 b "A cat and two mice in my court?"
-  { .type = type::voice, .voice = { .audioIndex = 192 } }, // 457 bird/b3.ogg
-  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 181 } }, // 458 b "Is this some kind of joke?"
-  { .type = type::voice, .voice = { .audioIndex = 193 } }, // 459 leona/c59.ogg
-  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 182 } }, // 460 l "Not a joke Your Majesty, these are my friends"
-  { .type = type::voice, .voice = { .audioIndex = 194 } }, // 461 eily/e70.ogg
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 183 } }, // 462 e "Friends?"
-  { .type = type::voice, .voice = { .audioIndex = 195 } }, // 463 bird/b4.ogg
-  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 184 } }, // 464 b "Miss Agrepen, your reputation is far from acceptable"
-  { .type = type::voice, .voice = { .audioIndex = 196 } }, // 465 bird/b5.ogg
-  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 185 } }, // 466 b "And I can imagine, you already know why I have summoned you here today"
-  { .type = type::voice, .voice = { .audioIndex = 197 } }, // 467 leona/c60.ogg
-  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 186 } }, // 468 l "Uhhmmmm...."
-  { .type = type::voice, .voice = { .audioIndex = 198 } }, // 469 leona/c61.ogg
-  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 187 } }, // 470 l "Does it have anything to do with Eastern Nidus?"
-  { .type = type::voice, .voice = { .audioIndex = 199 } }, // 471 bird/b6.ogg
-  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 188 } }, // 472 b "I think you already know the answer to that"
-  { .type = type::voice, .voice = { .audioIndex = 200 } }, // 473 bird/b7.ogg
-  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 189 } }, // 474 b "Your father would be rather dissapointed if he were still alive"
-  { .type = type::voice, .voice = { .audioIndex = 201 } }, // 475 leona/c0.ogg
-  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 31 } }, // 476 l "..."
-  { .type = type::voice, .voice = { .audioIndex = 202 } }, // 477 bird/b8.ogg
-  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 190 } }, // 478 b "Leona Agrepen, the court has found you guilty of two cases of larceny and seven cases of petty pilfering"
-  { .type = type::voice, .voice = { .audioIndex = 203 } }, // 479 bird/b9.ogg
-  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 191 } }, // 480 b "Miss Agrepen, you are hereby banned from stepping foot in Eastern Nidus"
-  { .type = type::voice, .voice = { .audioIndex = 204 } }, // 481 bird/b10.ogg
-  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 192 } }, // 482 b "From here on out, you shall be restricted to the central principalities of Avia"
-  { .type = type::voice, .voice = { .audioIndex = 205 } }, // 483 leona/c62.ogg
-  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 193 } }, // 484 l "Owww c'mon! There is nothing to do around here!"
-  { .type = type::voice, .voice = { .audioIndex = 206 } }, // 485 bird/b11.ogg
-  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 194 } }, // 486 b "Silence!"
-  { .type = type::voice, .voice = { .audioIndex = 207 } }, // 487 bird/b12.ogg
-  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 195 } }, // 488 b "It is here, in the Central city of Alysen that you shall remain, where I can keep a watchful eye on you"
-  { .type = type::voice, .voice = { .audioIndex = 208 } }, // 489 bird/b13.ogg
-  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 196 } }, // 490 b "Or would you prefer that I permit the request of the lesser courts to have you declawed?"
-  { .type = type::voice, .voice = { .audioIndex = 209 } }, // 491 leona/c63.ogg
-  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 197 } }, // 492 l "No ><"
-  { .type = type::voice, .voice = { .audioIndex = 210 } }, // 493 bird/b14.ogg
-  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 198 } }, // 494 b "Take my leniency as a display of gratitude for the services rendered by your father"
-  { .type = type::voice, .voice = { .audioIndex = 211 } }, // 495 leona/c64.ogg
-  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 199 } }, // 496 l "Yes Your Majesty... Forgive me for speaking out of turn"
-  { .type = type::voice, .voice = { .audioIndex = 212 } }, // 497 bird/b15.ogg
-  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 200 } }, // 498 b "Now, why have you brought these little mice before me?"
-  { .type = type::voice, .voice = { .audioIndex = 213 } }, // 499 leona/c65.ogg
-  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 201 } }, // 500 l "Alary, Your Majesty, these are minstrels I met on the road to Alysen"
-  { .type = type::voice, .voice = { .audioIndex = 214 } }, // 501 leona/c66.ogg
-  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 202 } }, // 502 l "They lay claim to a feather, said to be one of Your Majesty's own"
-  { .type = type::voice, .voice = { .audioIndex = 215 } }, // 503 bird/b16.ogg
-  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 203 } }, // 504 b "Really?"
-  { .type = type::voice, .voice = { .audioIndex = 216 } }, // 505 bird/b17.ogg
-  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 204 } }, // 506 b "And what else might the two of you claim? Alice and Eily of the West"
-  { .type = type::voice, .voice = { .audioIndex = 217 } }, // 507 alice/a42.ogg
-  { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 205 } }, // 508 a "I u-uhh..."
-  { .type = type::voice, .voice = { .audioIndex = 218 } }, // 509 eily/e71.ogg
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 206 } }, // 510 e "Your Majesty, this feather was found by my brother in a castle to the north"
-  { .type = type::voice, .voice = { .audioIndex = 219 } }, // 511 eily/e72.ogg
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 207 } }, // 512 e "So very far my cousin and I have journeyed"
-  { .type = type::voice, .voice = { .audioIndex = 220 } }, // 513 eily/e73.ogg
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 208 } }, // 514 e "Over the mountains of Almystice"
-  { .type = type::voice, .voice = { .audioIndex = 221 } }, // 515 eily/e74.ogg
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 209 } }, // 516 e "Beyond the deep blue waters of the Lilac bay"
-  { .type = type::voice, .voice = { .audioIndex = 222 } }, // 517 eily/e75.ogg
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 2 } }, // 518 e "And across the vast fields of Alysen"
-  { .type = type::voice, .voice = { .audioIndex = 223 } }, // 519 eily/e76.ogg
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 210 } }, // 520 e "All in hopes that we might return Your Majesty's feather"
-  { .type = type::voice, .voice = { .audioIndex = 224 } }, // 521 bird/b18.ogg
-  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 211 } }, // 522 b "What splendid and courageous little mice the two of you are"
-  { .type = type::voice, .voice = { .audioIndex = 225 } }, // 523 leona/c67.ogg
-  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 212 } }, // 524 l "Nyanyanyanyanya"
-  { .type = type::voice, .voice = { .audioIndex = 226 } }, // 525 alice/a43.ogg
-  { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 213 } }, // 526 a "We also wanted to show our profound gratitude for the aid provided by Your Majesty just four moons ago"
-  { .type = type::voice, .voice = { .audioIndex = 227 } }, // 527 eily/e77.ogg
-  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 214 } }, // 528 e "Please allow us to perform a song for Your Majesty and Your Majesty's court"
-  { .type = type::stop, .stop = { .audioIndex = 180, .fadeout = 4.2 } }, // 529 Preludium
-  { .type = type::voice, .voice = { .audioIndex = 228 } }, // 530 bird/b19.ogg
-  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 215 } }, // 531 b "I appreciate your loyalty to the crown of Corvidae little mice"
-  { .type = type::stop, .stop = { .audioIndex = 0, .fadeout = 4.2 } }, // 532 MistAmbience
-  { .type = type::voice, .voice = { .audioIndex = 229 } }, // 533 bird/b20.ogg
-  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 216 } }, // 534 b "You are most welcome to proceed with your little song"
-  { .type = type::play, .play = { .audioIndex = 230 } }, // 535 poem/Poem3.ogg
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 31 } }, // 403 e "..."
+  { .type = type::play, .play = { .audioIndex = 170 } }, // 404 poem/KiriStella.ogg
+  { .type = type::pause, .pause = { .duration = 64 } }, // 405
+  { .type = type::voice, .voice = { .audioIndex = 171 } }, // 406 leona/c54.ogg
+  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 163 } }, // 407 c "Very Nyice!"
+  { .type = type::voice, .voice = { .audioIndex = 172 } }, // 408 leona/c55.ogg
+  { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 164 } }, // 409 c "Now tell me little minstrels, what are your names?"
+  { .type = type::voice, .voice = { .audioIndex = 173 } }, // 410 alice/a39.ogg
+  { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 165 } }, // 411 a "My name is Alice"
+  { .type = type::voice, .voice = { .audioIndex = 174 } }, // 412 eily/e67.ogg
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 166 } }, // 413 e "And my name is Eily"
+  { .type = type::voice, .voice = { .audioIndex = 175 } }, // 414 eily/e68.ogg
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 167 } }, // 415 e "What is your name?"
+  { .type = type::voice, .voice = { .audioIndex = 176 } }, // 416 leona/c56.ogg
+  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 168 } }, // 417 l "My name is Leona!"
+  { .type = type::scene_color, .scene_color = { .color = 0xffffff } }, // 418 bgwhite
+  { .type = type::voice, .voice = { .audioIndex = 177 } }, // 419 nara/n8.ogg
+  { .type = type::say, .say = { .characterIndex = 5, .stringIndex = 169 } }, // 420 n "And so, the odd trio walked through the wheatfields and towards the castle"
+  { .type = type::voice, .voice = { .audioIndex = 178 } }, // 421 nara/n9.ogg
+  { .type = type::say, .say = { .characterIndex = 5, .stringIndex = 170 } }, // 422 n "Upon approaching the gates, the three were escorted to a large room"
+  { .type = type::voice, .voice = { .audioIndex = 179 } }, // 423 nara/n10.ogg
+  { .type = type::say, .say = { .characterIndex = 5, .stringIndex = 171 } }, // 424 n "They were then instructed to wait for an audience with the Queen"
+  { .type = type::voice, .voice = { .audioIndex = 180 } }, // 425 hera/h1.ogg
+  { .type = type::say, .say = { .characterIndex = 7, .stringIndex = 172 } }, // 426 h "You may now present yourselves before her Majesty, Queen Alary of Alysen"
+  { .type = type::scene, .scene = { .imageIndex = 5 } }, // 427 bgcastle1
+  { .type = type::play, .play = { .audioIndex = 181 } }, // 428 music/Preludium.ogg
+  { .type = type::show, .show = { .imageIndex = 9, .transformIndex = transform::right, } }, // 429 bi
+  { .type = type::pause, .pause = { .duration = 1.0 } }, // 430
+  { .type = type::voice, .voice = { .audioIndex = 182 } }, // 431 hera/h2.ogg
+  { .type = type::say, .say = { .characterIndex = 7, .stringIndex = 173 } }, // 432 h "Leona Agrepen of Elmindeer"
+  { .type = type::show, .show = { .imageIndex = 10, .transformIndex = xflip | transform::center, } }, // 433 cat
+  { .type = type::voice, .voice = { .audioIndex = 183 } }, // 434 leona/c57.ogg
+  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 174 } }, // 435 l "Hail, your Majesty"
+  { .type = type::voice, .voice = { .audioIndex = 184 } }, // 436 hera/h3.ogg
+  { .type = type::say, .say = { .characterIndex = 7, .stringIndex = 175 } }, // 437 h "Eily VeraWheat of the Western Principalities"
+  { .type = type::show, .show = { .imageIndex = 12, .transformIndex = transform::centerleft, } }, // 438 ei
+  { .type = type::voice, .voice = { .audioIndex = 185 } }, // 439 eily/e69.ogg
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 174 } }, // 440 e "Hail, your Majesty"
+  { .type = type::voice, .voice = { .audioIndex = 186 } }, // 441 hera/h4.ogg
+  { .type = type::say, .say = { .characterIndex = 7, .stringIndex = 176 } }, // 442 h "Alice SeraWheat of the Western Principalities"
+  { .type = type::play, .play = { .audioIndex = 187 } }, // 443 sfx/Glass.ogg
+  { .type = type::pause, .pause = { .duration = 1.0 } }, // 444
+  { .type = type::voice, .voice = { .audioIndex = 188 } }, // 445 alice/a40.ogg
+  { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 177 } }, // 446 a "I'm alright!"
+  { .type = type::show, .show = { .imageIndex = 16, .transformIndex = transform::left, } }, // 447 wal
+  { .type = type::voice, .voice = { .audioIndex = 189 } }, // 448 alice/a41.ogg
+  { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 178 } }, // 449 a "H-Hail, your majesty"
+  { .type = type::voice, .voice = { .audioIndex = 190 } }, // 450 leona/c58.ogg
+  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 160 } }, // 451 l "Nyanyanya"
+  { .type = type::voice, .voice = { .audioIndex = 191 } }, // 452 bird/b1.ogg
+  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 179 } }, // 453 b "And what is this?"
+  { .type = type::voice, .voice = { .audioIndex = 192 } }, // 454 bird/b2.ogg
+  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 180 } }, // 455 b "A cat and two mice in my court?"
+  { .type = type::voice, .voice = { .audioIndex = 193 } }, // 456 bird/b3.ogg
+  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 181 } }, // 457 b "Is this some kind of joke?"
+  { .type = type::voice, .voice = { .audioIndex = 194 } }, // 458 leona/c59.ogg
+  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 182 } }, // 459 l "Not a joke Your Majesty, these are my friends"
+  { .type = type::voice, .voice = { .audioIndex = 195 } }, // 460 eily/e70.ogg
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 183 } }, // 461 e "Friends?"
+  { .type = type::voice, .voice = { .audioIndex = 196 } }, // 462 bird/b4.ogg
+  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 184 } }, // 463 b "Miss Agrepen, your reputation is far from acceptable"
+  { .type = type::voice, .voice = { .audioIndex = 197 } }, // 464 bird/b5.ogg
+  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 185 } }, // 465 b "And I can imagine, you already know why I have summoned you here today"
+  { .type = type::voice, .voice = { .audioIndex = 198 } }, // 466 leona/c60.ogg
+  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 186 } }, // 467 l "Uhhmmmm...."
+  { .type = type::voice, .voice = { .audioIndex = 199 } }, // 468 leona/c61.ogg
+  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 187 } }, // 469 l "Does it have anything to do with Eastern Nidus?"
+  { .type = type::voice, .voice = { .audioIndex = 200 } }, // 470 bird/b6.ogg
+  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 188 } }, // 471 b "I think you already know the answer to that"
+  { .type = type::voice, .voice = { .audioIndex = 201 } }, // 472 bird/b7.ogg
+  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 189 } }, // 473 b "Your father would be rather dissapointed if he were still alive"
+  { .type = type::voice, .voice = { .audioIndex = 202 } }, // 474 leona/c0.ogg
+  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 31 } }, // 475 l "..."
+  { .type = type::voice, .voice = { .audioIndex = 203 } }, // 476 bird/b8.ogg
+  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 190 } }, // 477 b "Leona Agrepen, the court has found you guilty of two cases of larceny and seven cases of petty pilfering"
+  { .type = type::voice, .voice = { .audioIndex = 204 } }, // 478 bird/b9.ogg
+  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 191 } }, // 479 b "Miss Agrepen, you are hereby banned from stepping foot in Eastern Nidus"
+  { .type = type::voice, .voice = { .audioIndex = 205 } }, // 480 bird/b10.ogg
+  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 192 } }, // 481 b "From here on out, you shall be restricted to the central principalities of Avia"
+  { .type = type::voice, .voice = { .audioIndex = 206 } }, // 482 leona/c62.ogg
+  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 193 } }, // 483 l "Owww c'mon! There is nothing to do around here!"
+  { .type = type::voice, .voice = { .audioIndex = 207 } }, // 484 bird/b11.ogg
+  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 194 } }, // 485 b "Silence!"
+  { .type = type::voice, .voice = { .audioIndex = 208 } }, // 486 bird/b12.ogg
+  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 195 } }, // 487 b "It is here, in the Central city of Alysen that you shall remain, where I can keep a watchful eye on you"
+  { .type = type::voice, .voice = { .audioIndex = 209 } }, // 488 bird/b13.ogg
+  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 196 } }, // 489 b "Or would you prefer that I permit the request of the lesser courts to have you declawed?"
+  { .type = type::voice, .voice = { .audioIndex = 210 } }, // 490 leona/c63.ogg
+  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 197 } }, // 491 l "No ><"
+  { .type = type::voice, .voice = { .audioIndex = 211 } }, // 492 bird/b14.ogg
+  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 198 } }, // 493 b "Take my leniency as a display of gratitude for the services rendered by your father"
+  { .type = type::voice, .voice = { .audioIndex = 212 } }, // 494 leona/c64.ogg
+  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 199 } }, // 495 l "Yes Your Majesty... Forgive me for speaking out of turn"
+  { .type = type::voice, .voice = { .audioIndex = 213 } }, // 496 bird/b15.ogg
+  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 200 } }, // 497 b "Now, why have you brought these little mice before me?"
+  { .type = type::voice, .voice = { .audioIndex = 214 } }, // 498 leona/c65.ogg
+  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 201 } }, // 499 l "Alary, Your Majesty, these are minstrels I met on the road to Alysen"
+  { .type = type::voice, .voice = { .audioIndex = 215 } }, // 500 leona/c66.ogg
+  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 202 } }, // 501 l "They lay claim to a feather, said to be one of Your Majesty's own"
+  { .type = type::voice, .voice = { .audioIndex = 216 } }, // 502 bird/b16.ogg
+  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 203 } }, // 503 b "Really?"
+  { .type = type::voice, .voice = { .audioIndex = 217 } }, // 504 bird/b17.ogg
+  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 204 } }, // 505 b "And what else might the two of you claim? Alice and Eily of the West"
+  { .type = type::voice, .voice = { .audioIndex = 218 } }, // 506 alice/a42.ogg
+  { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 205 } }, // 507 a "I u-uhh..."
+  { .type = type::voice, .voice = { .audioIndex = 219 } }, // 508 eily/e71.ogg
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 206 } }, // 509 e "Your Majesty, this feather was found by my brother in a castle to the north"
+  { .type = type::voice, .voice = { .audioIndex = 220 } }, // 510 eily/e72.ogg
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 207 } }, // 511 e "So very far my cousin and I have journeyed"
+  { .type = type::voice, .voice = { .audioIndex = 221 } }, // 512 eily/e73.ogg
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 208 } }, // 513 e "Over the mountains of Almystice"
+  { .type = type::voice, .voice = { .audioIndex = 222 } }, // 514 eily/e74.ogg
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 209 } }, // 515 e "Beyond the deep blue waters of the Lilac bay"
+  { .type = type::voice, .voice = { .audioIndex = 223 } }, // 516 eily/e75.ogg
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 2 } }, // 517 e "And across the vast fields of Alysen"
+  { .type = type::voice, .voice = { .audioIndex = 224 } }, // 518 eily/e76.ogg
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 210 } }, // 519 e "All in hopes that we might return Your Majesty's feather"
+  { .type = type::voice, .voice = { .audioIndex = 225 } }, // 520 bird/b18.ogg
+  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 211 } }, // 521 b "What splendid and courageous little mice the two of you are"
+  { .type = type::voice, .voice = { .audioIndex = 226 } }, // 522 leona/c67.ogg
+  { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 212 } }, // 523 l "Nyanyanyanyanya"
+  { .type = type::voice, .voice = { .audioIndex = 227 } }, // 524 alice/a43.ogg
+  { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 213 } }, // 525 a "We also wanted to show our profound gratitude for the aid provided by Your Majesty just four moons ago"
+  { .type = type::voice, .voice = { .audioIndex = 228 } }, // 526 eily/e77.ogg
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 214 } }, // 527 e "Please allow us to perform a song for Your Majesty and Your Majesty's court"
+  { .type = type::stop, .stop = { .audioIndex = 181, .fadeout = 4.2 } }, // 528 Preludium
+  { .type = type::voice, .voice = { .audioIndex = 229 } }, // 529 bird/b19.ogg
+  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 215 } }, // 530 b "I appreciate your loyalty to the crown of Corvidae little mice"
+  { .type = type::stop, .stop = { .audioIndex = 0, .fadeout = 4.2 } }, // 531 MistAmbience
+  { .type = type::voice, .voice = { .audioIndex = 230 } }, // 532 bird/b20.ogg
+  { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 216 } }, // 533 b "You are most welcome to proceed with your little song"
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 31 } }, // 534 e "..."
+  { .type = type::play, .play = { .audioIndex = 231 } }, // 535 poem/BirdSong.ogg
   { .type = type::scene, .scene = { .imageIndex = 6 } }, // 536 bgcastle2
-  { .type = type::pause, .pause = { .duration = 0.0 } }, // 537
-  { .type = type::scene, .scene = { .imageIndex = 7 } }, // 538 bgcastle3
-  { .type = type::pause, .pause = { .duration = 0.0 } }, // 539
-  { .type = type::scene, .scene = { .imageIndex = 8 } }, // 540 bgcastle4
-  { .type = type::pause, .pause = { .duration = 0.0 } }, // 541
-  { .type = type::scene, .scene = { .imageIndex = 7 } }, // 542 bgcastle3
-  { .type = type::pause, .pause = { .duration = 0.0 } }, // 543
-  { .type = type::scene, .scene = { .imageIndex = 6 } }, // 544 bgcastle2
-  { .type = type::pause, .pause = { .duration = 0.0 } }, // 545
-  { .type = type::scene, .scene = { .imageIndex = 7 } }, // 546 bgcastle3
-  { .type = type::pause, .pause = { .duration = 0.0 } }, // 547
-  { .type = type::scene, .scene = { .imageIndex = 6 } }, // 548 bgcastle2
-  { .type = type::pause, .pause = { .duration = 0.0 } }, // 549
-  { .type = type::scene, .scene = { .imageIndex = 5 } }, // 550 bgcastle1
-  { .type = type::pause, .pause = { .duration = 3 } }, // 551
-  { .type = type::scene_color, .scene_color = { .color = 0xffffff } }, // 552 bgwhite
-  { .type = type::pause, .pause = { .duration = 33 } }, // 553
-  { .type = type::voice, .voice = { .audioIndex = 231 } }, // 554 nara/n11.ogg
-  { .type = type::say, .say = { .characterIndex = 5, .stringIndex = 217 } }, // 555 n "In the end, Leona managed to stay out of the dungeon"
-  { .type = type::voice, .voice = { .audioIndex = 232 } }, // 556 nara/n12.ogg
-  { .type = type::say, .say = { .characterIndex = 5, .stringIndex = 218 } }, // 557 n "Eily and Alice both stayed in service of the queen for 7 harvests"
-  { .type = type::voice, .voice = { .audioIndex = 233 } }, // 558 nara/n13.ogg
-  { .type = type::say, .say = { .characterIndex = 5, .stringIndex = 219 } }, // 559 n "before returning to their small nameless town, near the Keep of Musia"
-  { .type = type::_return }, // 560
+  { .type = type::scene, .scene = { .imageIndex = 6 } }, // 537 bgcastle2
+  { .type = type::pause, .pause = { .duration = 0.0 } }, // 538
+  { .type = type::scene, .scene = { .imageIndex = 7 } }, // 539 bgcastle3
+  { .type = type::pause, .pause = { .duration = 0.0 } }, // 540
+  { .type = type::scene, .scene = { .imageIndex = 8 } }, // 541 bgcastle4
+  { .type = type::pause, .pause = { .duration = 0.0 } }, // 542
+  { .type = type::scene, .scene = { .imageIndex = 7 } }, // 543 bgcastle3
+  { .type = type::pause, .pause = { .duration = 0.0 } }, // 544
+  { .type = type::scene, .scene = { .imageIndex = 6 } }, // 545 bgcastle2
+  { .type = type::pause, .pause = { .duration = 0.0 } }, // 546
+  { .type = type::scene, .scene = { .imageIndex = 7 } }, // 547 bgcastle3
+  { .type = type::pause, .pause = { .duration = 0.0 } }, // 548
+  { .type = type::scene, .scene = { .imageIndex = 6 } }, // 549 bgcastle2
+  { .type = type::pause, .pause = { .duration = 0.0 } }, // 550
+  { .type = type::scene, .scene = { .imageIndex = 5 } }, // 551 bgcastle1
+  { .type = type::pause, .pause = { .duration = 3 } }, // 552
+  { .type = type::scene_color, .scene_color = { .color = 0xffffff } }, // 553 bgwhite
+  { .type = type::pause, .pause = { .duration = 33 } }, // 554
+  { .type = type::voice, .voice = { .audioIndex = 232 } }, // 555 nara/n11.ogg
+  { .type = type::say, .say = { .characterIndex = 5, .stringIndex = 217 } }, // 556 n "In the end, Leona managed to stay out of the dungeon"
+  { .type = type::voice, .voice = { .audioIndex = 233 } }, // 557 nara/n12.ogg
+  { .type = type::say, .say = { .characterIndex = 5, .stringIndex = 218 } }, // 558 n "Eily and Alice both stayed in service of the queen for 7 harvests"
+  { .type = type::voice, .voice = { .audioIndex = 234 } }, // 559 nara/n13.ogg
+  { .type = type::say, .say = { .characterIndex = 5, .stringIndex = 219 } }, // 560 n "before returning to their small nameless town, near the Keep of Musia"
+  { .type = type::_return }, // 561
 };
 
 const int statements_length = (sizeof (statements)) / (sizeof (statements[0]));
