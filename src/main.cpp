@@ -965,7 +965,8 @@ int main()
 
   renpy::interpreter interpreter_state;
   //interpreter_state.reset(88);
-  interpreter_state.reset(427);
+  interpreter_state.reset(0);
+  /*
   while (interpreter_state.pc < 533) {
     if (interpreter_state.pause.menu) {
       renpy::jumpToMenuItem(interpreter_state, 0);
@@ -976,6 +977,7 @@ int main()
     interpreter_state.interpret();
   }
   audio::stop_all();
+  */
 
   //////////////////////////////////////////////////////////////////////
   // renpy composite
