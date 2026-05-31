@@ -75,7 +75,9 @@ OBJS = \
 	src/renpy/interpreter.o \
 	src/renpy/interact.o \
 	src/audio.o \
-	src/poem1.o
+	src/poem/birdsong.o \
+	src/poem/eleanorthehero.o \
+	src/poem/kiristella.o
 
 ZLIB = ../zlib-1.3.2
 CFLAGS += -I$(ZLIB)
@@ -117,8 +119,8 @@ all: main
 #%.dds: %.png
 #	WINEDEBUG=-all wine $(HOME)/Texconv.exe -y -nogpu -nowic -dx10 --format BC7_UNORM_SRGB -m 1 $< -o $(dir $@)
 
-%.pcm: %.wav
-	ffmpeg -loglevel quiet -y -i $< -c:a pcm_s16le -ar 48000 -ac 2 -f s16le $@
+#%.pcm: %.wav
+#	ffmpeg -loglevel quiet -y -i $< -c:a pcm_s16le -ar 48000 -ac 2 -f s16le $@
 
 #%.pcm: %.ogg
 #	ffmpeg -loglevel quiet -y -i $< -c:a pcm_s16le -ar 48000 -ac 2 -f s16le $@
@@ -126,8 +128,8 @@ all: main
 #%.pcm: %.mp3
 #	ffmpeg -loglevel quiet -y -i $< -c:a pcm_s16le -ar 48000 -ac 2 -f s16le $@
 
-%.opus.bin: %.pcm
-	./tools/opus_encode $< $@
+#%.opus.bin: %.pcm
+#	./tools/opus_encode $< $@
 
 main: $(OBJS) $(LIBS)
 	$(CC) $(ARCH) $(LDFLAGS) $(FLAGS) $(OPT) $(DEBUG) $^ -o $@

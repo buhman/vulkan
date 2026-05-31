@@ -568,15 +568,15 @@ const language::dissolve dissolves[] = {
   { .duration = 1.3, .first_statement = 337, .count = 3 },
   { .duration = 3.0, .first_statement = 418, .count = 1 },
   { .duration = 2.0, .first_statement = 427, .count = 2 },
-  { .duration = 7.0, .first_statement = 537, .count = 1 },
-  { .duration = 7.0, .first_statement = 539, .count = 1 },
-  { .duration = 7.0, .first_statement = 541, .count = 1 },
-  { .duration = 7.0, .first_statement = 543, .count = 1 },
-  { .duration = 7.0, .first_statement = 545, .count = 1 },
-  { .duration = 7.0, .first_statement = 547, .count = 1 },
-  { .duration = 7.0, .first_statement = 549, .count = 1 },
-  { .duration = 10.0, .first_statement = 551, .count = 1 },
-  { .duration = 13.0, .first_statement = 553, .count = 1 },
+  { .duration = 7.0, .first_statement = 538, .count = 2 },
+  { .duration = 7.0, .first_statement = 541, .count = 2 },
+  { .duration = 7.0, .first_statement = 544, .count = 2 },
+  { .duration = 7.0, .first_statement = 547, .count = 2 },
+  { .duration = 7.0, .first_statement = 550, .count = 2 },
+  { .duration = 7.0, .first_statement = 553, .count = 2 },
+  { .duration = 7.0, .first_statement = 556, .count = 2 },
+  { .duration = 10.0, .first_statement = 559, .count = 2 },
+  { .duration = 13.0, .first_statement = 563, .count = 2 },
 };
 
 const int dissolves_length = (sizeof (dissolves)) / (sizeof (dissolves[0]));
@@ -987,7 +987,7 @@ const language::statement statements[] = {
   { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 162 } }, // 402 c "Sing me a song little minstrels!"
   { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 31 } }, // 403 e "..."
   { .type = type::play, .play = { .audioIndex = 170 } }, // 404 poem/KiriStella.ogg
-  { .type = type::pause, .pause = { .duration = 64 } }, // 405
+  { .type = type::pause, .pause = { .duration = 67 } }, // 405
   { .type = type::voice, .voice = { .audioIndex = 171 } }, // 406 leona/c54.ogg
   { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 163 } }, // 407 c "Very Nyice!"
   { .type = type::voice, .voice = { .audioIndex = 172 } }, // 408 leona/c55.ogg
@@ -1119,31 +1119,42 @@ const language::statement statements[] = {
   { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 31 } }, // 534 e "..."
   { .type = type::play, .play = { .audioIndex = 231 } }, // 535 poem/BirdSong.ogg
   { .type = type::scene, .scene = { .imageIndex = 6 } }, // 536 bgcastle2
-  { .type = type::scene, .scene = { .imageIndex = 6 } }, // 537 bgcastle2
-  { .type = type::pause, .pause = { .duration = 0.0 } }, // 538
-  { .type = type::scene, .scene = { .imageIndex = 7 } }, // 539 bgcastle3
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 31 } }, // 537 e "..."
+  { .type = type::scene, .scene = { .imageIndex = 6 } }, // 538 bgcastle2
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 31 } }, // 539 e "..."
   { .type = type::pause, .pause = { .duration = 0.0 } }, // 540
-  { .type = type::scene, .scene = { .imageIndex = 8 } }, // 541 bgcastle4
-  { .type = type::pause, .pause = { .duration = 0.0 } }, // 542
-  { .type = type::scene, .scene = { .imageIndex = 7 } }, // 543 bgcastle3
-  { .type = type::pause, .pause = { .duration = 0.0 } }, // 544
-  { .type = type::scene, .scene = { .imageIndex = 6 } }, // 545 bgcastle2
+  { .type = type::scene, .scene = { .imageIndex = 7 } }, // 541 bgcastle3
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 31 } }, // 542 e "..."
+  { .type = type::pause, .pause = { .duration = 0.0 } }, // 543
+  { .type = type::scene, .scene = { .imageIndex = 8 } }, // 544 bgcastle4
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 31 } }, // 545 e "..."
   { .type = type::pause, .pause = { .duration = 0.0 } }, // 546
   { .type = type::scene, .scene = { .imageIndex = 7 } }, // 547 bgcastle3
-  { .type = type::pause, .pause = { .duration = 0.0 } }, // 548
-  { .type = type::scene, .scene = { .imageIndex = 6 } }, // 549 bgcastle2
-  { .type = type::pause, .pause = { .duration = 0.0 } }, // 550
-  { .type = type::scene, .scene = { .imageIndex = 5 } }, // 551 bgcastle1
-  { .type = type::pause, .pause = { .duration = 3 } }, // 552
-  { .type = type::scene_color, .scene_color = { .color = 0xffffff } }, // 553 bgwhite
-  { .type = type::pause, .pause = { .duration = 33 } }, // 554
-  { .type = type::voice, .voice = { .audioIndex = 232 } }, // 555 nara/n11.ogg
-  { .type = type::say, .say = { .characterIndex = 5, .stringIndex = 217 } }, // 556 n "In the end, Leona managed to stay out of the dungeon"
-  { .type = type::voice, .voice = { .audioIndex = 233 } }, // 557 nara/n12.ogg
-  { .type = type::say, .say = { .characterIndex = 5, .stringIndex = 218 } }, // 558 n "Eily and Alice both stayed in service of the queen for 7 harvests"
-  { .type = type::voice, .voice = { .audioIndex = 234 } }, // 559 nara/n13.ogg
-  { .type = type::say, .say = { .characterIndex = 5, .stringIndex = 219 } }, // 560 n "before returning to their small nameless town, near the Keep of Musia"
-  { .type = type::_return }, // 561
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 31 } }, // 548 e "..."
+  { .type = type::pause, .pause = { .duration = 0.0 } }, // 549
+  { .type = type::scene, .scene = { .imageIndex = 6 } }, // 550 bgcastle2
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 31 } }, // 551 e "..."
+  { .type = type::pause, .pause = { .duration = 0.0 } }, // 552
+  { .type = type::scene, .scene = { .imageIndex = 7 } }, // 553 bgcastle3
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 31 } }, // 554 e "..."
+  { .type = type::pause, .pause = { .duration = 0.0 } }, // 555
+  { .type = type::scene, .scene = { .imageIndex = 6 } }, // 556 bgcastle2
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 31 } }, // 557 e "..."
+  { .type = type::pause, .pause = { .duration = 0.0 } }, // 558
+  { .type = type::scene, .scene = { .imageIndex = 5 } }, // 559 bgcastle1
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 31 } }, // 560 e "..."
+  { .type = type::pause, .pause = { .duration = 0.0 } }, // 561
+  { .type = type::pause, .pause = { .duration = 3 } }, // 562
+  { .type = type::scene_color, .scene_color = { .color = 0xffffff } }, // 563 bgwhite
+  { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 31 } }, // 564 e "..."
+  { .type = type::pause, .pause = { .duration = 33 } }, // 565
+  { .type = type::voice, .voice = { .audioIndex = 232 } }, // 566 nara/n11.ogg
+  { .type = type::say, .say = { .characterIndex = 5, .stringIndex = 217 } }, // 567 n "In the end, Leona managed to stay out of the dungeon"
+  { .type = type::voice, .voice = { .audioIndex = 233 } }, // 568 nara/n12.ogg
+  { .type = type::say, .say = { .characterIndex = 5, .stringIndex = 218 } }, // 569 n "Eily and Alice both stayed in service of the queen for 7 harvests"
+  { .type = type::voice, .voice = { .audioIndex = 234 } }, // 570 nara/n13.ogg
+  { .type = type::say, .say = { .characterIndex = 5, .stringIndex = 219 } }, // 571 n "before returning to their small nameless town, near the Keep of Musia"
+  { .type = type::_return }, // 572
 };
 
 const int statements_length = (sizeof (statements)) / (sizeof (statements[0]));

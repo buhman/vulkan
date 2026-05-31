@@ -965,8 +965,8 @@ int main()
 
   renpy::interpreter interpreter_state;
   //interpreter_state.reset(88);
-  interpreter_state.reset(59);
-  while (interpreter_state.pc < 88) {
+  interpreter_state.reset(427);
+  while (interpreter_state.pc < 533) {
     if (interpreter_state.pause.menu) {
       renpy::jumpToMenuItem(interpreter_state, 0);
     }
@@ -1319,7 +1319,7 @@ int main()
       offscreenRender(commandBuffer, frameIndex, mx, my, 2, true, renpy_state, interpreter_state, font_state, surfaceCapabilities);
     } else {
       offscreenRender(commandBuffer, frameIndex, mx, my, 0, true, renpy_state, interpreter_state, font_state, surfaceCapabilities);
-      offscreenRender(commandBuffer, frameIndex, mx, my, 1, false, renpy_state, interpreter_state, font_state, surfaceCapabilities);
+      offscreenRender(commandBuffer, frameIndex, mx, my, 1, drawText, renpy_state, interpreter_state, font_state, surfaceCapabilities);
     }
 
     //////////////////////////////////////////////////////////////////////

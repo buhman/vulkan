@@ -21,7 +21,7 @@
 #include "renpy/script.h"
 
 #include "audio.h"
-#include "poem1.h"
+#include "poem.h"
 
 namespace font::outline {
   static const _Float16 vertexData[] = {
@@ -745,11 +745,12 @@ namespace font::outline {
       }
     } else {
       bool say_poem = state.say.stringIndex == (uint32_t)renpy::script::strings_say_poem_index;
-      if (audio::poem1_playing && say_poem) {
-        int word_index = poem1::timestamps[audio::poem_timestamp_index].wordIndex;
-        char const * const string = combine_words(poem1::words,
-                                                  poem1::lines[audio::poem_line_index].start,
-                                                  poem1::lines[audio::poem_line_index].length,
+      if ((audio::poem_playing != nullptr) && say_poem) {
+        poem::poem const * const poem = audio::poem_playing;
+        int word_index = poem->timestamps[audio::poem_timestamp_index].wordIndex;
+        char const * const string = combine_words(poem->words,
+                                                  poem->lines[audio::poem_line_index].start,
+                                                  poem->lines[audio::poem_line_index].length,
                                                   word_index);
         uint32_t x = textboxLeft << 6;
         uint32_t y = (600 + 20) << 6;
@@ -759,10 +760,10 @@ namespace font::outline {
                  outputIndex,
                  0x000000);
 
-        if ((audio::poem_line_index + 1) < poem1::lines_length) {
-          char const * const string = combine_words(poem1::words,
-                                                    poem1::lines[audio::poem_line_index + 1].start,
-                                                    poem1::lines[audio::poem_line_index + 1].length,
+        if ((audio::poem_line_index + 1) < poem->lines_length) {
+          char const * const string = combine_words(poem->words,
+                                                    poem->lines[audio::poem_line_index + 1].start,
+                                                    poem->lines[audio::poem_line_index + 1].length,
                                                     -1);
           uint32_t x = textboxLeft << 6;
           //uint32_t y = (600 + 20) << 6;

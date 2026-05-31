@@ -1,7 +1,7 @@
-#include "poem1.h"
+#include "poem.h"
 
-namespace poem1 {
-  char const * const words[] = {
+namespace poem {
+  static char const * const words[] = {
     "Windless", "misty", "nights",
     "I've", "seen", "along", "my", "way",
     "Long", "ago",
@@ -10,9 +10,9 @@ namespace poem1 {
     "Clad", "in", "cloud", "and", "rain",
     "Through", "the", "night", "and", "the", "day",
   };
-  int const words_length = (sizeof (words)) / (sizeof (words[0]));
+  static int const words_length = (sizeof (words)) / (sizeof (words[0]));
 
-  line const lines[] = {
+  static line const lines[] = {
     { 0, 3 },
     { 3, 5 },
     { 8, 2 },
@@ -21,9 +21,9 @@ namespace poem1 {
     { 20, 5 },
     { 25, 6 }
   };
-  int const lines_length = (sizeof (lines)) / (sizeof (lines[0]));
+  static int const lines_length = (sizeof (lines)) / (sizeof (lines[0]));
 
-  timestamp const timestamps[] = {
+  static timestamp const timestamps[] = {
     { 0.0, -1 }, // [instrumental]
 
     { 4.985, 0 }, // windless
@@ -68,5 +68,14 @@ namespace poem1 {
 
     { 33.00, -1 }, // [instrumental]
   };
-  int const timestamps_length = (sizeof (timestamps)) / (sizeof (timestamps[0]));
+  static int const timestamps_length = (sizeof (timestamps)) / (sizeof (timestamps[0]));
+
+  poem const eleanorthehero = {
+    .words = words,
+    .words_length = words_length,
+    .lines = lines,
+    .lines_length = lines_length,
+    .timestamps = timestamps,
+    .timestamps_length = timestamps_length,
+  };
 }

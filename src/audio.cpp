@@ -10,7 +10,7 @@
 #include "new.h"
 #include "minmax.h"
 #include "renpy/language.h"
-#include "poem1.h"
+#include "poem.h"
 
 namespace audio {
 
@@ -38,7 +38,7 @@ namespace audio {
     uint32_t tail_index;
     uint32_t fadeout_end;
     uint32_t fadeout_index;
-    bool is_poem1;
+    poem::poem const * poem;
   };
 
   //
@@ -151,8 +151,16 @@ namespace audio {
     instance.tail_index = audio_buffers[audio_index].sample_count;
     instance.fadeout_end = 0;
     instance.fadeout_index = 0;
-    instance.is_poem1 = (strcmp(instance.audio_buffer->audio->path, "audio/poem/Poem1.opus.bin") == 0);
-    if (instance.is_poem1) {
+    if (strcmp(instance.audio_buffer->audio->path, "audio/poem/BirdSong.opus.bin") == 0) {
+      instance.poem = &poem::birdsong;
+    } else if (strcmp(instance.audio_buffer->audio->path, "audio/poem/EleanorTheHero.opus.bin") == 0) {
+      instance.poem = &poem::eleanorthehero;
+    } else if (strcmp(instance.audio_buffer->audio->path, "audio/poem/KiriStella.opus.bin") == 0) {
+      instance.poem = &poem::kiristella;
+    } else {
+      instance.poem = nullptr;
+    }
+    if (instance.poem != nullptr) {
       poem_timestamp_index = 0;
       poem_line_index = 0;
     }
@@ -276,25 +284,27 @@ namespace audio {
 
   int poem_timestamp_index = 0;
   int poem_line_index = 0;
-  bool poem1_playing = false;
+  poem::poem const * poem_playing = nullptr;
 
   void update_poem(AudioInstance & instance)
   {
-    if (!instance.is_poem1) {
+    if (instance.poem == nullptr) {
       return;
     }
 
-    poem1_playing = true;
+    poem::poem const * const poem = instance.poem;
+    assert(poem_playing == nullptr);
+    poem_playing = poem;
 
-    if (poem_timestamp_index < (poem1::timestamps_length - 1)) {
+    if (poem_timestamp_index < (poem->timestamps_length - 1)) {
       double time = (double)instance.sample_index / (double)sample_rate;
-      while (poem1::timestamps[poem_timestamp_index + 1].time <= time) {
+      while (poem->timestamps[poem_timestamp_index + 1].time <= time) {
         poem_timestamp_index += 1;
       }
     }
 
-    if (poem_line_index < (poem1::lines_length - 1)) {
-      while (poem1::timestamps[poem_timestamp_index].wordIndex >= poem1::lines[poem_line_index].start + poem1::lines[poem_line_index].length) {
+    if (poem_line_index < (poem->lines_length - 1)) {
+      while (poem->timestamps[poem_timestamp_index].wordIndex >= poem->lines[poem_line_index].start + poem->lines[poem_line_index].length) {
         poem_line_index += 1;
       }
     }
@@ -308,7 +318,7 @@ namespace audio {
     int16_t mix_buffer[half_period_samples * channels];
     memset(mix_buffer, 0, (sizeof (mix_buffer)));
 
-    poem1_playing = false;
+    poem_playing = nullptr;
     for (int i = 0; i < audio_instances_count; i++) {
       update_instance(mix_buffer, audio_instances[i]);
 

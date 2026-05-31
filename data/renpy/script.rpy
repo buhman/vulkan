@@ -699,15 +699,15 @@ label start:
         voice "leona/c53.ogg"
         c "Sing me a song little minstrels!"
 
-        menu:
-            Estevie Kiri Stella
-            The Hero of Eleanor (again)
+        #menu:
+        #    Estevie Kiri Stella
+        #    The Hero of Eleanor (again)
         #stop WheatFields fadeout 3.0
 
         #voice "mousegirls/mg2.ogg"
         e "..."
         play music "poem/KiriStella.ogg" noloop
-        pause 64
+        pause 67
 
 
 

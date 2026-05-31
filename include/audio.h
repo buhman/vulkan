@@ -1,12 +1,13 @@
 #pragma once
 
 #include "renpy/language.h"
+#include "poem.h"
 
 namespace audio {
 
   extern int poem_timestamp_index;
   extern int poem_line_index;
-  extern bool poem1_playing;
+  extern poem::poem const * poem_playing;
 
   void init();
   void load(renpy::language::audio const * const audio, int count);
