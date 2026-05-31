@@ -977,6 +977,7 @@ int main()
   //interpreter_state.reset(427);
   interpreter_state.reset(0);
   //while (interpreter_state.pc < 543) {
+  /*
   while (interpreter_state.pc < 26) {
     if (interpreter_state.pause.menu) {
       renpy::jumpToMenuItem(interpreter_state, 0);
@@ -986,6 +987,7 @@ int main()
     interpreter_state.pause.dissolve = false;
     interpreter_state.interpret();
   }
+  */
   audio::stop_all();
 
   //////////////////////////////////////////////////////////////////////

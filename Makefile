@@ -7,7 +7,7 @@ OBJARCH = elf64-x86-64
 
 UNAME := $(shell uname -s)
 
-OPT += -O0
+OPT += -O3
 OPT += -march=core-avx2
 
 DEBUG = -g
