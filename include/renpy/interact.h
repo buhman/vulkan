@@ -15,6 +15,7 @@ namespace renpy {
   extern int lastGamepadItem;
   extern bool lastUseGamepad;
 
+  void jumpToMenuItem(interpreter & state, int i);
   bool overlap(int menuWidth, int menuHeight,
                int x, int y,
                int mx, int my,

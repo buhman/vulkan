@@ -39,7 +39,7 @@ namespace renpy {
   static bool lastgDown = false;
   static bool lastgAccept = false;
 
-  static void jumpToMenuItem(interpreter & state, int i)
+  void jumpToMenuItem(interpreter & state, int i)
   {
     // jump to menu item
     uint32_t optionIndex = state.menu.optionIndex + i;

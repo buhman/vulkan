@@ -557,7 +557,7 @@ namespace renpy {
     instanceMappedData[maximumImageCount * frameIndex + outputIndex++] = {
       .size = {708, 200},
       .topLeft = {286, 720 - 200},
-      .color = 0x80ffffffu,
+      .color = 0xc0ffffffu,
       .imageIndex = -2, // white gradient 1
     };
     instanceMappedData[maximumImageCount * frameIndex + outputIndex++] = {

@@ -3,6 +3,7 @@
 namespace renpy::script {
   extern char const * const strings[];
   extern const int strings_length;
+  extern const int strings_say_poem_index;
 
   extern const language::character characters[];
   extern const int characters_length;

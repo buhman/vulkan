@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
 
 #ifdef __APPLE__
 #include "vulkan/vulkan.h"
@@ -18,6 +19,9 @@
 #include "font/outline.h"
 #include "font/outline_types.h"
 #include "renpy/script.h"
+
+#include "audio.h"
+#include "poem1.h"
 
 namespace font::outline {
   static const _Float16 vertexData[] = {
@@ -625,7 +629,8 @@ namespace font::outline {
                        uint32_t color) const
   {
     for (int i = startIndex; i < endIndex; i++) {
-      char c = string[i];
+      bool highlight = string[i] < 0;
+      char c = abs(string[i]);
       types::glyph const& glyph = loadedFont.glyphs[c - 32];
 
       if (c != ' ' && c != '\n') {
@@ -633,7 +638,7 @@ namespace font::outline {
           (uint16_t)((x + glyph.metrics.horiBearingX) >> 6),
           (uint16_t)((y - glyph.metrics.horiBearingY) >> 6),
           (uint32_t)(c - 32),
-          color,
+          highlight ? 0xa81524: color,
         };
       }
 
@@ -653,7 +658,7 @@ namespace font::outline {
     uint32_t leftOffset = 0;
 
     while (true) {
-      char c = string[stringIndex++];
+      char c = abs(string[stringIndex++]);
       if (c == 0)
         break;
 
@@ -670,15 +675,15 @@ namespace font::outline {
       lineWidth += glyph.metrics.horiAdvance;
 
       if ((lineWidth - leftOffset) + loadedFont.font->face_metrics.max_advance > (maxWidth << 6)) {
-        while (string[stringIndex] != ' ') {
-          char c = string[--stringIndex];
+        while (abs(string[stringIndex]) != ' ') {
+          char c = abs(string[--stringIndex]);
           types::glyph const& glyph = loadedFont.glyphs[c - 32];
           lineWidth -= glyph.metrics.horiAdvance;
         }
         uint32_t center = (minX + (maxWidth / 2)) << 6;
         uint32_t left = center - (lineWidth / 2);
         emit_line(frameIndex, string, left - leftOffset, y, outputIndex, lineStart, stringIndex, color);
-        while (string[stringIndex] == ' ') stringIndex++;
+        while (abs(string[stringIndex]) == ' ') stringIndex++;
         lineStart = stringIndex;
         lineWidth = 0;
         y += loadedFont.font->face_metrics.height * 1.2;
@@ -694,6 +699,28 @@ namespace font::outline {
     }
   }
 
+  static char line_buffer[1024];
+  char const * combine_words(char const * const * const words, int start, int count,
+                             int word_index)
+  {
+    assert(count > 0);
+    int index = 0;
+    for (int i = start; i < start + count; i++) {
+      char const * word = words[i];
+      int sign = (word_index == i) ? -1 : 1;
+      while (true) {
+        int c = *word++;
+        if (c == 0)
+          break;
+        line_buffer[index++] = (char)(c * sign);
+      }
+      line_buffer[index++] = ' ';
+    }
+    assert(index > 0);
+    line_buffer[index - 1] = 0;
+    return line_buffer;
+  }
+
   //////////////////////////////////////////////////////////////////////
   // draw
   //////////////////////////////////////////////////////////////////////
@@ -705,8 +732,49 @@ namespace font::outline {
     // transfer
     int outputIndex = 0;
 
-    if (!state.pause.menu) {
-      if (state.say.stringIndex != -1u) {
+    if (state.pause.menu) {
+      assert(state.menu.count != 0);
+      for (uint32_t i = 0; i < state.menu.count; i++) {
+        uint32_t x = 400 << 6;
+        uint32_t y = (100 * i + 130) << 6;
+        centered(frameIndex, renpy::script::options[state.menu.optionIndex + i].string,
+                 x, y,
+                 400, 480,
+                 outputIndex,
+                 0x000000);
+      }
+    } else {
+      bool say_poem = state.say.stringIndex == (uint32_t)renpy::script::strings_say_poem_index;
+      if (audio::poem1_playing && say_poem) {
+        int word_index = poem1::timestamps[audio::poem_timestamp_index].wordIndex;
+        char const * const string = combine_words(poem1::words,
+                                                  poem1::lines[audio::poem_line_index].start,
+                                                  poem1::lines[audio::poem_line_index].length,
+                                                  word_index);
+        uint32_t x = textboxLeft << 6;
+        uint32_t y = (600 + 20) << 6;
+        centered(frameIndex, string,
+                 x, y,
+                 textboxLeft, textboxWidth,
+                 outputIndex,
+                 0x000000);
+
+        if ((audio::poem_line_index + 1) < poem1::lines_length) {
+          char const * const string = combine_words(poem1::words,
+                                                    poem1::lines[audio::poem_line_index + 1].start,
+                                                    poem1::lines[audio::poem_line_index + 1].length,
+                                                    -1);
+          uint32_t x = textboxLeft << 6;
+          //uint32_t y = (600 + 20) << 6;
+          y += (20 << 6);
+          centered(frameIndex, string,
+                   x, y,
+                   textboxLeft, textboxWidth,
+                   outputIndex,
+                   0x808080);
+        }
+
+      } else if (state.say.stringIndex != -1u) {
         char const * const string = renpy::script::strings[state.say.stringIndex];
         uint32_t x = textboxLeft << 6;
         uint32_t y = 600 << 6;
@@ -727,17 +795,6 @@ namespace font::outline {
                  550, 180,
                  outputIndex,
                  character.color);
-      }
-    } else {
-      assert(state.menu.count != 0);
-      for (uint32_t i = 0; i < state.menu.count; i++) {
-        uint32_t x = 400 << 6;
-        uint32_t y = (100 * i + 130) << 6;
-        centered(frameIndex, renpy::script::options[state.menu.optionIndex + i].string,
-                 x, y,
-                 400, 480,
-                 outputIndex,
-                 0x000000);
       }
     }
 

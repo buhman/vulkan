@@ -74,7 +74,8 @@ OBJS = \
 	src/renpy/script.o \
 	src/renpy/interpreter.o \
 	src/renpy/interact.o \
-	src/audio.o
+	src/audio.o \
+	src/poem1.o
 
 ZLIB = ../zlib-1.3.2
 CFLAGS += -I$(ZLIB)

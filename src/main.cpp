@@ -953,11 +953,29 @@ int main()
   renpy_state.init();
 
   //////////////////////////////////////////////////////////////////////
+  // audio
+  //////////////////////////////////////////////////////////////////////
+
+  audio::init();
+  audio::load(renpy::script::audio, renpy::script::audio_length);
+
+  //////////////////////////////////////////////////////////////////////
   // interpreter
   //////////////////////////////////////////////////////////////////////
 
   renpy::interpreter interpreter_state;
-  interpreter_state.reset(12);
+  //interpreter_state.reset(88);
+  interpreter_state.reset(59);
+  while (interpreter_state.pc < 88) {
+    if (interpreter_state.pause.menu) {
+      renpy::jumpToMenuItem(interpreter_state, 0);
+    }
+    interpreter_state.pause.voice = false;
+    interpreter_state.pause.pause = false;
+    interpreter_state.pause.dissolve = false;
+    interpreter_state.interpret();
+  }
+  audio::stop_all();
 
   //////////////////////////////////////////////////////////////////////
   // renpy composite
@@ -1019,9 +1037,6 @@ int main()
   double dissolve_start = 0.0;
 
   //collada_state.update(0);
-
-  audio::init();
-  audio::load(renpy::script::audio, renpy::script::audio_length);
 
   bool useGamepad = false;
   uint32_t whichGamepad = 0;

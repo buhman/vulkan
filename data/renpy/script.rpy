@@ -208,7 +208,10 @@ label start:
                 e "Sure"
                 a "..."
                 play music "poem/Poem1.ogg" noloop
-                pause 40
+                # rawr 1.375
+                #pause 39.275
+                #pause 37.9
+                pause 38.8875
             "I am too tired" :
                 voice "eily/e16.ogg"
                 e "Serves you right for scaring those elephant-dogs"
@@ -256,8 +259,10 @@ label start:
         show ei at centerleft:
             xzoom -1
         #voice "placeholdermeow.mp3"
-        voice "leona/c1.ogg"
+        #voice "leona/c1.ogg"
         c "Rawrrrr"
+        play music "leona/c1.ogg"
+        pause 0.7
         hide catw
         show cat at right
         play ScaredMice "music/ScaredMice.ogg"
@@ -893,22 +898,32 @@ label start:
 
         scene bgcastle2
         with Dissolve(7.0)
+        pause 0.0
 
         scene bgcastle3
         with Dissolve(7.0)
+        pause 0.0
 
         scene bgcastle4
         with Dissolve(7.0)
+        pause 0.0
 
         scene bgcastle3
         with Dissolve(7.0)
+        pause 0.0
 
         scene bgcastle2
         with Dissolve(7.0)
+        pause 0.0
+
         scene bgcastle3
         with Dissolve(7.0)
+        pause 0.0
+
         scene bgcastle2
         with Dissolve(7.0)
+        pause 0.0
+
         scene bgcastle1
         with Dissolve(10.0)
 

@@ -10,6 +10,7 @@
 #include "new.h"
 #include "minmax.h"
 #include "renpy/language.h"
+#include "poem1.h"
 
 namespace audio {
 
@@ -24,13 +25,6 @@ namespace audio {
   static int const half_period_samples = sample_rate / 30;
   static int const half_period_size = half_period_samples * sample_size * channels;
 
-  //
-
-  static SDL_AudioStream * audio_stream;
-  static SDL_AudioSpec audio_spec;
-
-  static OpusDecoder * opus_decoder;
-
   struct AudioBuffer {
     renpy::language::audio const * audio;
     int16_t * buf;
@@ -44,7 +38,15 @@ namespace audio {
     uint32_t tail_index;
     uint32_t fadeout_end;
     uint32_t fadeout_index;
+    bool is_poem1;
   };
+
+  //
+
+  static SDL_AudioStream * audio_stream;
+  static SDL_AudioSpec audio_spec;
+
+  static OpusDecoder * opus_decoder;
 
   static AudioBuffer * audio_buffers;
   static int audio_buffers_count;
@@ -137,6 +139,7 @@ namespace audio {
 
   void play(int audio_index)
   {
+    fprintf(stderr, "%d %d\n", audio_index, audio_buffers_count);
     assert(audio_index >= 0 && audio_index < audio_buffers_count);
     assert(audio_instances_count < max_audio_instances);
 
@@ -148,6 +151,11 @@ namespace audio {
     instance.tail_index = audio_buffers[audio_index].sample_count;
     instance.fadeout_end = 0;
     instance.fadeout_index = 0;
+    instance.is_poem1 = (strcmp(instance.audio_buffer->audio->path, "audio/poem/Poem1.opus.bin") == 0);
+    if (instance.is_poem1) {
+      poem_timestamp_index = 0;
+      poem_line_index = 0;
+    }
   }
 
   bool exists(int audio_index)
@@ -178,6 +186,11 @@ namespace audio {
     }
   }
 
+  void stop_all()
+  {
+    audio_instances_count = 0;
+  }
+
   static inline void saturation_add(int16_t * mix_buffer, int32_t value)
   {
     int32_t mix_value = *mix_buffer;
@@ -204,8 +217,6 @@ namespace audio {
     int16_t const * const buf = instance.audio_buffer->buf;
     uint32_t const sample_count = instance.audio_buffer->sample_count;
     uint32_t const loop_end = instance.audio_buffer->audio->loop_end * (double)sample_rate;
-    bool is_music = (instance.audio_buffer->audio->audio_flags & renpy::language::audio::music) != 0;
-
     uint32_t mix_index = 0;
     for (int i = 0; i < half_period_samples; i++) {
       if (loop_end != 0.0) {
@@ -225,10 +236,10 @@ namespace audio {
       assert(instance.sample_index < sample_count);
       assert(instance.tail_index <= sample_count);
 
-
       double fadeout = 1.0;
       double attenuation = instance.audio_buffer->audio->attenuation;
       assert(attenuation != 0.0);
+      //bool is_music = (instance.audio_buffer->audio->audio_flags & renpy::language::audio::music) != 0;
       //if (is_music)
       //fprintf(stderr, "attenuation %f\n", attenuation);
       if (instance.fadeout_end != 0) {
@@ -263,6 +274,32 @@ namespace audio {
     return false;
   }
 
+  int poem_timestamp_index = 0;
+  int poem_line_index = 0;
+  bool poem1_playing = false;
+
+  void update_poem(AudioInstance & instance)
+  {
+    if (!instance.is_poem1) {
+      return;
+    }
+
+    poem1_playing = true;
+
+    if (poem_timestamp_index < (poem1::timestamps_length - 1)) {
+      double time = (double)instance.sample_index / (double)sample_rate;
+      while (poem1::timestamps[poem_timestamp_index + 1].time <= time) {
+        poem_timestamp_index += 1;
+      }
+    }
+
+    if (poem_line_index < (poem1::lines_length - 1)) {
+      while (poem1::timestamps[poem_timestamp_index].wordIndex >= poem1::lines[poem_line_index].start + poem1::lines[poem_line_index].length) {
+        poem_line_index += 1;
+      }
+    }
+  }
+
   void update()
   {
     if (SDL_GetAudioStreamQueued(audio_stream) >= half_period_size)
@@ -271,8 +308,11 @@ namespace audio {
     int16_t mix_buffer[half_period_samples * channels];
     memset(mix_buffer, 0, (sizeof (mix_buffer)));
 
+    poem1_playing = false;
     for (int i = 0; i < audio_instances_count; i++) {
       update_instance(mix_buffer, audio_instances[i]);
+
+      update_poem(audio_instances[i]);
     }
 
     bool culled = true;

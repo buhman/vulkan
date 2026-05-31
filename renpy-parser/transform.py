@@ -73,7 +73,7 @@ attenuations = {
     "MistAmbience": 1.0,
     "TinyForestMinstrels": 0.45,
     "WheatFields": 1.0,
-    "Preludium": 1.0,
+    "Preludium": 0.45,
 }
 
 character_images = {
@@ -294,6 +294,7 @@ def pass2_strings(state):
         yield f"\"{string.decode('utf-8')}\", // {i}"
     yield "};"
     yield "const int strings_length = (sizeof (strings)) / (sizeof (strings[0]));"
+    yield f"const int strings_say_poem_index = {state.string_lookup[b'...']};"
 
 def pass2_characters(state):
     yield "const language::character characters[] = {"
