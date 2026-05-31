@@ -6,7 +6,7 @@ namespace renpy {
 
   namespace menu {
     constexpr int width = 480;
-    constexpr int height = 40;
+    constexpr int height = 42;
     constexpr int x = 400;
     constexpr int y = 100;
     constexpr int yStride = 100;

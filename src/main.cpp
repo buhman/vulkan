@@ -548,6 +548,15 @@ void handlePause(renpy::interpreter & interpreter_state,
   }
 }
 
+int mainAudio(void * quit)
+{
+  while (*(bool *)quit == false) {
+    audio::update();
+    SDL_Delay(1);
+  }
+  return 0;
+}
+
 int main()
 {
   file::init();
@@ -965,9 +974,10 @@ int main()
 
   renpy::interpreter interpreter_state;
   //interpreter_state.reset(88);
+  //interpreter_state.reset(427);
   interpreter_state.reset(0);
-  /*
-  while (interpreter_state.pc < 533) {
+  //while (interpreter_state.pc < 543) {
+  while (interpreter_state.pc < 26) {
     if (interpreter_state.pause.menu) {
       renpy::jumpToMenuItem(interpreter_state, 0);
     }
@@ -977,7 +987,6 @@ int main()
     interpreter_state.interpret();
   }
   audio::stop_all();
-  */
 
   //////////////////////////////////////////////////////////////////////
   // renpy composite
@@ -1043,9 +1052,9 @@ int main()
   bool useGamepad = false;
   uint32_t whichGamepad = 0;
 
-  while (quit == false) {
-    audio::update();
+  SDL_Thread * audio_thread = SDL_CreateThread(mainAudio, "audio", &quit);
 
+  while (quit == false) {
     //////////////////////////////////////////////////////////////////////
     // interpreter update
     //////////////////////////////////////////////////////////////////////
@@ -1530,6 +1539,7 @@ int main()
     }
   }
 
+  SDL_WaitThread(audio_thread, nullptr);
   VK_CHECK(vkDeviceWaitIdle(device));
 
   //collada_state.vulkan.destroy_all(collada_scene_descriptor);

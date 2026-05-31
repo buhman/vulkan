@@ -232,27 +232,27 @@ const int strings_length = (sizeof (strings)) / (sizeof (strings[0]));
 const int strings_say_poem_index = 31;
 
 // b'a'
-static const uint32_t character_images_0[] = { 14, 16, 17 };
+static const uint32_t character_images_0[] = { 16, 18, 19 };
 
 static constexpr uint32_t character_images_0_length = 3;
 
 // b'b'
-static const uint32_t character_images_1[] = { 10 };
+static const uint32_t character_images_1[] = { 12 };
 
 static constexpr uint32_t character_images_1_length = 1;
 
 // b'c'
-static const uint32_t character_images_2[] = { 11, 12 };
+static const uint32_t character_images_2[] = { 13, 14 };
 
 static constexpr uint32_t character_images_2_length = 2;
 
 // b'e'
-static const uint32_t character_images_3[] = { 13, 15 };
+static const uint32_t character_images_3[] = { 15, 17 };
 
 static constexpr uint32_t character_images_3_length = 2;
 
 // b'mg'
-static const uint32_t character_images_4[] = { 14, 16, 17, 13, 15 };
+static const uint32_t character_images_4[] = { 16, 18, 19, 15, 17 };
 
 static constexpr uint32_t character_images_4_length = 5;
 
@@ -262,7 +262,7 @@ static const uint32_t character_images_5[] = {  };
 static constexpr uint32_t character_images_5_length = 0;
 
 // b'l'
-static const uint32_t character_images_6[] = { 11, 12 };
+static const uint32_t character_images_6[] = { 13, 14 };
 
 static constexpr uint32_t character_images_6_length = 2;
 
@@ -526,23 +526,25 @@ const int audio_length = (sizeof (audio)) / (sizeof (audio[0]));
 
 const language::image images[] = {
   { .path = "data/renpy/images/flowers.dds", .is_character_image = false }, // 0 flowers.png
-  { .path = "data/renpy/images/bg/forest1.dds", .is_character_image = false }, // 1 bg/forest1.png
-  { .path = "data/renpy/images/bg/forest2.dds", .is_character_image = false }, // 2 bg/forest2.png
-  { .path = "data/renpy/images/bg/flowerfield1.dds", .is_character_image = false }, // 3 bg/flowerfield1.png
-  { .path = "data/renpy/images/bg/wheatfield1.dds", .is_character_image = false }, // 4 bg/wheatfield1.png
-  { .path = "data/renpy/images/bg/castle1.dds", .is_character_image = false }, // 5 bg/castle1.png
-  { .path = "data/renpy/images/bg/castle2.dds", .is_character_image = false }, // 6 bg/castle2.png
-  { .path = "data/renpy/images/bg/castle3.dds", .is_character_image = false }, // 7 bg/castle3.png
-  { .path = "data/renpy/images/bg/castle4.dds", .is_character_image = false }, // 8 bg/castle4.png
-  { .path = "data/renpy/images/end.dds", .is_character_image = false }, // 9 end.png
-  { .path = "data/renpy/images/ch/ibird/Bird.dds", .is_character_image = true }, // 10 ch/ibird/Bird.png
-  { .path = "data/renpy/images/ch/icat/Cat.dds", .is_character_image = true }, // 11 ch/icat/Cat.png
-  { .path = "data/renpy/images/ch/icat/Catw.dds", .is_character_image = true }, // 12 ch/icat/Catw.png
-  { .path = "data/renpy/images/ch/ieily/Eily.dds", .is_character_image = true }, // 13 ch/ieily/Eily.png
-  { .path = "data/renpy/images/ch/ialice/Alice.dds", .is_character_image = true }, // 14 ch/ialice/Alice.png
-  { .path = "data/renpy/images/ch/ieily/Seily.dds", .is_character_image = true }, // 15 ch/ieily/Seily.png
-  { .path = "data/renpy/images/ch/ialice/Salice.dds", .is_character_image = true }, // 16 ch/ialice/Salice.png
-  { .path = "data/renpy/images/ch/ialice/Walice.dds", .is_character_image = true }, // 17 ch/ialice/Walice.png
+  { .path = "data/renpy/images/button1.dds", .is_character_image = false }, // 1 button1.png
+  { .path = "data/renpy/images/button2.dds", .is_character_image = false }, // 2 button2.png
+  { .path = "data/renpy/images/bg/forest1.dds", .is_character_image = false }, // 3 bg/forest1.png
+  { .path = "data/renpy/images/bg/forest2.dds", .is_character_image = false }, // 4 bg/forest2.png
+  { .path = "data/renpy/images/bg/flowerfield1.dds", .is_character_image = false }, // 5 bg/flowerfield1.png
+  { .path = "data/renpy/images/bg/wheatfield1.dds", .is_character_image = false }, // 6 bg/wheatfield1.png
+  { .path = "data/renpy/images/bg/castle1.dds", .is_character_image = false }, // 7 bg/castle1.png
+  { .path = "data/renpy/images/bg/castle2.dds", .is_character_image = false }, // 8 bg/castle2.png
+  { .path = "data/renpy/images/bg/castle3.dds", .is_character_image = false }, // 9 bg/castle3.png
+  { .path = "data/renpy/images/bg/castle4.dds", .is_character_image = false }, // 10 bg/castle4.png
+  { .path = "data/renpy/images/end.dds", .is_character_image = false }, // 11 end.png
+  { .path = "data/renpy/images/ch/ibird/Bird.dds", .is_character_image = true }, // 12 ch/ibird/Bird.png
+  { .path = "data/renpy/images/ch/icat/Cat.dds", .is_character_image = true }, // 13 ch/icat/Cat.png
+  { .path = "data/renpy/images/ch/icat/Catw.dds", .is_character_image = true }, // 14 ch/icat/Catw.png
+  { .path = "data/renpy/images/ch/ieily/Eily.dds", .is_character_image = true }, // 15 ch/ieily/Eily.png
+  { .path = "data/renpy/images/ch/ialice/Alice.dds", .is_character_image = true }, // 16 ch/ialice/Alice.png
+  { .path = "data/renpy/images/ch/ieily/Seily.dds", .is_character_image = true }, // 17 ch/ieily/Seily.png
+  { .path = "data/renpy/images/ch/ialice/Salice.dds", .is_character_image = true }, // 18 ch/ialice/Salice.png
+  { .path = "data/renpy/images/ch/ialice/Walice.dds", .is_character_image = true }, // 19 ch/ialice/Walice.png
 };
 
 const int images_length = (sizeof (images)) / (sizeof (images[0]));
@@ -594,12 +596,12 @@ const language::statement statements[] = {
   { .type = type::play, .play = { .audioIndex = 5 } }, // 12 music/TinyForestMinstrels.ogg
   { .type = type::voice, .voice = { .audioIndex = 6 } }, // 13 nara/n4.ogg
   { .type = type::say, .say = { .characterIndex = 5, .stringIndex = 3 } }, // 14 n "Tiny minstrels can be heard amongst the trees"
-  { .type = type::scene, .scene = { .imageIndex = 1 } }, // 15 bgforest1
+  { .type = type::scene, .scene = { .imageIndex = 3 } }, // 15 bgforest1
   { .type = type::play, .play = { .audioIndex = 1 } }, // 16 sfx/Chime.ogg
-  { .type = type::show, .show = { .imageIndex = 14, .transformIndex = transform::left, } }, // 17 al
+  { .type = type::show, .show = { .imageIndex = 16, .transformIndex = transform::left, } }, // 17 al
   { .type = type::voice, .voice = { .audioIndex = 7 } }, // 18 alice/a1.ogg
   { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 4 } }, // 19 a "Are we almost there?"
-  { .type = type::show, .show = { .imageIndex = 13, .transformIndex = transform::right, } }, // 20 ei
+  { .type = type::show, .show = { .imageIndex = 15, .transformIndex = transform::right, } }, // 20 ei
   { .type = type::voice, .voice = { .audioIndex = 8 } }, // 21 eily/e1.ogg
   { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 5 } }, // 22 e "Hmmm... Not really"
   { .type = type::voice, .voice = { .audioIndex = 9 } }, // 23 alice/a2.ogg
@@ -638,11 +640,11 @@ const language::statement statements[] = {
   { .type = type::voice, .voice = { .audioIndex = 21 } }, // 56 nara/n5.ogg
   { .type = type::say, .say = { .characterIndex = 5, .stringIndex = 18 } }, // 57 n "As the minstrel mice girls continue along the path, the forest opens up into a beautiful field of flowers"
   { .type = type::play, .play = { .audioIndex = 22 } }, // 58 music/PhrygianButterflies.ogg
-  { .type = type::scene, .scene = { .imageIndex = 3 } }, // 59 bgflower1
-  { .type = type::show, .show = { .imageIndex = 13, .transformIndex = transform::right, } }, // 60 ei
+  { .type = type::scene, .scene = { .imageIndex = 5 } }, // 59 bgflower1
+  { .type = type::show, .show = { .imageIndex = 15, .transformIndex = transform::right, } }, // 60 ei
   { .type = type::voice, .voice = { .audioIndex = 23 } }, // 61 eily/e8.ogg
   { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 19 } }, // 62 e "Look at all the butterflies! They are all so pretty!"
-  { .type = type::show, .show = { .imageIndex = 14, .transformIndex = transform::left, } }, // 63 al
+  { .type = type::show, .show = { .imageIndex = 16, .transformIndex = transform::left, } }, // 63 al
   { .type = type::voice, .voice = { .audioIndex = 24 } }, // 64 alice/a8.ogg
   { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 20 } }, // 65 a "This place is like a dream..."
   { .type = type::voice, .voice = { .audioIndex = 25 } }, // 66 eily/e9.ogg
@@ -678,19 +680,19 @@ const language::statement statements[] = {
   { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 33 } }, // 96 a "They were asking for it, you know"
   { .type = type::jump, .jump = { .statementIndex = 98 } }, // 97 internal jump (b'__menu_end', 1)
   { .type = type::jump, .jump = { .statementIndex = 99 } }, // 98 mainbranch2
-  { .type = type::hide, .hide = { .imageIndex = 13 } }, // 99 ei
-  { .type = type::show, .show = { .imageIndex = 12, .transformIndex = transform::right, } }, // 100 catw
-  { .type = type::show, .show = { .imageIndex = 13, .transformIndex = xflip | transform::centerleft, } }, // 101 ei
+  { .type = type::hide, .hide = { .imageIndex = 15 } }, // 99 ei
+  { .type = type::show, .show = { .imageIndex = 14, .transformIndex = transform::right, } }, // 100 catw
+  { .type = type::show, .show = { .imageIndex = 15, .transformIndex = xflip | transform::centerleft, } }, // 101 ei
   { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 34 } }, // 102 c "Rawrrrr"
   { .type = type::play, .play = { .audioIndex = 38 } }, // 103 leona/c1.ogg
   { .type = type::pause, .pause = { .duration = 0.7 } }, // 104
-  { .type = type::hide, .hide = { .imageIndex = 12 } }, // 105 catw
-  { .type = type::show, .show = { .imageIndex = 11, .transformIndex = transform::right, } }, // 106 cat
+  { .type = type::hide, .hide = { .imageIndex = 14 } }, // 105 catw
+  { .type = type::show, .show = { .imageIndex = 13, .transformIndex = transform::right, } }, // 106 cat
   { .type = type::play, .play = { .audioIndex = 39 } }, // 107 music/ScaredMice.ogg
-  { .type = type::hide, .hide = { .imageIndex = 13 } }, // 108 ei
-  { .type = type::hide, .hide = { .imageIndex = 14 } }, // 109 al
-  { .type = type::show, .show = { .imageIndex = 15, .transformIndex = xflip | transform::centerleft, } }, // 110 sei
-  { .type = type::show, .show = { .imageIndex = 16, .transformIndex = transform::left, } }, // 111 sal
+  { .type = type::hide, .hide = { .imageIndex = 15 } }, // 108 ei
+  { .type = type::hide, .hide = { .imageIndex = 16 } }, // 109 al
+  { .type = type::show, .show = { .imageIndex = 17, .transformIndex = xflip | transform::centerleft, } }, // 110 sei
+  { .type = type::show, .show = { .imageIndex = 18, .transformIndex = transform::left, } }, // 111 sal
   { .type = type::voice, .voice = { .audioIndex = 40 } }, // 112 mousegirls/mg1.ogg
   { .type = type::say, .say = { .characterIndex = 4, .stringIndex = 35 } }, // 113 mg "AHHHHHHHHHH!!!!!"
   { .type = type::voice, .voice = { .audioIndex = 41 } }, // 114 leona/c2.ogg
@@ -710,13 +712,13 @@ const language::statement statements[] = {
   { .type = type::stop, .stop = { .audioIndex = 39, .fadeout = 2.0 } }, // 128 ScaredMice
   { .type = type::voice, .voice = { .audioIndex = 46 } }, // 129 leona/c4.ogg
   { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 41 } }, // 130 c "I'm not gonna eat you nyanyanya"
-  { .type = type::hide, .hide = { .imageIndex = 16 } }, // 131 sal
-  { .type = type::show, .show = { .imageIndex = 14, .transformIndex = transform::left, } }, // 132 al
+  { .type = type::hide, .hide = { .imageIndex = 18 } }, // 131 sal
+  { .type = type::show, .show = { .imageIndex = 16, .transformIndex = transform::left, } }, // 132 al
   { .type = type::play, .play = { .audioIndex = 5 } }, // 133 music/TinyForestMinstrels.ogg
   { .type = type::voice, .voice = { .audioIndex = 47 } }, // 134 leona/c5.ogg
   { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 42 } }, // 135 c "I just want to know what two little meowses are doing so very far away from home"
-  { .type = type::hide, .hide = { .imageIndex = 15 } }, // 136 sei
-  { .type = type::show, .show = { .imageIndex = 13, .transformIndex = xflip | transform::centerleft, } }, // 137 ei
+  { .type = type::hide, .hide = { .imageIndex = 17 } }, // 136 sei
+  { .type = type::show, .show = { .imageIndex = 15, .transformIndex = xflip | transform::centerleft, } }, // 137 ei
   { .type = type::voice, .voice = { .audioIndex = 48 } }, // 138 leona/c6.ogg
   { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 43 } }, // 139 c "Also, are you minstrels?"
   { .type = type::voice, .voice = { .audioIndex = 49 } }, // 140 eily/e20.ogg
@@ -763,7 +765,7 @@ const language::statement statements[] = {
   { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 63 } }, // 181 c "I DONT NEED TO BE PRESSURED BY LITTLE MICE TO SAY ANYTHING!!!!"
   { .type = type::voice, .voice = { .audioIndex = 69 } }, // 182 leona/c17.ogg
   { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 64 } }, // 183 c "GOOD DAY!"
-  { .type = type::hide, .hide = { .imageIndex = 11 } }, // 184 cat
+  { .type = type::hide, .hide = { .imageIndex = 13 } }, // 184 cat
   { .type = type::voice, .voice = { .audioIndex = 70 } }, // 185 alice/a17.ogg
   { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 65 } }, // 186 a "Wha..."
   { .type = type::voice, .voice = { .audioIndex = 71 } }, // 187 eily/e28.ogg
@@ -776,19 +778,19 @@ const language::statement statements[] = {
   { .type = type::play, .play = { .audioIndex = 1 } }, // 194 sfx/Chime.ogg
   { .type = type::voice, .voice = { .audioIndex = 74 } }, // 195 nara/n6.ogg
   { .type = type::say, .say = { .characterIndex = 5, .stringIndex = 69 } }, // 196 n "After their encounter with the weird cat, the mice scurry out of the flower field and into the nearby meadow"
-  { .type = type::scene, .scene = { .imageIndex = 2 } }, // 197 bgforest2
-  { .type = type::show, .show = { .imageIndex = 13, .transformIndex = transform::right, } }, // 198 ei
+  { .type = type::scene, .scene = { .imageIndex = 4 } }, // 197 bgforest2
+  { .type = type::show, .show = { .imageIndex = 15, .transformIndex = transform::right, } }, // 198 ei
   { .type = type::voice, .voice = { .audioIndex = 75 } }, // 199 eily/e30.ogg
   { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 70 } }, // 200 e "I think this is the right way..."
-  { .type = type::show, .show = { .imageIndex = 14, .transformIndex = transform::left, } }, // 201 al
+  { .type = type::show, .show = { .imageIndex = 16, .transformIndex = transform::left, } }, // 201 al
   { .type = type::voice, .voice = { .audioIndex = 76 } }, // 202 alice/a19.ogg
   { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 71 } }, // 203 a "Then where did the path go?"
   { .type = type::voice, .voice = { .audioIndex = 77 } }, // 204 eily/e31.ogg
   { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 72 } }, // 205 e "How am I supposed to know?"
   { .type = type::voice, .voice = { .audioIndex = 78 } }, // 206 alice/a20.ogg
   { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 73 } }, // 207 a "Did you hear that?!?!"
-  { .type = type::show, .show = { .imageIndex = 13, .transformIndex = xflip | transform::centerleft, } }, // 208 ei
-  { .type = type::show, .show = { .imageIndex = 11, .transformIndex = transform::right, } }, // 209 cat
+  { .type = type::show, .show = { .imageIndex = 15, .transformIndex = xflip | transform::centerleft, } }, // 208 ei
+  { .type = type::show, .show = { .imageIndex = 13, .transformIndex = transform::right, } }, // 209 cat
   { .type = type::play, .play = { .audioIndex = 22 } }, // 210 music/PhrygianButterflies.ogg
   { .type = type::voice, .voice = { .audioIndex = 79 } }, // 211 leona/c18.ogg
   { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 74 } }, // 212 c "Hey there... I apologize, I didn't mean to storm off like that"
@@ -914,27 +916,27 @@ const language::statement statements[] = {
   { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 128 } }, // 332 e "Ha ha... Okay..."
   { .type = type::voice, .voice = { .audioIndex = 135 } }, // 333 leona/c36.ogg
   { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 129 } }, // 334 c "Great! Follow me, I know a shortcut! :3"
-  { .type = type::hide, .hide = { .imageIndex = 11 } }, // 335 cat
+  { .type = type::hide, .hide = { .imageIndex = 13 } }, // 335 cat
   { .type = type::voice, .voice = { .audioIndex = 136 } }, // 336 alice/a34.ogg
   { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 130 } }, // 337 a "Sounds good!"
-  { .type = type::hide, .hide = { .imageIndex = 14 } }, // 338 al
+  { .type = type::hide, .hide = { .imageIndex = 16 } }, // 338 al
   { .type = type::stop, .stop = { .audioIndex = 22, .fadeout = 2.0 } }, // 339 PhrygianButterflies
   { .type = type::voice, .voice = { .audioIndex = 137 } }, // 340 eily/e56.ogg
   { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 131 } }, // 341 e "Oh dear!"
-  { .type = type::hide, .hide = { .imageIndex = 13 } }, // 342 ei
+  { .type = type::hide, .hide = { .imageIndex = 15 } }, // 342 ei
   { .type = type::scene_color, .scene_color = { .color = 0xffffff } }, // 343 bgwhite
   { .type = type::play, .play = { .audioIndex = 1 } }, // 344 sfx/Chime.ogg
   { .type = type::voice, .voice = { .audioIndex = 138 } }, // 345 nara/n7.ogg
   { .type = type::say, .say = { .characterIndex = 5, .stringIndex = 132 } }, // 346 n "And so the mice girls follow the noble cat further towards their destination"
-  { .type = type::scene, .scene = { .imageIndex = 4 } }, // 347 bgwheatfield1
+  { .type = type::scene, .scene = { .imageIndex = 6 } }, // 347 bgwheatfield1
   { .type = type::play, .play = { .audioIndex = 139 } }, // 348 music/WheatFields.ogg
-  { .type = type::show, .show = { .imageIndex = 11, .transformIndex = transform::right, } }, // 349 cat
+  { .type = type::show, .show = { .imageIndex = 13, .transformIndex = transform::right, } }, // 349 cat
   { .type = type::voice, .voice = { .audioIndex = 140 } }, // 350 leona/c37.ogg
   { .type = type::say, .say = { .characterIndex = 2, .stringIndex = 133 } }, // 351 c "Nya"
-  { .type = type::show, .show = { .imageIndex = 17, .transformIndex = transform::left, } }, // 352 wal
+  { .type = type::show, .show = { .imageIndex = 19, .transformIndex = transform::left, } }, // 352 wal
   { .type = type::voice, .voice = { .audioIndex = 141 } }, // 353 alice/a35.ogg
   { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 134 } }, // 354 a "Look, your right, the castle is just up ahead!"
-  { .type = type::show, .show = { .imageIndex = 13, .transformIndex = xflip | transform::centerleft, } }, // 355 ei
+  { .type = type::show, .show = { .imageIndex = 15, .transformIndex = xflip | transform::centerleft, } }, // 355 ei
   { .type = type::voice, .voice = { .audioIndex = 142 } }, // 356 eily/e57.ogg
   { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 135 } }, // 357 e "Wait up"
   { .type = type::voice, .voice = { .audioIndex = 143 } }, // 358 leona/c38.ogg
@@ -1016,18 +1018,18 @@ const language::statement statements[] = {
   { .type = type::say, .say = { .characterIndex = 5, .stringIndex = 171 } }, // 434 n "They were then instructed to wait for an audience with the Queen"
   { .type = type::voice, .voice = { .audioIndex = 180 } }, // 435 hera/h1.ogg
   { .type = type::say, .say = { .characterIndex = 7, .stringIndex = 172 } }, // 436 h "You may now present yourselves before her Majesty, Queen Alary of Alysen"
-  { .type = type::scene, .scene = { .imageIndex = 5 } }, // 437 bgcastle1
+  { .type = type::scene, .scene = { .imageIndex = 7 } }, // 437 bgcastle1
   { .type = type::play, .play = { .audioIndex = 181 } }, // 438 music/Preludium.ogg
-  { .type = type::show, .show = { .imageIndex = 10, .transformIndex = transform::right, } }, // 439 bi
+  { .type = type::show, .show = { .imageIndex = 12, .transformIndex = transform::right, } }, // 439 bi
   { .type = type::pause, .pause = { .duration = 1.0 } }, // 440
   { .type = type::voice, .voice = { .audioIndex = 182 } }, // 441 hera/h2.ogg
   { .type = type::say, .say = { .characterIndex = 7, .stringIndex = 173 } }, // 442 h "Leona Agrepen of Elmindeer"
-  { .type = type::show, .show = { .imageIndex = 11, .transformIndex = xflip | transform::center, } }, // 443 cat
+  { .type = type::show, .show = { .imageIndex = 13, .transformIndex = xflip | transform::center, } }, // 443 cat
   { .type = type::voice, .voice = { .audioIndex = 183 } }, // 444 leona/c57.ogg
   { .type = type::say, .say = { .characterIndex = 6, .stringIndex = 174 } }, // 445 l "Hail, your Majesty"
   { .type = type::voice, .voice = { .audioIndex = 184 } }, // 446 hera/h3.ogg
   { .type = type::say, .say = { .characterIndex = 7, .stringIndex = 175 } }, // 447 h "Eily VeraWheat of the Western Principalities"
-  { .type = type::show, .show = { .imageIndex = 13, .transformIndex = transform::centerleft, } }, // 448 ei
+  { .type = type::show, .show = { .imageIndex = 15, .transformIndex = transform::centerleft, } }, // 448 ei
   { .type = type::voice, .voice = { .audioIndex = 185 } }, // 449 eily/e69.ogg
   { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 174 } }, // 450 e "Hail, your Majesty"
   { .type = type::voice, .voice = { .audioIndex = 186 } }, // 451 hera/h4.ogg
@@ -1036,7 +1038,7 @@ const language::statement statements[] = {
   { .type = type::pause, .pause = { .duration = 1.0 } }, // 454
   { .type = type::voice, .voice = { .audioIndex = 188 } }, // 455 alice/a40.ogg
   { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 177 } }, // 456 a "I'm alright!"
-  { .type = type::show, .show = { .imageIndex = 17, .transformIndex = transform::left, } }, // 457 wal
+  { .type = type::show, .show = { .imageIndex = 19, .transformIndex = transform::left, } }, // 457 wal
   { .type = type::voice, .voice = { .audioIndex = 189 } }, // 458 alice/a41.ogg
   { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 178 } }, // 459 a "H-Hail, your majesty"
   { .type = type::voice, .voice = { .audioIndex = 190 } }, // 460 leona/c58.ogg
@@ -1124,7 +1126,7 @@ const language::statement statements[] = {
   { .type = type::voice, .voice = { .audioIndex = 230 } }, // 542 bird/b20.ogg
   { .type = type::say, .say = { .characterIndex = 1, .stringIndex = 216 } }, // 543 b "You are most welcome to proceed with your little song"
   { .type = type::play, .play = { .audioIndex = 231 } }, // 544 poem/BirdSong.ogg
-  { .type = type::scene, .scene = { .imageIndex = 5 } }, // 545 bgcastle1
+  { .type = type::scene, .scene = { .imageIndex = 7 } }, // 545 bgcastle1
   { .type = type::say, .say = { .characterIndex = 3, .stringIndex = 31 } }, // 546 e "..."
   { .type = type::pause, .pause = { .duration = 73.5 } }, // 547
   { .type = type::scene_color, .scene_color = { .color = 0xffffff } }, // 548 bgwhite
@@ -1135,7 +1137,7 @@ const language::statement statements[] = {
   { .type = type::voice, .voice = { .audioIndex = 234 } }, // 553 nara/n13.ogg
   { .type = type::say, .say = { .characterIndex = 5, .stringIndex = 219 } }, // 554 n "before returning to their small nameless town, near the Keep of Musia"
   { .type = type::scene_color, .scene_color = { .color = 0xffffff } }, // 555 bgwhite
-  { .type = type::show, .show = { .imageIndex = 9, .transformIndex = transform::center, } }, // 556 bgend
+  { .type = type::show, .show = { .imageIndex = 11, .transformIndex = transform::center, } }, // 556 bgend
   { .type = type::pause, .pause = { .duration = 1.0 } }, // 557
   { .type = type::jump, .jump = { .statementIndex = 557 } }, // 558 end
   { .type = type::_return }, // 559

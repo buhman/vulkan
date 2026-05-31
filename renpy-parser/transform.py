@@ -409,6 +409,8 @@ def pass2(state):
 def main():
     preamble = b"""
 image _internal_flowers = "flowers.png"
+image _internal_button1 = "button1.png"
+image _internal_button2 = "button2.png"
     """
     with open(sys.argv[1], 'rb') as f:
         mem = memoryview(bytes(chain(preamble, f.read())))

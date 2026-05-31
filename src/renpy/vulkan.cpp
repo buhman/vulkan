@@ -546,6 +546,19 @@ namespace renpy {
         .color = overlap ? 0xf0494493u : 0xa0ffffffu,
         .imageIndex = -3, // white gradient 2
       };
+
+      constexpr int buttonWidth = 368;
+      constexpr int buttonHeight = 96;
+      constexpr int menuCenterX = menu::x + (menu::width / 2);
+      int menuCenterY = menu::yStride * i + menu::y + (menu::height / 2) + 7;
+
+      instanceMappedData[maximumImageCount * frameIndex + outputIndex++] = {
+        .size = {buttonWidth, buttonHeight},
+        .topLeft = {menuCenterX - buttonWidth / 2, (int16_t)(menuCenterY - buttonHeight / 2)},
+        .color = 0,
+        .imageIndex = (int16_t)(1 + (i % 2)), // button1/button2
+      };
+
     }
   }
 

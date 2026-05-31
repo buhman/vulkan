@@ -243,6 +243,8 @@ audio/nara/n13.opus.bin
 
 data/renpy/images/end.dds
 data/renpy/images/flowers.dds
+data/renpy/images/button1.dds
+data/renpy/images/button2.dds
 data/renpy/images/bg/forest1.dds
 data/renpy/images/bg/forest2.dds
 data/renpy/images/bg/flowerfield1.dds
