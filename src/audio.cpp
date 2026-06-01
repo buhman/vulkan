@@ -58,7 +58,7 @@ namespace audio {
   void init()
   {
     audio_spec.channels = channels;
-    audio_spec.format = SDL_AUDIO_S16LE;
+    audio_spec.format = SDL_AUDIO_F32LE;
     audio_spec.freq = sample_rate;
     audio_stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &audio_spec, NULL, NULL);
     assert(audio_stream);
@@ -199,15 +199,12 @@ namespace audio {
     audio_instances_count = 0;
   }
 
-  static inline void saturation_add(int16_t * mix_buffer, int32_t value)
+  static inline float clampf(float v)
   {
-    int32_t mix_value = *mix_buffer;
-    mix_value += value;
-    if (mix_value > 32767)
-      mix_value = 32767;
-    if (mix_value < -32768)
-      mix_value = -32768;
-    *mix_buffer = mix_value;
+    if (v > 1.0f)
+      return 1.0f;
+    if (v < -1.0f)
+      return -1.0f;
   }
 
   static inline void remove_instance(int instance_index)
@@ -220,7 +217,7 @@ namespace audio {
     audio_instances_count -= 1;
   }
 
-  static inline void update_instance(int16_t * mix_buffer, AudioInstance & instance)
+  static inline void update_instance(float * mix_buffer, AudioInstance & instance)
   {
     int16_t const * const buf = instance.audio_buffer->buf;
     uint32_t const sample_count = instance.audio_buffer->sample_count;
@@ -259,7 +256,8 @@ namespace audio {
         if (instance.tail_index != sample_count) {
           value += buf[instance.tail_index * channels + ch];
         }
-        saturation_add(&mix_buffer[mix_index * channels + ch], (double)value * fadeout * attenuation);
+        constexpr double scale = 1.0f / 32768.0f;
+        mix_buffer[mix_index * channels + ch] += (double)value * fadeout * attenuation * scale;
       }
       instance.sample_index += 1;
       instance.fadeout_index += 1;
@@ -312,10 +310,11 @@ namespace audio {
 
   void update()
   {
-    if (SDL_GetAudioStreamQueued(audio_stream) >= half_period_size)
+    float mix_buffer[half_period_samples * channels];
+
+    if (SDL_GetAudioStreamQueued(audio_stream) >= (int)(sizeof (mix_buffer)))
       return;
 
-    int16_t mix_buffer[half_period_samples * channels];
     memset(mix_buffer, 0, (sizeof (mix_buffer)));
 
     poem_playing = nullptr;
@@ -337,6 +336,6 @@ namespace audio {
       }
     }
 
-    SDL_PutAudioStreamData(audio_stream, (void *)mix_buffer, half_period_size);
+    SDL_PutAudioStreamData(audio_stream, (void *)mix_buffer, (int)(sizeof (mix_buffer)));
   }
 }
