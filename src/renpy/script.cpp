@@ -909,7 +909,7 @@ const language::statement statements[] = {
   { .type = type::voice, .voice = { .audioIndex = 133 } }, // 325 alice/a33.ogg
   { .type = type::say, .say = { .characterIndex = 0, .stringIndex = 127 } }, // 326 a "Alright!"
   { .type = type::jump, .jump = { .statementIndex = 330 } }, // 327 internal jump (b'__menu_end', 4)
-  { .type = type::jump, .jump = { .statementIndex = 296 } }, // 328 mainbranch4
+  { .type = type::jump, .jump = { .statementIndex = 331 } }, // 328 mainbranch5
   { .type = type::jump, .jump = { .statementIndex = 330 } }, // 329 internal jump (b'__menu_end', 4)
   { .type = type::jump, .jump = { .statementIndex = 331 } }, // 330 mainbranch5
   { .type = type::voice, .voice = { .audioIndex = 134 } }, // 331 eily/e55.ogg

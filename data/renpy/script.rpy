@@ -593,7 +593,7 @@ label start:
                 voice "alice/a33.ogg"
                 a "Alright!"
             "Stay Silent" :
-                jump mainbranch4
+                jump mainbranch5
 
 
 
