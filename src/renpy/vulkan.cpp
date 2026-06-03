@@ -640,7 +640,7 @@ namespace renpy {
       {
         .sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE,
         .memory = instanceMemory,
-        .offset = 0,
+        .offset = instanceBufferOffset[frameIndex],
         .size = (sizeof (ImageInstance)) * outputIndex,
       }
     };

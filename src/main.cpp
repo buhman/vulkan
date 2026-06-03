@@ -20,13 +20,19 @@
 #include "shader_data.h"
 #include "minmax.h"
 #include "view.h"
+#include "mouse.h"
 
 #include "font/outline.h"
+#include "font/bitmap.h"
+#include "font/bitmap/vulkan.h"
 #include "renpy/vulkan.h"
 #include "renpy/composite/vulkan.h"
 #include "renpy/interpreter.h"
 #include "renpy/interact.h"
 #include "renpy/script.h"
+
+#include "ui/vulkan.h"
+#include "ui.h"
 
 #include "audio.h"
 
@@ -369,6 +375,8 @@ void offscreenRender(VkCommandBuffer commandBuffer, int frameIndex,
                      renpy::vulkan const & renpy_state,
                      renpy::interpreter const & interpreter_state,
                      font::outline::font const & font_state,
+                     font::bitmap::vulkan const & bitmap_font_state,
+                     ui::vulkan const & ui_state,
                      VkSurfaceCapabilitiesKHR const & surfaceCapabilities)
 {
   // barrier
@@ -474,6 +482,11 @@ void offscreenRender(VkCommandBuffer commandBuffer, int frameIndex,
     font_state.draw(commandBuffer, frameIndex, interpreter_state);
   }
 
+  MappedInstanceData<font::BitmapInstance> bitmapData{ bitmap_font_state.bitmapInstance[frameIndex],
+                                                       font::bitmap::vulkan::maximumGlyphCount, 0 };
+  ui_state.draw(commandBuffer, frameIndex, bitmapData);
+  bitmap_font_state.draw(commandBuffer, frameIndex, bitmapData.index);
+
   vkCmdEndRendering(commandBuffer);
 
   // barrier
@@ -503,13 +516,6 @@ void offscreenRender(VkCommandBuffer commandBuffer, int frameIndex,
     };
     vkCmdPipelineBarrier2(commandBuffer, &colorBarrierDependencyInfo);
   }
-}
-
-static inline double clamp01(double a)
-{
-  if (a < 0.0) return 0.0;
-  if (a > 1.0) return 1.0;
-  return a;
 }
 
 void handlePause(renpy::interpreter & interpreter_state,
@@ -929,6 +935,15 @@ int main()
   minecraft_state.init();
   */
 
+  VulkanState vulkan_state(instance,
+                           device,
+                           queue,
+                           commandPool,
+                           physicalDeviceProperties,
+                           physicalDeviceMemoryProperties,
+                           surfaceFormat.format,
+                           depthFormat);
+
   //////////////////////////////////////////////////////////////////////
   // initialize font
   //////////////////////////////////////////////////////////////////////
@@ -944,6 +959,16 @@ int main()
                            depthFormat,
                            textureSamplers[2]);
   font_state.init();
+
+  // bitmap font
+
+  font::bitmap::vulkan bitmap_font_state(&vulkan_state);
+
+  //////////////////////////////////////////////////////////////////////
+  // ui
+  //////////////////////////////////////////////////////////////////////
+
+  ui::vulkan ui_state(&vulkan_state);
 
   //////////////////////////////////////////////////////////////////////
   // initialize renpy
@@ -966,7 +991,14 @@ int main()
   //////////////////////////////////////////////////////////////////////
 
   audio::init();
+  int64_t audio_start;
+  SDL_GetCurrentTime(&audio_start);
   audio::load(renpy::script::audio, renpy::script::audio_length);
+  int64_t audio_end;
+  SDL_GetCurrentTime(&audio_end);
+  double audio_time = (double)(audio_end - audio_start) * (0.000000001);
+  // 2.17
+  printf("audio_time %f\n", audio_time);
 
   //////////////////////////////////////////////////////////////////////
   // interpreter
@@ -975,7 +1007,7 @@ int main()
   renpy::interpreter interpreter_state;
   //interpreter_state.reset(88);
   //interpreter_state.reset(427);
-  interpreter_state.reset(0);
+  interpreter_state.reset(347);
   //while (interpreter_state.pc < 543) {
   /*
   while (interpreter_state.pc < 26) {
@@ -1054,7 +1086,8 @@ int main()
   bool useGamepad = false;
   uint32_t whichGamepad = 0;
 
-  SDL_Thread * audio_thread = SDL_CreateThread(mainAudio, "audio", &quit);
+  SDL_Thread * audio_thread = nullptr;
+  audio_thread = SDL_CreateThread(mainAudio, "audio", &quit);
 
   while (quit == false) {
     //////////////////////////////////////////////////////////////////////
@@ -1125,7 +1158,10 @@ int main()
     float mx;
     float my;
     uint32_t mouseFlags = SDL_GetMouseState(&mx, &my);
+    static bool mLastLeft = false;
     bool mLeft = (mouseFlags & SDL_BUTTON_LMASK) != 0;
+    bool mEdge = (mLeft && (mLeft != mLastLeft));
+    mLastLeft = mLeft;
     bool gUp = false;
     bool gDown = false;
     bool gAccept = false;
@@ -1139,6 +1175,13 @@ int main()
         }
       }
     }
+
+    float mxf;
+    float myf;
+    mouse::normalize(surfaceCapabilities.currentExtent.width,
+                     surfaceCapabilities.currentExtent.height,
+                     mx, my, &mxf, &myf);
+    ui::update(mxf, myf, mLeft, mEdge);
 
     renpy::update(interpreter_state, mx, my, mLeft,
                   gUp, gDown, gAccept, useGamepad,
@@ -1329,10 +1372,10 @@ int main()
     //////////////////////////////////////////////////////////////////////
 
     if (interpreter_state.pause.dissolve) {
-      offscreenRender(commandBuffer, frameIndex, mx, my, 2, true, renpy_state, interpreter_state, font_state, surfaceCapabilities);
+      offscreenRender(commandBuffer, frameIndex, mx, my, 2, true, renpy_state, interpreter_state, font_state, bitmap_font_state, ui_state, surfaceCapabilities);
     } else {
-      offscreenRender(commandBuffer, frameIndex, mx, my, 0, true, renpy_state, interpreter_state, font_state, surfaceCapabilities);
-      offscreenRender(commandBuffer, frameIndex, mx, my, 1, false, renpy_state, interpreter_state, font_state, surfaceCapabilities);
+      offscreenRender(commandBuffer, frameIndex, mx, my, 0, true, renpy_state, interpreter_state, font_state, bitmap_font_state, ui_state, surfaceCapabilities);
+      offscreenRender(commandBuffer, frameIndex, mx, my, 1, false, renpy_state, interpreter_state, font_state, bitmap_font_state, ui_state, surfaceCapabilities);
     }
 
     //////////////////////////////////////////////////////////////////////
@@ -1541,7 +1584,8 @@ int main()
     }
   }
 
-  SDL_WaitThread(audio_thread, nullptr);
+  if (audio_thread != nullptr)
+    SDL_WaitThread(audio_thread, nullptr);
   VK_CHECK(vkDeviceWaitIdle(device));
 
   //collada_state.vulkan.destroy_all(collada_scene_descriptor);

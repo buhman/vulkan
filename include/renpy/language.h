@@ -47,7 +47,7 @@ namespace renpy::language {
     char const * const path;
     double loop_end;
     uint32_t audio_flags;
-    double attenuation;
+    double gain;
   };
 
   struct image {

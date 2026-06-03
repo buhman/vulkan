@@ -12,11 +12,11 @@ namespace renpy {
   };
 
   static constexpr top_left transforms[] = {
-    [language::transform::left] = { .top = 192, .left = 0 },
-    [language::transform::centerleft] = { .top = 192, .left = 240 },
-    [language::transform::center] = { .top = 192, .left = 416 },
-    [language::transform::centerright] = { .top = 192, .left = 588 },
-    [language::transform::right] = { .top = 192, .left = 828 },
+    /*[language::transform::left] =*/ { .top = 192, .left = 0 },
+    /*[language::transform::centerleft] =*/ { .top = 192, .left = 240 },
+    /*[language::transform::center] =*/ { .top = 192, .left = 416 },
+    /*[language::transform::centerright] =*/ { .top = 192, .left = 588 },
+    /*[language::transform::right] =*/ { .top = 192, .left = 828 },
   };
   static constexpr int transformsCount = (sizeof (transforms)) / (sizeof (transforms[0]));
 

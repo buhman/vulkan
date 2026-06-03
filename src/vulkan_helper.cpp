@@ -9,7 +9,6 @@
 #include "volk/volk.h"
 #endif
 
-#include "vulkan/vulkan.h"
 #include "vulkan/vk_enum_string_helper.h"
 
 #include "minmax.h"
@@ -134,7 +133,7 @@ void textureTransfer(VkDevice device,
                      VkDeviceSize nonCoherentAtomSize,
                      VkPhysicalDeviceMemoryProperties const & physicalDeviceMemoryProperties,
                      uint32_t imageDataSize,
-                     void * imageData,
+                     void const * imageData,
                      VkImage image,
                      uint32_t width,
                      uint32_t height,
@@ -490,4 +489,245 @@ VertexIndex createVertexIndexBuffer(VkDevice device,
   vkUnmapMemory(device, vertexIndex.memory);
 
   return vertexIndex;
+}
+
+void createQuadPipeline(VkDevice device,
+                        VkFormat colorFormat,
+                        VkFormat depthFormat,
+                        uint32_t descriptorSetLayoutCount,
+                        VkDescriptorSetLayout const * descriptorSetLayouts,
+                        uint32_t pushConstantRangeCount,
+                        VkPushConstantRange const * pushConstantRanges,
+                        VkShaderModule shaderModule,
+                        uint32_t perInstanceStride,
+                        uint32_t instanceAttributeDescriptionCount,
+                        VkVertexInputAttributeDescription * instanceAttributeDescriptions,
+                        VkPipelineLayout * pipelineLayout,
+                        VkPipeline * pipeline)
+{
+  VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{
+    .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
+    .setLayoutCount = descriptorSetLayoutCount,
+    .pSetLayouts = descriptorSetLayouts,
+    .pushConstantRangeCount = pushConstantRangeCount,
+    .pPushConstantRanges = pushConstantRanges
+  };
+  VK_CHECK(vkCreatePipelineLayout(device, &pipelineLayoutCreateInfo, nullptr, pipelineLayout));
+
+  VkPipelineInputAssemblyStateCreateInfo inputAssemblyState{
+    .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
+    .topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP
+  };
+
+  VkPipelineShaderStageCreateInfo shaderStages[2]{
+    {
+      .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+      .stage = VK_SHADER_STAGE_VERTEX_BIT,
+      .module = shaderModule,
+      .pName = "VSMain"
+    },
+    {
+      .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+      .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
+      .module = shaderModule,
+      .pName = "PSMain"
+    }
+  };
+
+  VkPipelineViewportStateCreateInfo viewportState{
+    .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
+    .viewportCount = 1,
+    .scissorCount = 1
+  };
+
+  constexpr uint32_t dynamicStateCount = 2;
+  VkDynamicState dynamicStates[dynamicStateCount]{
+    VK_DYNAMIC_STATE_VIEWPORT,
+    VK_DYNAMIC_STATE_SCISSOR,
+  };
+  VkPipelineDynamicStateCreateInfo dynamicState{
+    .sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
+    .dynamicStateCount = dynamicStateCount,
+    .pDynamicStates = dynamicStates
+  };
+
+  VkPipelineDepthStencilStateCreateInfo depthStencilState{
+    .sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
+    .depthTestEnable = VK_FALSE,
+    .depthWriteEnable = VK_FALSE,
+    .depthCompareOp = VK_COMPARE_OP_ALWAYS,
+    .stencilTestEnable = VK_FALSE,
+    .front = {
+      .failOp = VK_STENCIL_OP_REPLACE,
+      .passOp = VK_STENCIL_OP_REPLACE,
+      .depthFailOp = VK_STENCIL_OP_REPLACE,
+      .compareOp = VK_COMPARE_OP_ALWAYS,
+      .compareMask = 0x01,
+      .writeMask = 0x01,
+      .reference = 1,
+    },
+    .back = {
+      .failOp = VK_STENCIL_OP_REPLACE,
+      .passOp = VK_STENCIL_OP_REPLACE,
+      .depthFailOp = VK_STENCIL_OP_REPLACE,
+      .compareOp = VK_COMPARE_OP_ALWAYS,
+      .compareMask = 0x01,
+      .writeMask = 0x01,
+      .reference = 1,
+    },
+  };
+
+  VkPipelineRenderingCreateInfo renderingCreateInfo{
+    .sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
+    .colorAttachmentCount = 1,
+    .pColorAttachmentFormats = &colorFormat,
+    .depthAttachmentFormat = depthFormat,
+    .stencilAttachmentFormat = depthFormat
+  };
+
+  VkPipelineColorBlendAttachmentState blendAttachment{
+    .blendEnable = VK_TRUE,
+    .srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA,
+    .dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+    .colorBlendOp = VK_BLEND_OP_ADD,
+    .srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE,
+    .dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO,
+    .alphaBlendOp = VK_BLEND_OP_ADD,
+    .colorWriteMask = 0xF,
+  };
+  VkPipelineColorBlendStateCreateInfo colorBlendState{
+    .sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
+    .attachmentCount = 1,
+    .pAttachments = &blendAttachment
+  };
+  VkPipelineRasterizationStateCreateInfo rasterizationState{
+    .sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
+    //.cullMode = VK_CULL_MODE_BACK_BIT,
+    .cullMode = VK_CULL_MODE_NONE,
+    .frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
+    .lineWidth = 1.0f
+  };
+  VkPipelineMultisampleStateCreateInfo multisampleState{
+    .sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
+    .rasterizationSamples = VK_SAMPLE_COUNT_1_BIT
+  };
+
+  constexpr uint32_t perVertexStride = 4 * 2;
+  constexpr int vertexBindingDescriptionsCount = 2;
+  VkVertexInputBindingDescription vertexBindingDescriptions[vertexBindingDescriptionsCount]{
+    {
+      .binding = 0,
+      .stride = perVertexStride,
+      .inputRate = VK_VERTEX_INPUT_RATE_VERTEX
+    },
+    {
+      .binding = 1,
+      .stride = perInstanceStride,
+      .inputRate = VK_VERTEX_INPUT_RATE_INSTANCE
+    },
+  };
+
+  uint32_t vertexAttributeDescriptionsCount = 2u + instanceAttributeDescriptionCount;
+  VkVertexInputAttributeDescription vertexAttributeDescriptions[vertexAttributeDescriptionsCount];
+    // per-vertex
+  vertexAttributeDescriptions[0] = { // position
+    .location = 0,
+    .binding = 0,
+    .format = VK_FORMAT_R16G16_SFLOAT,
+    .offset = 0,
+  };
+  vertexAttributeDescriptions[1] = { // texture
+    .location = 1,
+    .binding = 0,
+    .format = VK_FORMAT_R16G16_SFLOAT,
+    .offset = 4,
+  };
+  memcpy(&vertexAttributeDescriptions[2], instanceAttributeDescriptions, instanceAttributeDescriptionCount * (sizeof (VkVertexInputAttributeDescription)));
+
+  VkPipelineVertexInputStateCreateInfo vertexInputState{
+    .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
+    .vertexBindingDescriptionCount = vertexBindingDescriptionsCount,
+    .pVertexBindingDescriptions = vertexBindingDescriptions,
+    .vertexAttributeDescriptionCount = vertexAttributeDescriptionsCount,
+    .pVertexAttributeDescriptions = vertexAttributeDescriptions,
+  };
+
+  VkGraphicsPipelineCreateInfo pipelineCreateInfos[1]{
+    {
+      .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
+      .pNext = &renderingCreateInfo,
+      .stageCount = 2,
+      .pStages = shaderStages,
+      .pVertexInputState = &vertexInputState,
+      .pInputAssemblyState = &inputAssemblyState,
+      .pViewportState = &viewportState,
+      .pRasterizationState = &rasterizationState,
+      .pMultisampleState = &multisampleState,
+      .pDepthStencilState = &depthStencilState,
+      .pColorBlendState = &colorBlendState,
+      .pDynamicState = &dynamicState,
+      .layout = *pipelineLayout
+    },
+  };
+
+  VK_CHECK(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, pipelineCreateInfos, nullptr, pipeline));
+}
+
+VkShaderModule loadShader(VkDevice device,
+                          char const * const path)
+{
+  uint32_t shaderSize;
+  void const * shaderStart = file::open(path, &shaderSize);
+
+  VkShaderModuleCreateInfo shaderModuleCreateInfo{
+    .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
+    .codeSize = shaderSize,
+    .pCode = (uint32_t *)shaderStart
+  };
+  VkShaderModule shaderModule;
+  VK_CHECK(vkCreateShaderModule(device, &shaderModuleCreateInfo, nullptr, &shaderModule));
+  return shaderModule;
+}
+
+void createInstanceBuffer(VkDevice device,
+                          VkPhysicalDeviceProperties const & physicalDeviceProperties,
+                          VkPhysicalDeviceMemoryProperties const & physicalDeviceMemoryProperties,
+                          VkDeviceSize bufferSize,
+                          InstanceBuffer * instanceBuffer)
+{
+  instanceBuffer->memorySize = bufferSize * 2;
+  instanceBuffer->offset[0] = bufferSize * 0;
+  instanceBuffer->offset[1] = bufferSize * 1;
+
+  // create buffer
+  VkBufferCreateInfo bufferCreateInfo{
+    .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+    .size = instanceBuffer->memorySize,
+    .usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+    .sharingMode = VK_SHARING_MODE_EXCLUSIVE
+  };
+  VK_CHECK(vkCreateBuffer(device, &bufferCreateInfo, nullptr, &instanceBuffer->buffer));
+
+  // allocate memory
+
+  VkMemoryRequirements memoryRequirements;
+  vkGetBufferMemoryRequirements(device, instanceBuffer->buffer, &memoryRequirements);
+  VkMemoryPropertyFlags memoryPropertyFlags{ VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT };
+  VkMemoryAllocateFlags memoryAllocateFlags{};
+  VkDeviceSize stride;
+  allocateFromMemoryRequirements(device,
+                                 physicalDeviceProperties.limits.nonCoherentAtomSize,
+                                 physicalDeviceMemoryProperties,
+                                 memoryRequirements,
+                                 memoryPropertyFlags,
+                                 memoryAllocateFlags,
+                                 1,
+                                 &instanceBuffer->memory,
+                                 &stride);
+
+  VK_CHECK(vkBindBufferMemory(device, instanceBuffer->buffer, instanceBuffer->memory, 0));
+
+  // map memory
+
+  VK_CHECK(vkMapMemory(device, instanceBuffer->memory, 0, VK_WHOLE_SIZE, 0, (void **)&instanceBuffer->mappedData));
 }

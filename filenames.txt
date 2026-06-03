@@ -1,8 +1,12 @@
 shader/font.spv
+shader/font/bitmap.spv
 data/font/outline/medieval_sharp_24.data
+data/font/bitmap/terminus_128x64_6x12.data
 
 shader/renpy.spv
 shader/renpy_composite.spv
+
+shader/ui/solid.spv
 
 audio/sfx/Chime.opus.bin
 audio/music/MistAmbience.opus.bin

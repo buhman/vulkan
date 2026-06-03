@@ -17,3 +17,11 @@ inline static constexpr T clamp(T n, T minVal, T maxVal)
 {
   return min(max(n, minVal), maxVal);
 }
+
+template <typename T>
+static inline T clamp01(T a)
+{
+  if (a < 0.0) return 0.0;
+  if (a > 1.0) return 1.0;
+  return a;
+}

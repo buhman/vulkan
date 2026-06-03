@@ -94,7 +94,7 @@ void textureTransfer(VkDevice device,
                      VkDeviceSize nonCoherentAtomSize,
                      VkPhysicalDeviceMemoryProperties const & physicalDeviceMemoryProperties,
                      uint32_t imageDataSize,
-                     void * imageData,
+                     void const * imageData,
                      VkImage image,
                      uint32_t width,
                      uint32_t height,
@@ -114,3 +114,34 @@ VertexIndex createVertexIndexBuffer(VkDevice device,
                                     uint32_t vertexSize,
                                     void const * indexStart,
                                     uint32_t indexSize);
+
+void createQuadPipeline(VkDevice device,
+                        VkFormat colorFormat,
+                        VkFormat depthFormat,
+                        uint32_t descriptorSetLayoutCount,
+                        VkDescriptorSetLayout const * descriptorSetLayouts,
+                        uint32_t pushConstantRangeCount,
+                        VkPushConstantRange const * pushConstantRanges,
+                        VkShaderModule shaderModule,
+                        uint32_t perInstanceStride,
+                        uint32_t instanceAttributeDescriptionCount,
+                        VkVertexInputAttributeDescription * instanceAttributeDescriptions,
+                        VkPipelineLayout * pipelineLayout,
+                        VkPipeline * pipeline);
+
+VkShaderModule loadShader(VkDevice device,
+                          char const * const path);
+
+struct InstanceBuffer {
+  VkDeviceSize offset[2];
+  VkBuffer buffer;
+  VkDeviceMemory memory;
+  VkDeviceSize memorySize;
+  void * mappedData;
+};
+
+void createInstanceBuffer(VkDevice device,
+                          VkPhysicalDeviceProperties const & physicalDeviceProperties,
+                          VkPhysicalDeviceMemoryProperties const & physicalDeviceMemoryProperties,
+                          VkDeviceSize bufferSize,
+                          InstanceBuffer * instanceBuffer);

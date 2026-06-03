@@ -333,7 +333,7 @@ def pass2_audio(state):
         else:
             audio_type = "0"
 
-        yield f"{{ .path = \"audio/{path}.opus.bin\", .loop_end = {float(loop)}, .audio_flags = {audio_type}, .attenuation = {attenuation} }}, // {i} {orig_path}"
+        yield f"{{ .path = \"audio/{path}.opus.bin\", .loop_end = {float(loop)}, .audio_flags = {audio_type}, .gain = {attenuation} }}, // {i} {orig_path}"
     yield "};"
     yield "const int audio_length = (sizeof (audio)) / (sizeof (audio[0]));"
 

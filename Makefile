@@ -7,7 +7,7 @@ OBJARCH = elf64-x86-64
 
 UNAME := $(shell uname -s)
 
-OPT += -O3
+OPT += -O0
 OPT += -march=core-avx2
 
 DEBUG = -g
@@ -17,12 +17,13 @@ CXXSTD = -std=gnu++20
 CFLAGS += -Wall -Werror
 CFLAGS += -Wfatal-errors
 CFLAGS += -Wno-error=unused-variable
-#CFLAGS += -Wno-error=unused-but-set-variable
+CFLAGS += -Wno-error=unused-but-set-variable
 CFLAGS += -Wno-format-security
 CFLAGS += -Wno-format
 CFLAGS += -Wno-error=unused-function
 CFLAGS += -Wno-error=array-bounds
 CFLAGS += -Wno-unknown-pragmas
+CFLAGS += -Wno-vla-cxx-extension
 CFLAGS += -fno-strict-aliasing
 CFLAGS += -I./include
 CFLAGS += -I./data
@@ -35,13 +36,14 @@ CFLAGS += -fpic
 CFLAGS += -ffunction-sections
 CFLAGS += -fdata-sections
 
-#FLAGS += -fstack-protector -fstack-protector-all -fno-omit-frame-pointer -fsanitize=address
+FLAGS += -fstack-protector -fstack-protector-all -fno-omit-frame-pointer -fsanitize=address
+CXXFLAGS += -fno-exceptions -fno-non-call-exceptions -fno-rtti -fno-threadsafe-statics
 
 LDFLAGS += -lm
 #LDFLAGS += -Wl,--gc-sections
 #-Wl,--print-gc-sections
 ifeq ($(UNAME),Linux)
-LDFLAGS += -Wl,-z noexecstack
+#LDFLAGS += -Wl,-z noexecstack
 endif
 ifeq ($(UNAME),Darwin)
 LDFLAGS += -framework Foundation -framework Cocoa -framework IOKit -framework AVFoundation -framework CoreVideo -framework CoreAudio -framework CoreMedia -framework CoreHaptics -framework AudioToolbox -framework GameController -framework ForceFeedback -framework Carbon -framework Metal -framework QuartzCore -framework UniformTypeIdentifiers
@@ -67,8 +69,10 @@ OBJS = \
 	src/pack.o \
 	src/dds/validate.o \
 	src/vulkan_helper.o \
+	src/vulkan_state.o \
 	src/tga/tga.o \
 	src/font/outline.o \
+	src/font/bitmap/vulkan.o \
 	src/renpy/vulkan.o \
 	src/renpy/composite/vulkan.o \
 	src/renpy/script.o \
@@ -77,7 +81,10 @@ OBJS = \
 	src/audio.o \
 	src/poem/birdsong.o \
 	src/poem/eleanorthehero.o \
-	src/poem/kiristella.o
+	src/poem/kiristella.o \
+	src/ui/vulkan.o \
+	src/ui/widget.o \
+	src/ui.o
 
 ZLIB = ../zlib-1.3.2
 CFLAGS += -I$(ZLIB)
@@ -107,11 +114,14 @@ endif
 
 all: main
 
+CC = clang
+CXX = clang++
+
 %.o: %.c
 	$(CC) $(ARCH) $(CSTD) $(CFLAGS) $(FLAGS) $(OPT) $(DEBUG) -c $< -o $@
 
 %.o: %.cpp
-	$(CXX) $(ARCH) $(CXXSTD) $(CFLAGS) $(FLAGS) $(OPT) $(DEBUG) -c $< -o $@
+	$(CXX) $(ARCH) $(CXXSTD) $(CFLAGS) $(CXXFLAGS) $(FLAGS) $(OPT) $(DEBUG) -c $< -o $@
 
 %.o: %.s
 	$(AS) $< -o $@
@@ -132,7 +142,7 @@ all: main
 #	./tools/opus_encode $< $@
 
 main: $(OBJS) $(LIBS)
-	$(CC) $(ARCH) $(LDFLAGS) $(FLAGS) $(OPT) $(DEBUG) $^ -o $@
+	$(CXX) $(ARCH) $(LDFLAGS) $(FLAGS) $(OPT) $(DEBUG) $^ -o $@
 
 %.spv: %.hlsl
 	../dxc/bin/dxc -spirv -T lib_6_3 -fspv-target-env=vulkan1.3 $< -Fo $@
