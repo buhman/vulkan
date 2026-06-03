@@ -12,76 +12,13 @@ namespace ui
   constexpr int combLeft = 700;
   constexpr int outputMixLeft = 1000;
 
-#define BREVERB audio::fbreverb
-#define FREVERB audio::ffreverb
 
-  widget::DelayGainSlider fap[3] {
-    widget::DelayGainSlider("allpass 0",
-                            allpassLeft, top + ySpace * 0,
-                            1, 2500, &FREVERB.ap[0].delay,
-                            0.0, 1.0, &FREVERB.ap[0].gain0, &FREVERB.ap[0].gainM),
-    widget::DelayGainSlider("allpass 1",
-                            allpassLeft, top + ySpace * 1,
-                            1, 2500, &FREVERB.ap[1].delay,
-                            0.0, 1.0, &FREVERB.ap[1].gain0, &FREVERB.ap[1].gainM),
-    widget::DelayGainSlider("allpass 2",
-                            allpassLeft, top + ySpace * 2,
-                            1, 2500, &FREVERB.ap[2].delay,
-                            0.0, 1.0, &FREVERB.ap[2].gain0, &FREVERB.ap[2].gainM),
+  struct ap_comb {
+    widget::DelayGainSlider ap[3];
+    widget::DelayGainSlider comb[4];
   };
 
-  widget::DelayGainSlider fcomb[4] {
-    widget::DelayGainSlider("comb 0",
-                            combLeft, top + ySpace * 0,
-                            100, 15000, &FREVERB.cf[0].delay,
-                            0.0, 1.0, &FREVERB.cf[0].gain0, &FREVERB.cf[0].gainM),
-    widget::DelayGainSlider("comb 1",
-                            combLeft, top + ySpace * 1,
-                            100, 15000, &FREVERB.cf[1].delay,
-                            0.0, 1.0, &FREVERB.cf[1].gain0, &FREVERB.cf[1].gainM),
-    widget::DelayGainSlider("comb 2",
-                            combLeft, top + ySpace * 2,
-                            100, 15000, &FREVERB.cf[2].delay,
-                            0.0, 1.0, &FREVERB.cf[2].gain0, &FREVERB.cf[2].gainM),
-    widget::DelayGainSlider("comb 3",
-                            combLeft, top + ySpace * 3,
-                            100, 15000, &FREVERB.cf[3].delay,
-                            0.0, 1.0, &FREVERB.cf[3].gain0, &FREVERB.cf[3].gainM),
-  };
-
-  widget::DelayGainSlider bap[3] {
-    widget::DelayGainSlider("allpass 0",
-                            allpassLeft, top + ySpace * 0,
-                            1, 2500, &BREVERB.ap[0].delay,
-                            0.0, 1.0, &BREVERB.ap[0].gain0, &BREVERB.ap[0].gainM),
-    widget::DelayGainSlider("allpass 1",
-                            allpassLeft, top + ySpace * 1,
-                            1, 2500, &BREVERB.ap[1].delay,
-                            0.0, 1.0, &BREVERB.ap[1].gain0, &BREVERB.ap[1].gainM),
-    widget::DelayGainSlider("allpass 2",
-                            allpassLeft, top + ySpace * 2,
-                            1, 2500, &BREVERB.ap[2].delay,
-                            0.0, 1.0, &BREVERB.ap[2].gain0, &BREVERB.ap[2].gainM),
-  };
-
-  widget::DelayGainSlider bcomb[4] {
-    widget::DelayGainSlider("comb 0",
-                            combLeft, top + ySpace * 0,
-                            100, 15000, &BREVERB.cf[0].delay,
-                            0.0, 1.0, &BREVERB.cf[0].gain0, &BREVERB.cf[0].gainM),
-    widget::DelayGainSlider("comb 1",
-                            combLeft, top + ySpace * 1,
-                            100, 15000, &BREVERB.cf[1].delay,
-                            0.0, 1.0, &BREVERB.cf[1].gain0, &BREVERB.cf[1].gainM),
-    widget::DelayGainSlider("comb 2",
-                            combLeft, top + ySpace * 2,
-                            100, 15000, &BREVERB.cf[2].delay,
-                            0.0, 1.0, &BREVERB.cf[2].gain0, &BREVERB.cf[2].gainM),
-    widget::DelayGainSlider("comb 3",
-                            combLeft, top + ySpace * 3,
-                            100, 15000, &BREVERB.cf[3].delay,
-                            0.0, 1.0, &BREVERB.cf[3].gain0, &BREVERB.cf[3].gainM),
-  };
+  ap_comb reverberatorSliders[2];
 
   widget::Slider<float, false> dryGain("dry gain",
                                        outputMixLeft, top + yMixSpace * 0, 150, 14,
@@ -118,6 +55,38 @@ namespace ui
                                  120, 0,
                                  &audio::reverbIndex);
 
+  void init()
+  {
+    static const char * allpassLabels[3] = {
+      "allpass 0",
+      "allpass 1",
+      "allpass 2",
+    };
+    static const char * combLabels[4] = {
+      "comb 0",
+      "comb 1",
+      "comb 2",
+      "comb 3",
+    };
+
+    for (int i = 0; i < 2; i++) {
+      for (int j = 0; j < 3; j++) {
+        reverberatorSliders[i].ap[j] =
+          widget::DelayGainSlider(allpassLabels[j],
+                                  allpassLeft, top + ySpace * j,
+                                  1, audio::reverbs[i]->ap[j].maxDelay, &audio::reverbs[i]->ap[j].delay,
+                                  0.0, 1.0, &audio::reverbs[i]->ap[j].gain);
+      }
+      for (int j = 0; j < 4; j++) {
+        reverberatorSliders[i].comb[j] =
+          widget::DelayGainSlider(combLabels[j],
+                                  combLeft, top + ySpace * j,
+                                  100, audio::reverbs[i]->cf[j].maxDelay, &audio::reverbs[i]->cf[j].delay,
+                                  0.0, 1.0, &audio::reverbs[i]->cf[j].gain);
+      }
+    }
+  }
+
   void draw(MappedInstanceData<SolidInstance> & data,
             MappedInstanceData<font::BitmapInstance> & fontData)
   {
@@ -127,8 +96,8 @@ namespace ui
         0x80000000,
       });
 
-    widget::DelayGainSlider * ap = (audio::reverbIndex == 0) ? bap : fap;
-    widget::DelayGainSlider * comb = (audio::reverbIndex == 0) ? bcomb : fcomb;
+    widget::DelayGainSlider * ap = reverberatorSliders[audio::reverbIndex].ap;
+    widget::DelayGainSlider * comb = reverberatorSliders[audio::reverbIndex].comb;
 
     for (int i = 0; i < 3; i++)
       ap[i].draw(data, fontData);
@@ -148,8 +117,8 @@ namespace ui
 
   void update(float mx, float my, bool mLeft, bool mEdge)
   {
-    widget::DelayGainSlider * ap = (audio::reverbIndex == 0) ? bap : fap;
-    widget::DelayGainSlider * comb = (audio::reverbIndex == 0) ? bcomb : fcomb;
+    widget::DelayGainSlider * ap = reverberatorSliders[audio::reverbIndex].ap;
+    widget::DelayGainSlider * comb = reverberatorSliders[audio::reverbIndex].comb;
 
     for (int i = 0; i < 3; i++)
       ap[i].update(mx, my, mLeft, mEdge);

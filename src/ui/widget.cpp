@@ -179,15 +179,13 @@ namespace ui::widget
     drawStringCentered(fontData, delay.slider.left + delay.slider.width / 2, delay.slider.top - 16, label);
 
     delay.draw(data, fontData);
-    gain0.draw(data, fontData);
-    gainM.draw(data, fontData);
+    gain.draw(data, fontData);
   }
 
   void DelayGainSlider::update(float mx, float my, bool mLeft, bool mEdge)
   {
     delay.update(mx, my, mLeft, mEdge);
-    gain0.update(mx, my, mLeft, mEdge);
-    gainM.update(mx, my, mLeft, mEdge);
+    gain.update(mx, my, mLeft, mEdge);
   }
 
   template <int optionCount>

@@ -23,7 +23,9 @@ CFLAGS += -Wno-format
 CFLAGS += -Wno-error=unused-function
 CFLAGS += -Wno-error=array-bounds
 CFLAGS += -Wno-unknown-pragmas
+ifneq '' '$(findstring clang++,$(CXX))'
 CFLAGS += -Wno-vla-cxx-extension
+endif
 CFLAGS += -fno-strict-aliasing
 CFLAGS += -I./include
 CFLAGS += -I./data
@@ -43,7 +45,7 @@ LDFLAGS += -lm
 #LDFLAGS += -Wl,--gc-sections
 #-Wl,--print-gc-sections
 ifeq ($(UNAME),Linux)
-#LDFLAGS += -Wl,-z noexecstack
+LDFLAGS += -z noexecstack
 endif
 ifeq ($(UNAME),Darwin)
 LDFLAGS += -framework Foundation -framework Cocoa -framework IOKit -framework AVFoundation -framework CoreVideo -framework CoreAudio -framework CoreMedia -framework CoreHaptics -framework AudioToolbox -framework GameController -framework ForceFeedback -framework Carbon -framework Metal -framework QuartzCore -framework UniformTypeIdentifiers
@@ -113,9 +115,6 @@ LIBS = \
 endif
 
 all: main
-
-CC = clang
-CXX = clang++
 
 %.o: %.c
 	$(CC) $(ARCH) $(CSTD) $(CFLAGS) $(FLAGS) $(OPT) $(DEBUG) -c $< -o $@

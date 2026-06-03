@@ -7,88 +7,57 @@ namespace audio {
   constexpr int sample_rate = 48000;
   constexpr int channels = 2;
 
-  template <int maxDelay>
-  struct FeedbackCombFilter {
-  private:
-    //float * buffer;
-    float buffer[maxDelay];
-    int index;
-  public:
-    int delay;
-    float gain0;
-    float gainM;
-
-    FeedbackCombFilter(int delay, float gain0, float gainM);
-    void reset();
-    float feed(float value);
-  };
-
-  template <int maxDelay>
-  struct FeedforwardCombFilter {
-  private:
-    //float * buffer;
-    float buffer[maxDelay];
-    int index;
-  public:
-    int delay;
-    float gain0;
-    float gainM;
-
-    FeedforwardCombFilter(int delay, float gain0, float gainM);
-    void reset();
-    float feed(float value);
-  };
-
-  template <int maxDelay>
-  struct AllpassFilter {
-  private:
-    //float * buffer;
-    float buffer[maxDelay];
+  struct DelayFilter {
+    float * buffer;
     int index;
 
-  public:
+    const int maxDelay;
     int delay;
-    float gain0;
-    float gainM;
+    float gain;
 
-    AllpassFilter(int delay, float gain0, float gainM);
+    DelayFilter(int maxDelay, int delay, float gain);
+
     void reset();
-    float feed(float x);
+    virtual float feed(float value) = 0;
   };
 
-  using FBCF = FeedbackCombFilter<15000>;
-  using FFCF = FeedforwardCombFilter<15000>;
-  using AP = AllpassFilter<2500>;
+  struct FeedbackCombFilter : DelayFilter {
+    FeedbackCombFilter(int maxDelay, int delay, float gain);
+    float feed(float value) override;
+  };
+
+  struct FeedforwardCombFilter : DelayFilter {
+  public:
+    FeedforwardCombFilter(int maxDelay, int delay, float gain);
+    float feed(float value) override;
+  };
+
+  struct AllpassFilter : DelayFilter {
+    AllpassFilter(int maxDelay, int delay, float gain);
+    float feed(float x) override;
+  };
+
+  using FBCF = FeedbackCombFilter;
+  using FFCF = FeedforwardCombFilter;
+  using AP = AllpassFilter;
 
   struct lr { float l; float r; };
 
-  struct FBReverb {
+  struct Reverb {
+    static constexpr int apCount = 3;
     static constexpr int cfCount = 4;
-    static constexpr int apCount = 3;
 
-    FBCF cf[cfCount];
-    AP ap[apCount];
+    DelayFilter * cf;
+    DelayFilter * ap;
 
-    FBReverb();
-    void reset();
-    lr feed(float x);
-  };
-
-  struct FFReverb {
-    static constexpr int __cfCount = 4;
-    static constexpr int apCount = 3;
-
-    FFCF cf[__cfCount];
-    AP ap[apCount];
-
-    FFReverb();
+    Reverb(DelayFilter * cf, DelayFilter * ap);
     void reset();
     lr feed(float x);
   };
 
   extern int reverbIndex;
-  extern FBReverb fbreverb;
-  extern FFReverb ffreverb;
+  extern Reverb * reverbs[];
+  extern int const reverbsCount;
 
   extern float wetGain;
   extern float dryGain;

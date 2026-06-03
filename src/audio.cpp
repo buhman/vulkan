@@ -13,14 +13,14 @@
 #include "poem.h"
 
 namespace audio {
-  static int const frame_samples = 960; // 20 milliseconds @ 48kHz
+  //static int const frame_samples = 960; // 20 milliseconds @ 48kHz
   static int const sample_size = (sizeof (int16_t));
 
   static int const max_frame_size = 960 * 3; // 20ms at 48kHz
-  static int const max_packet_size = 1275;
+  //static int const max_packet_size = 1275;
 
   static int const half_period_samples = sample_rate / 30;
-  static int const half_period_size = half_period_samples * sample_size * channels;
+  //static int const half_period_size = half_period_samples * sample_size * channels;
 
   struct AudioBuffer {
     renpy::language::audio const * audio;
@@ -28,111 +28,87 @@ namespace audio {
     uint32_t sample_count;
   };
 
-  template <int maxDelay>
-  FeedbackCombFilter<maxDelay>::FeedbackCombFilter(int delay, float gain0, float gainM)
-    : delay(delay), gain0(gain0), gainM(gainM)
+  //////////////////////////////////////////////////////////////////////
+  // DelayFilter
+  //////////////////////////////////////////////////////////////////////
+
+  void DelayFilter::reset()
   {
-    //buffer = (float *)malloc((sizeof (float)) * maxDelay);
+    memset(buffer, 0, maxDelay * (sizeof (float)));
+  }
+
+  DelayFilter::DelayFilter(int maxDelay, int delay, float gain)
+    : index(0)
+    , maxDelay(maxDelay)
+    , delay(delay)
+    , gain(gain)
+  {
+    buffer = (float *)malloc(maxDelay * (sizeof (float)));
     reset();
   }
 
-  template <int maxDelay>
-  void FeedbackCombFilter<maxDelay>::reset()
-  {
-    index = 0;
-    memset(buffer, 0, (sizeof (float)) * maxDelay);
-  }
+  //////////////////////////////////////////////////////////////////////
+  // FeedbackCombFilter
+  //////////////////////////////////////////////////////////////////////
 
-  template <int maxDelay>
-  float FeedbackCombFilter<maxDelay>::feed(float value)
+  FeedbackCombFilter::FeedbackCombFilter(int maxDelay, int delay, float gain)
+    : DelayFilter(maxDelay, delay, gain)
+  {}
+
+  float FeedbackCombFilter::feed(float value)
   {
-    float y = gain0 * value + gainM * buffer[index];
+    float y = gain * value + gain * buffer[index];
     buffer[index] = y;
     index = (index + 1) % delay;
     return y;
   }
 
-  template <int maxDelay>
-  FeedforwardCombFilter<maxDelay>::FeedforwardCombFilter(int delay, float gain0, float gainM)
-    : delay(delay), gain0(gain0), gainM(gainM)
-  {
-    //buffer = (float *)malloc((sizeof (float)) * maxDelay);
-    reset();
-  }
+  //////////////////////////////////////////////////////////////////////
+  // FeedForwardCombFilter
+  //////////////////////////////////////////////////////////////////////
 
-  template <int maxDelay>
-  void FeedforwardCombFilter<maxDelay>::reset()
-  {
-    index = 0;
-    memset(buffer, 0, (sizeof (float)) * maxDelay);
-  }
+  FeedforwardCombFilter::FeedforwardCombFilter(int maxDelay, int delay, float gain)
+    : DelayFilter(maxDelay, delay, gain)
+  {}
 
-  template <int maxDelay>
-  float FeedforwardCombFilter<maxDelay>::feed(float value)
+  float FeedforwardCombFilter::feed(float value)
   {
-    float y = gain0 * value + gainM * buffer[index];
+    float y = gain * value + gain * buffer[index];
     buffer[index] = value;
     index = (index + 1) % delay;
     return y;
   }
 
-  template <int maxDelay>
-  AllpassFilter<maxDelay>::AllpassFilter(int delay, float gain0, float gainM)
-    : delay(delay), gain0(gain0), gainM(gainM)
-  {
-    //buffer = (float *)malloc((sizeof (float)) * maxDelay);
-    reset();
-  }
+  //////////////////////////////////////////////////////////////////////
+  // AllpassFilter
+  //////////////////////////////////////////////////////////////////////
 
-  template <int maxDelay>
-  void AllpassFilter<maxDelay>::reset()
-  {
-    index = 0;
-    memset(buffer, 0, (sizeof (float)) * maxDelay);
-  }
+  AllpassFilter::AllpassFilter(int maxDelay, int delay, float gain)
+    : DelayFilter(maxDelay, delay, gain)
+  {}
 
-  template <int maxDelay>
-  float AllpassFilter<maxDelay>::feed(float x)
+  float AllpassFilter::feed(float x)
   {
-    float v = x + -gainM * buffer[index];
-    float y = buffer[index] + gain0 * v;
+    float v = x + -gain * buffer[index];
+    float y = buffer[index] + gain * v;
     buffer[index] = v;
     index = (index + 1) % delay;
     return y;
   }
 
-  struct AudioInstance {
-    int audio_index;
-    AudioBuffer * audio_buffer;
-    uint32_t sample_index;
-    uint32_t tail_index;
-    uint32_t fadeout_end;
-    uint32_t fadeout_index;
-    poem::poem const * poem;
-  };
+  //////////////////////////////////////////////////////////////////////
+  // Reverberators
+  //////////////////////////////////////////////////////////////////////
 
-  FBReverb::FBReverb()
-    : cf{FBCF(3229, 1.0f, 0.733f), // 1687
-         FBCF(3079, 1.0f, 0.802f), // 1601
-         FBCF(3943, 1.0f, 0.753f), // 2053
-         FBCF(4327, 1.0f, 0.733f), // 2251
-      }
-    , ap{AP(661, 0.7f, 0.7f), // 347
-         AP(257, 0.7f, 0.7f), // 113
-         AP(71, 0.7f, 0.7f), // 37
-      }
-  { }
-
-  void FBReverb::reset()
+  void Reverb::reset()
   {
     for (int i = 0; i < cfCount; i++)
       cf[i].reset();
-
     for (int i = 0; i < apCount; i++)
       ap[i].reset();
   }
 
-  lr FBReverb::feed(float x)
+  lr Reverb::feed(float x)
   {
     for (int i = 0; i < apCount; i++) {
       x = ap[i].feed(x);
@@ -151,53 +127,53 @@ namespace audio {
     return {a, b};
   }
 
+  Reverb::Reverb(DelayFilter * cf, DelayFilter * ap)
+    : cf(cf), ap(ap)
+  {}
 
-  FFReverb::FFReverb()
-    : cf{FFCF{9209, 1.0f, 0.742f},
-         FFCF{9601, 1.0f, 0.733f},
-         FFCF{10369, 1.0f, 0.715f},
-         FFCF{11131, 1.0f, 0.697f},
-      }
-    , ap{AP{2017, 0.7f, 0.7f},
-         AP{647, 0.7f, 0.7f},
-         AP{137, 0.7f, 0.7f},
-      }
-  { }
+  static FFCF forwardCF[4]{FFCF{15000, 9209, 0.742f},
+                           FFCF{15000, 9601, 0.733f},
+                           FFCF{15000, 10369, 0.715f},
+                           FFCF{15000, 11131, 0.697f}};
 
-  void FFReverb::reset()
-  {
-    for (int i = 0; i < __cfCount; i++) {
-      printf("reset cf %d\n", i);
-      cf[i].reset();
-    }
+  static AP forwardAP[3]{AP{2500, 2017, 0.7f},
+                         AP{2500, 647, 0.7f},
+                         AP{2500, 137, 0.7f}};
+  Reverb forwardReverb(forwardCF, forwardAP);
 
-    for (int i = 0; i < apCount; i++)
-      ap[i].reset();
-  }
-
-  lr FFReverb::feed(float x)
-  {
-    for (int i = 0; i < apCount; i++) {
-      x = ap[i].feed(x);
-    }
-
-    float x0 = cf[0].feed(x);
-    float x1 = cf[1].feed(x);
-    float x2 = cf[2].feed(x);
-    float x3 = cf[3].feed(x);
-
-    float s0 = x0 + x1 + x2 + x3;
-    //float s0 = x0 + x1 + x2;
-    return {s0, s0};
-  }
+  static FBCF backCF[4]{FBCF{10000, 3229, 0.733f},  // 1687
+                        FBCF{10000, 3079, 0.802f},  // 1601
+                        FBCF{10000, 3943, 0.753f},  // 2053
+                        FBCF{10000, 4327, 0.733f}}; // 2251
+  static AP backAP[3]{AP{1500, 661, 0.7f}, // 347
+                      AP{1500, 257, 0.7f}, // 113
+                      AP{1500, 71, 0.7f}};
+  Reverb backReverb(backCF, backAP);
 
   int reverbIndex = 0;
-  FBReverb fbreverb;
-  FFReverb ffreverb;
+  Reverb * reverbs[] = {
+    &backReverb,
+    &forwardReverb,
+  };
+  int const reverbsCount = (sizeof (reverbs)) / (sizeof (reverbs[0]));
 
   float dryGain = 1.0;
   float wetGain = 0.25;
   float mixChannelGain[mixChannelCount];
+
+  //////////////////////////////////////////////////////////////////////
+  // AudioInstance
+  //////////////////////////////////////////////////////////////////////
+
+  struct AudioInstance {
+    int audio_index;
+    AudioBuffer * audio_buffer;
+    uint32_t sample_index;
+    uint32_t tail_index;
+    uint32_t fadeout_end;
+    uint32_t fadeout_index;
+    poem::poem const * poem;
+  };
 
   //
 
@@ -221,8 +197,8 @@ namespace audio {
     SDL_ResumeAudioStreamDevice(audio_stream);
 
     audio_instances_count = 0;
-    fbreverb.reset();
-    ffreverb.reset();
+    for (int i = 0; i < reverbsCount; i++)
+      reverbs[i]->reset();
 
     for (int i = 0; i < mixChannelCount; i++) {
       mixChannelGain[i] = 1.0f;
@@ -566,12 +542,8 @@ namespace audio {
       float value = channel_buffer[mix_channel::voice][i * channels + 0];
 
       lr wet;
-      if (reverbIndex == 0) {
-        wet = fbreverb.feed(value);
-      }
-      else {
-        wet = ffreverb.feed(value);
-      }
+      assert(reverbIndex >= 0 && reverbIndex < reverbsCount);
+      wet = reverbs[reverbIndex]->feed(value);
       float left = value * dryGain + wet.l * wetGain;
       float right = value * dryGain + wet.r * wetGain;
       channel_buffer[mix_channel::voice][i * channels + 0] = left;

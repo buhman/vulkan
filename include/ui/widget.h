@@ -86,6 +86,9 @@ namespace ui::widget
     T maxExtent;
     T * value;
 
+    Slider()
+    {}
+
     Slider(char const * label,
            int left, int top, int width, int height,
            T minValue, T maxValue,
@@ -117,30 +120,27 @@ namespace ui::widget
     char const * label;
 
     Slider<int, true> delay;
-    Slider<float, true> gain0;
-    Slider<float, true> gainM;
+    Slider<float, true> gain;
+
+    DelayGainSlider()
+    {}
 
     DelayGainSlider(char const * label,
                     int left, int top,
                     int delayMin, int delayMax, int * delayValue,
                     float gainMin, float gainMax,
-                    float * gain0Value, float * gainMValue)
+                    float * gainValue)
       : label(label)
       , delay("delay",
               left, top, 150, 14,
               delayMin, delayMax,
               delayMin, delayMax,
               delayValue)
-      , gain0("gain0",
-              left, top + 30, 150, 14,
-              gainMin, gainMax,
-              gainMin, gainMax,
-              gain0Value)
-      , gainM("gainM",
-              left, top + 60, 150, 14,
-              gainMin, gainMax,
-              gainMin, gainMax,
-              gainMValue)
+      , gain("gain",
+             left, top + 30, 150, 14,
+             gainMin, gainMax,
+             gainMin, gainMax,
+             gainValue)
     {}
 
     void draw(MappedInstanceData<SolidInstance> & data,
