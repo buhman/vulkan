@@ -487,6 +487,7 @@ namespace audio {
   int poem_timestamp_index = 0;
   int poem_line_index = 0;
   poem::poem const * poem_playing = nullptr;
+  poem::poem const * next_poem_playing = nullptr;
 
   void update_poem(AudioInstance & instance)
   {
@@ -495,19 +496,23 @@ namespace audio {
     }
 
     poem::poem const * const poem = instance.poem;
-    assert(poem_playing == nullptr);
-    poem_playing = poem;
+    assert(next_poem_playing == nullptr);
+    next_poem_playing = poem;
 
     if (poem_timestamp_index < (poem->timestamps_length - 1)) {
       double time = (double)instance.sample_index / (double)sample_rate;
       while (poem->timestamps[poem_timestamp_index + 1].time <= time) {
         poem_timestamp_index += 1;
+        if ((poem_timestamp_index + 1) >= poem->timestamps_length)
+          break;
       }
     }
 
     if (poem_line_index < (poem->lines_length - 1)) {
       while (poem->timestamps[poem_timestamp_index].wordIndex >= poem->lines[poem_line_index].start + poem->lines[poem_line_index].length) {
         poem_line_index += 1;
+        if (poem_line_index >= poem->lines_length)
+          break;
       }
     }
   }
@@ -535,12 +540,13 @@ namespace audio {
     memset(&mix_buffer[0], 0, (sizeof (mix_buffer)));
     memset(&channel_buffer[0][0], 0, (sizeof (channel_buffer)));
 
-    poem_playing = nullptr;
+    next_poem_playing = nullptr;
     for (int i = 0; i < audio_instances_count; i++) {
       update_instance(channel_buffer[getMixChannel(audio_instances[i])], audio_instances[i]);
 
       update_poem(audio_instances[i]);
     }
+    poem_playing = next_poem_playing;
 
     bool culled = true;
     while (culled) {

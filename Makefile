@@ -7,7 +7,7 @@ OBJARCH = elf64-x86-64
 
 UNAME := $(shell uname -s)
 
-OPT += -O0
+OPT += -O3
 OPT += -march=core-avx2
 
 DEBUG = -g
@@ -36,7 +36,7 @@ CFLAGS += -fpic
 CFLAGS += -ffunction-sections
 CFLAGS += -fdata-sections
 
-FLAGS += -fstack-protector -fstack-protector-all -fno-omit-frame-pointer -fsanitize=address
+#FLAGS += -fstack-protector -fstack-protector-all -fno-omit-frame-pointer -fsanitize=address
 CXXFLAGS += -fno-exceptions -fno-non-call-exceptions -fno-rtti -fno-threadsafe-statics
 
 LDFLAGS += -lm
