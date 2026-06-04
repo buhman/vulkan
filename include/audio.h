@@ -8,8 +8,8 @@ namespace audio {
   constexpr int channels = 2;
 
   struct DelayFilter {
-    float * buffer;
-    int index;
+    float * buffers[channels];
+    int indexes[channels];
 
     const int maxDelay;
     int delay;
@@ -18,23 +18,23 @@ namespace audio {
     DelayFilter(int maxDelay, int delay, float gain);
 
     void reset();
-    virtual float feed(float value) = 0;
+    virtual float feed(int channel, float value) = 0;
   };
 
   struct FeedbackCombFilter : DelayFilter {
     FeedbackCombFilter(int maxDelay, int delay, float gain);
-    float feed(float value) override;
+    float feed(int channel, float value) override;
   };
 
   struct FeedforwardCombFilter : DelayFilter {
   public:
     FeedforwardCombFilter(int maxDelay, int delay, float gain);
-    float feed(float value) override;
+    float feed(int channel, float value) override;
   };
 
   struct AllpassFilter : DelayFilter {
     AllpassFilter(int maxDelay, int delay, float gain);
-    float feed(float x) override;
+    float feed(int channel, float x) override;
   };
 
   using FBCF = FeedbackCombFilter;
@@ -52,11 +52,11 @@ namespace audio {
 
     Reverb(DelayFilter * cf, DelayFilter * ap);
     void reset();
-    lr feed(float x);
+    lr feed(int channel, float x);
   };
 
   extern int reverbIndex;
-  extern Reverb * reverbs[];
+  extern Reverb reverbs[];
   extern int const reverbsCount;
 
   extern float wetGain;

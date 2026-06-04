@@ -34,16 +34,20 @@ namespace audio {
 
   void DelayFilter::reset()
   {
-    memset(buffer, 0, maxDelay * (sizeof (float)));
+    for (int i = 0; i < channels; i++) {
+      memset(buffers[i], 0, maxDelay * (sizeof (float)));
+      indexes[i] = 0;
+    }
   }
 
   DelayFilter::DelayFilter(int maxDelay, int delay, float gain)
-    : index(0)
-    , maxDelay(maxDelay)
+    : maxDelay(maxDelay)
     , delay(delay)
     , gain(gain)
   {
-    buffer = (float *)malloc(maxDelay * (sizeof (float)));
+    for (int i = 0; i < channels; i++) {
+      buffers[i] = (float *)malloc(maxDelay * (sizeof (float)));
+    }
     reset();
   }
 
@@ -55,8 +59,11 @@ namespace audio {
     : DelayFilter(maxDelay, delay, gain)
   {}
 
-  float FeedbackCombFilter::feed(float value)
+  float FeedbackCombFilter::feed(int channel, float value)
   {
+    int & index = indexes[channel];
+    float * buffer = buffers[channel];
+
     float y = gain * value + gain * buffer[index];
     buffer[index] = y;
     index = (index + 1) % delay;
@@ -71,8 +78,11 @@ namespace audio {
     : DelayFilter(maxDelay, delay, gain)
   {}
 
-  float FeedforwardCombFilter::feed(float value)
+  float FeedforwardCombFilter::feed(int channel, float value)
   {
+    int & index = indexes[channel];
+    float * buffer = buffers[channel];
+
     float y = gain * value + gain * buffer[index];
     buffer[index] = value;
     index = (index + 1) % delay;
@@ -87,8 +97,11 @@ namespace audio {
     : DelayFilter(maxDelay, delay, gain)
   {}
 
-  float AllpassFilter::feed(float x)
+  float AllpassFilter::feed(int channel, float x)
   {
+    int & index = indexes[channel];
+    float * buffer = buffers[channel];
+
     float v = x + -gain * buffer[index];
     float y = buffer[index] + gain * v;
     buffer[index] = v;
@@ -108,16 +121,16 @@ namespace audio {
       ap[i].reset();
   }
 
-  lr Reverb::feed(float x)
+  lr Reverb::feed(int channel, float x)
   {
     for (int i = 0; i < apCount; i++) {
-      x = ap[i].feed(x);
+      x = ap[i].feed(channel, x);
     }
 
-    float x0 = cf[0].feed(x);
-    float x1 = cf[1].feed(x);
-    float x2 = cf[2].feed(x);
-    float x3 = cf[3].feed(x);
+    float x0 = cf[0].feed(channel, x);
+    float x1 = cf[1].feed(channel, x);
+    float x2 = cf[2].feed(channel, x);
+    float x3 = cf[3].feed(channel, x);
 
     float s0 = x0 + x2;
     float s1 = x1 + x3;
@@ -139,7 +152,6 @@ namespace audio {
   static AP forwardAP[3]{AP{2500, 2017, 0.7f},
                          AP{2500, 647, 0.7f},
                          AP{2500, 137, 0.7f}};
-  Reverb forwardReverb(forwardCF, forwardAP);
 
   static FBCF backCF[4]{FBCF{10000, 3229, 0.733f},  // 1687
                         FBCF{10000, 3079, 0.802f},  // 1601
@@ -148,12 +160,11 @@ namespace audio {
   static AP backAP[3]{AP{1500, 661, 0.7f}, // 347
                       AP{1500, 257, 0.7f}, // 113
                       AP{1500, 71, 0.7f}};
-  Reverb backReverb(backCF, backAP);
 
   int reverbIndex = 0;
-  Reverb * reverbs[] = {
-    &backReverb,
-    &forwardReverb,
+  Reverb reverbs[] = {
+    {backCF, backAP},
+    {forwardCF, forwardAP},
   };
   int const reverbsCount = (sizeof (reverbs)) / (sizeof (reverbs[0]));
 
@@ -198,7 +209,7 @@ namespace audio {
 
     audio_instances_count = 0;
     for (int i = 0; i < reverbsCount; i++)
-      reverbs[i]->reset();
+      reverbs[i].reset();
 
     for (int i = 0; i < mixChannelCount; i++) {
       mixChannelGain[i] = 1.0f;
@@ -539,15 +550,21 @@ namespace audio {
     // audio configuration "B"
     // mono reverberation
     for (int i = 0; i < half_period_samples; i++) {
-      float value = channel_buffer[mix_channel::voice][i * channels + 0];
+      float mix[2] = { 0, 0 };
+      for (int ch = 0; ch < channels; ch++) {
+        float value = channel_buffer[mix_channel::voice][i * channels + ch];
 
-      lr wet;
-      assert(reverbIndex >= 0 && reverbIndex < reverbsCount);
-      wet = reverbs[reverbIndex]->feed(value);
-      float left = value * dryGain + wet.l * wetGain;
-      float right = value * dryGain + wet.r * wetGain;
-      channel_buffer[mix_channel::voice][i * channels + 0] = left;
-      channel_buffer[mix_channel::voice][i * channels + 1] = right;
+        assert(reverbIndex >= 0 && reverbIndex < reverbsCount);
+        lr wet = reverbs[reverbIndex].feed(ch, value);
+
+        float left = value * dryGain + wet.l * wetGain;
+        float right = value * dryGain + wet.r * wetGain;
+        mix[0 ^ ch] += left;
+        mix[1 ^ ch] += right;
+      }
+
+      for (int ch = 0; ch < channels; ch++)
+        channel_buffer[mix_channel::voice][i * channels + ch] = mix[ch];
     }
 
     for (int i = 0; i < half_period_samples; i++) {

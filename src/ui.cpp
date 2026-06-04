@@ -74,15 +74,15 @@ namespace ui
         reverberatorSliders[i].ap[j] =
           widget::DelayGainSlider(allpassLabels[j],
                                   allpassLeft, top + ySpace * j,
-                                  1, audio::reverbs[i]->ap[j].maxDelay, &audio::reverbs[i]->ap[j].delay,
-                                  0.0, 1.0, &audio::reverbs[i]->ap[j].gain);
+                                  1, audio::reverbs[i].ap[j].maxDelay, &audio::reverbs[i].ap[j].delay,
+                                  0.0, 1.0, &audio::reverbs[i].ap[j].gain);
       }
       for (int j = 0; j < 4; j++) {
         reverberatorSliders[i].comb[j] =
           widget::DelayGainSlider(combLabels[j],
                                   combLeft, top + ySpace * j,
-                                  100, audio::reverbs[i]->cf[j].maxDelay, &audio::reverbs[i]->cf[j].delay,
-                                  0.0, 1.0, &audio::reverbs[i]->cf[j].gain);
+                                  100, audio::reverbs[i].cf[j].maxDelay, &audio::reverbs[i].cf[j].delay,
+                                  0.0, 1.0, &audio::reverbs[i].cf[j].gain);
       }
     }
   }
