@@ -561,6 +561,7 @@ namespace audio {
         float right = value * dryGain + wet.r * wetGain;
         mix[0 ^ ch] += left;
         mix[1 ^ ch] += right;
+        break;
       }
 
       for (int ch = 0; ch < channels; ch++)
